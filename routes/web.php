@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 
 // Homepage - redirect to tours or create a proper home page
 Route::get('/', function () {
-    return redirect()->route('tours.index');
+    return view('home');
 })->name('home');
 
 // Tours routes
