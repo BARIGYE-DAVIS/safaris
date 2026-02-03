@@ -170,4 +170,15 @@ class TourController extends Controller
         
         return view('tours.category', compact('tours', 'category', 'categoryName'));
     }
+
+    public function duration($days)
+    {
+    $tours = Tour::whereHas('itineraries', function ($query) use ($days) {
+        $query->havingRaw('COUNT(*) = ?', [$days]);
+    })->with(['itineraries', 'prices'])->paginate(12);
+    
+    $durationType = $days . ' Day' . ($days != 1 ? 's' : '');
+    
+    return view('tours.duration', compact('tours', 'days', 'durationType'));
+    }
 }
