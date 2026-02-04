@@ -37,15 +37,17 @@
                     <i class="fas fa-plus-circle"></i>
                     Create Tour
                 </a>
-                {{-- Example: Itineraries, Prices, Images admin views if you have them --}}
-                <a href="#" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
-                    <i class="fas fa-calendar-day"></i>
-                    Itineraries
+                <a href="{{ route('admin.contacts.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                    <i class="fas fa-envelope"></i>
+                    Contacts
                 </a>
-                <a href="#" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
-                    <i class="fas fa-tags"></i>
-                    Prices
+
+                <a href="{{ route('admin.bookings.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                    <i class="fas fa-calendar-check"></i>
+                    Bookings
                 </a>
+
+                 
                 <a href="#" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
                     <i class="fas fa-image"></i>
                     Images

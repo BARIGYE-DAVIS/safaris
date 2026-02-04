@@ -37,6 +37,7 @@ Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 // Contact
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+Route::get('/contact/success', [ContactController::class, 'success'])->name('contact.success');
 
 // About
 Route::get('/about', [PageController::class, 'about'])->name('about');
@@ -93,3 +94,5 @@ Route::get('/test-mail/{email}', function ($email) {
         return 'Failed to send email: ' . $e->getMessage();
     }
 })->where('email', '.*');
+
+require __DIR__ . '/admin.php';

@@ -2,8 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminAuthenticate;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminTourController;
+use App\Http\Controllers\ContactController;
 
 Route::get('admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
 Route::post('admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
@@ -32,4 +34,21 @@ Route::prefix('admin')->group(function () {
         ]
     ]);
 
+});
+
+Route::prefix('admin')->group(function () {
+    Route::get('/contacts', [ContactController::class, 'admin'])->name('admin.contacts.index');
+    Route::get('/contacts/{id}', [ContactController::class, 'show'])->name('admin.contacts.show');
+    Route::put('/contacts/{id}/read-status', [ContactController::class, 'updateReadStatus'])->name('admin.contacts.read-status');
+    Route::delete('/contacts/{id}', [ContactController::class, 'destroy'])->name('admin.contacts.destroy');
+    Route::post('/contacts/bulk-update', [ContactController::class, 'bulkUpdate'])->name('admin.contacts.bulk');
+    Route::get('/contacts-export', [ContactController::class, 'export'])->name('admin.contacts.export');
+    Route::get('/contacts-search', [ContactController::class, 'search'])->name('admin.contacts.search');
+
+    Route::get('/bookings', [BookingController::class, 'index'])->name('admin.bookings.index');
+    Route::get('/bookings/{id}', [BookingController::class, 'show'])->name('admin.bookings.show');
+    Route::put('/bookings/{id}/status', [BookingController::class, 'updateStatus'])->name('admin.bookings.status');
+    Route::delete('/bookings/{id}', [BookingController::class, 'destroy'])->name('admin.bookings.destroy');
+    Route::post('/bookings/bulk-update', [BookingController::class, 'bulkUpdate'])->name('admin.bookings.bulk');
+    Route::get('/bookings-export', [BookingController::class, 'export'])->name('admin.bookings.export');
 });
