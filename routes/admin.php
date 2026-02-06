@@ -6,6 +6,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminTourController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\GalleryController;
 
 Route::get('admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
 Route::post('admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
@@ -51,4 +52,15 @@ Route::prefix('admin')->group(function () {
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy'])->name('admin.bookings.destroy');
     Route::post('/bookings/bulk-update', [BookingController::class, 'bulkUpdate'])->name('admin.bookings.bulk');
     Route::get('/bookings-export', [BookingController::class, 'export'])->name('admin.bookings.export');
+
+    Route::get('/gallery', [GalleryController::class, 'admin'])->name('admin.gallery.index');
+    Route::get('/gallery/create', [GalleryController::class, 'create'])->name('admin.gallery.create');
+    Route::post('/gallery', [GalleryController::class, 'store'])->name('admin.gallery.store');
+    Route::get('/gallery/{gallery}/edit', [GalleryController::class, 'edit'])->name('admin.gallery.edit');
+    Route::put('/gallery/{gallery}', [GalleryController::class, 'update'])->name('admin.gallery.update');
+    Route::delete('/gallery/{gallery}', [GalleryController::class, 'destroy'])->name('admin.gallery.destroy');
+    Route::post('/gallery/{gallery}/toggle-visibility', [GalleryController::class, 'toggleVisibility'])->name('admin.gallery.toggle-visibility');
+    Route::delete('/gallery/bulk-delete', [GalleryController::class, 'bulkDelete'])->name('admin.gallery.bulk-delete');
+    Route::get('/gallery-export', [GalleryController::class, 'export'])->name('admin.gallery.export');
+
 });

@@ -29,6 +29,13 @@
                 </button>
             </div>
             <nav class="flex-1">
+                <a href="{{ route('admin.dashboard') }}">
+                    <div class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </div>
+                </a>
+
                 <a href="{{ route('admin.tours.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
                     <i class="fas fa-route"></i>
                     Tours
@@ -48,7 +55,7 @@
                 </a>
 
                  
-                <a href="#" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                <a href="{{ route('admin.gallery.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
                     <i class="fas fa-image"></i>
                     Images
                 </a>

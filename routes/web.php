@@ -19,8 +19,8 @@ use Illuminate\Support\Facades\Route;
 
 // Homepage - redirect to tours or create a proper home page
 Route::get('/', function () {
-    return view('home');
-})->name('home');
+    return view('index');
+})->name('index');
 
 // Tours routes
 Route::get('/tours', [TourController::class, 'index'])->name('tours.index');

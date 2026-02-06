@@ -29,7 +29,7 @@
         <div class="flex justify-between items-center h-16 md:h-20">
             <!-- Logo -->
             <div class="flex-shrink-0">
-                <a href="{{ route('home') }}" class="flex items-center space-x-2">
+                <a href="{{ route('index') }}" class="flex items-center space-x-2">
                     <img class="h-8 w-auto md:h-10" src="{{ asset('images/logo.png') }}" alt="Calm Africa Safaris Logo">
                     <div class="flex flex-col">
                         <span class="text-xl md:text-2xl font-bold text-green-700 leading-tight">Calm Africa</span>
@@ -41,8 +41,8 @@
             <!-- Desktop Navigation -->
             <div class="hidden md:block">
                 <div class="ml-10 flex items-baseline space-x-8">
-                    <a href="{{ route('home') }}" 
-                       class="nav-link {{ request()->routeIs('home') ? 'text-green-700 border-b-2 border-green-700' : 'text-gray-700 hover:text-green-700' }} px-3 py-2 text-sm font-medium transition-colors duration-200">
+                    <a href="{{ route('index') }}" 
+                       class="nav-link {{ request()->routeIs('index') ? 'text-green-700 border-b-2 border-green-700' : 'text-gray-700 hover:text-green-700' }} px-3 py-2 text-sm font-medium transition-colors duration-200">
                         Home
                     </a>
                     
@@ -272,8 +272,8 @@
         <!-- Mobile menu -->
         <div class="mobile-menu hidden md:hidden bg-white border-t border-gray-200" id="mobile-menu">
             <div class="px-2 pt-2 pb-3 space-y-1 max-h-96 overflow-y-auto">
-                <a href="{{ route('home') }}" 
-                   class="mobile-nav-link {{ request()->routeIs('home') ? 'bg-green-50 text-green-700 border-l-4 border-green-700' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }} block px-3 py-2 text-base font-medium transition-all duration-200">
+                <a href="{{ route('index') }}" 
+                   class="mobile-nav-link {{ request()->routeIs('index') ? 'bg-green-50 text-green-700 border-l-4 border-green-700' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }} block px-3 py-2 text-base font-medium transition-all duration-200">
                     🏠 Home
                 </a>
                 

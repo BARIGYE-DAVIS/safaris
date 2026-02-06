@@ -15,6 +15,7 @@ class Tour extends Model
         'category',
         'destinations',
         'type',
+        'status',
         'description',
         'included',
         'excluded',
@@ -37,6 +38,14 @@ class Tour extends Model
 
     public function prices() {
         return $this->hasMany(\App\Models\TourPrice::class);
+    }
+
+    /**
+ * Scope: Only published tours
+ */
+    public function scopePublished($query)
+    {
+    return $query->where('status', 'published');
     }
 
     public function images() {
