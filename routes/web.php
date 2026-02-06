@@ -28,7 +28,8 @@ Route::get('/tours/category/{category}', [TourController::class, 'category'])->n
 Route::get('/tours/{slug}', [TourController::class, 'show'])->name('tours.show');
 
 // Gallery
-Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery');
+Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
+Route::get('/gallery/{slug}', [GalleryController::class, 'show'])->name('gallery.show');
 
 // Blog
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');

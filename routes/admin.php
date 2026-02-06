@@ -55,6 +55,7 @@ Route::prefix('admin')->group(function () {
 
     Route::get('/gallery', [GalleryController::class, 'admin'])->name('admin.gallery.index');
     Route::get('/gallery/create', [GalleryController::class, 'create'])->name('admin.gallery.create');
+    Route::get('/gallery/{gallery}', [GalleryController::class, 'adminShow'])->name('admin.gallery.show'); 
     Route::post('/gallery', [GalleryController::class, 'store'])->name('admin.gallery.store');
     Route::get('/gallery/{gallery}/edit', [GalleryController::class, 'edit'])->name('admin.gallery.edit');
     Route::put('/gallery/{gallery}', [GalleryController::class, 'update'])->name('admin.gallery.update');

@@ -11,7 +11,7 @@
     <div class="hero-carousel relative w-full h-full">
         <!-- Slide 1 -->
         <div class="hero-slide absolute inset-0 w-full h-full opacity-100 transition-opacity duration-1000 ease-in-out" 
-             style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80'); background-size: cover; background-position: center;">
+             style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{{ asset('images/BWINDI.jpg') }}'); background-size: cover; background-position: center;">
             <div class="absolute inset-0 flex items-center justify-center">
                 <div class="text-center text-white max-w-4xl px-4 sm:px-6 lg:px-8">
                     <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in-up">
@@ -36,7 +36,7 @@
 
         <!-- Slide 2 -->
         <div class="hero-slide absolute inset-0 w-full h-full opacity-0 transition-opacity duration-1000 ease-in-out"
-             style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1549366021-9f761d040a94?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80'); background-size: cover; background-position: center;">
+             style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{{ asset('images/BIG FIVE.jpg') }}         '); background-size: cover; background-position: center;">
             <div class="absolute inset-0 flex items-center justify-center">
                 <div class="text-center text-white max-w-4xl px-4 sm:px-6 lg:px-8">
                     <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in-up">

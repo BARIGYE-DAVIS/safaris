@@ -15,7 +15,7 @@
         </p>
         <nav class="text-sm md:text-base">
             <ol class="flex justify-center space-x-2 text-green-200">
-                <li><a href="{{ route('home') }}" class="hover:text-white transition-colors">Home</a></li>
+                <li><a href="{{ route('index') }}" class="hover:text-white transition-colors">Home</a></li>
                 <li class="mx-2">/</li>
                 <li class="text-white">Tours</li>
             </ol>

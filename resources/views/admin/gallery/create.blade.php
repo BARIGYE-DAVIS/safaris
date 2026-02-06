@@ -4,6 +4,42 @@
 
 @section('content')
 <div class="container-fluid px-4 py-6">
+
+<!-- Success Message -->
+@if(session('success'))
+    <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-start animate-fade-in">
+        <svg class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="flex-1">
+            <p class="font-medium">Success!</p>
+            <p class="text-sm">{{ session('success') }}</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="ml-4 text-green-600 hover:text-green-800">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+@endif
+
+<!-- Error Messages -->
+@if(session('error'))
+    <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start animate-fade-in">
+        <svg class="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="flex-1">
+            <p class="font-medium">Error!</p>
+            <p class="text-sm">{{ session('error') }}</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="ml-4 text-red-600 hover:text-red-800">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+@endif
     <!-- Header Section -->
     <div class="mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -327,6 +363,21 @@
     .drop-zone-dragover {
         border-color: #10B981 !important;
         background-color: #F0FDF4 !important;
+    }
+
+      @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-out;
     }
 </style>
 @endpush

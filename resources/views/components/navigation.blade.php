@@ -222,8 +222,8 @@
                         </div>
                     </div>
 
-                    <a href="{{ route('gallery') }}" 
-                       class="nav-link {{ request()->routeIs('gallery') ? 'text-green-700 border-b-2 border-green-700' : 'text-gray-700 hover:text-green-700' }} px-3 py-2 text-sm font-medium transition-colors duration-200">
+                    <a href="{{ route('gallery.index') }}" 
+                       class="nav-link {{ request()->routeIs('gallery.index') ? 'text-green-700 border-b-2 border-green-700' : 'text-gray-700 hover:text-green-700' }} px-3 py-2 text-sm font-medium transition-colors duration-200">
                         Gallery
                     </a>
                     
@@ -414,8 +414,8 @@
                     </div>
                 </div>
 
-                <a href="{{ route('gallery') }}" 
-                   class="mobile-nav-link {{ request()->routeIs('gallery') ? 'bg-green-50 text-green-700 border-l-4 border-green-700' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }} block px-3 py-2 text-base font-medium transition-all duration-200">
+                <a href="{{ route('gallery.index') }}" 
+                   class="mobile-nav-link {{ request()->routeIs('gallery.index') ? 'bg-green-50 text-green-700 border-l-4 border-green-700' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }} block px-3 py-2 text-base font-medium transition-all duration-200">
                     📸 Gallery
                 </a>
                 

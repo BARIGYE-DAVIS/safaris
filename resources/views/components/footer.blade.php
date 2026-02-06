@@ -94,7 +94,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('gallery') }}" 
+                        <a href="{{ route('gallery.index') }}" 
                            class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
                             <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>

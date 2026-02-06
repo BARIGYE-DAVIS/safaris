@@ -263,7 +263,7 @@
                     <!-- Overlay on hover -->
                     <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
                         <div class="flex space-x-2">
-                            <a href="{{ route('admin.gallery.edit', $image->id) }}" 
+                            <a href="{{ route('admin.gallery.edit', $image) }}"
                                class="w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center text-white transition-colors"
                                title="Edit">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,7 +271,7 @@
                                 </svg>
                             </a>
 
-                            <a href="{{ route('gallery.show', $image->slug) }}" 
+                            <a href="{{ route('admin.gallery.show', $image->slug) }}" 
                                target="_blank"
                                class="w-10 h-10 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center text-white transition-colors"
                                title="View">
