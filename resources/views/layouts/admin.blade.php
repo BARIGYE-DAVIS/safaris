@@ -59,6 +59,19 @@
                     <i class="fas fa-image"></i>
                     Images
                 </a>
+                    <a href="{{ route('admin.countries.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                        <i class="fas fa-globe"></i>
+                        Countries
+                    </a>
+                    <a href="{{ route('admin.activities.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                        <i class="fas fa-hiking"></i>
+                        Activities
+                    </a>
+                    <a href="{{ route('admin.destinations.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Destinations
+                    </a>
+                        
                 <form method="POST" action="{{ route('admin.logout') }}" class="m-0 mt-auto">
                     @csrf
                     <button class="w-full px-6 py-3 text-left bg-indigo-900 hover:bg-indigo-700 flex items-center gap-3 sidebar-link" type="submit">
