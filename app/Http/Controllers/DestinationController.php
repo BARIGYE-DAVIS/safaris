@@ -230,38 +230,62 @@ class DestinationController extends Controller
     /**
      * PUBLIC: Display list of destinations
      */
-    public function index(Request $request)
-    {
-        $query = Destination::with('country')->active();
+/**
+ * PUBLIC: Display list of destinations
+ */
+public function index(Request $request)
+{
+    $query = Destination::with('country')->where('is_active', true);
 
-        // Filter by country
-        if ($request->filled('country')) {
-            $query->whereHas('country', function ($q) use ($request) {
-                $q->where('slug', $request->country)
-                  ->orWhere('code', $request->country);
-            });
-        }
-
-        // Show only popular
-        if ($request->filled('popular')) {
-            $query->popular();
-        }
-
-        // Search
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('description', 'like', "%{$request->search}%");
-            });
-        }
-
-        $destinations = $query->ordered()->paginate(12);
-        $countries = Country::active()->ordered()->get();
-        $popularDestinations = Destination::active()->popular()->ordered()->limit(6)->get();
-
-        return view('destinations.index', compact('destinations', 'countries', 'popularDestinations'));
+    // Filter by country
+    if ($request->filled('country')) {
+        $query->whereHas('country', function ($q) use ($request) {
+            $q->where('code', $request->country);
+        });
     }
 
+    // Show only popular
+    if ($request->filled('popular')) {
+        $query->where('is_popular', true);
+    }
+
+    // Search
+    if ($request->filled('search')) {
+        $query->where(function ($q) use ($request) {
+            $q->where('name', 'like', "%{$request->search}%")
+              ->orWhere('description', 'like', "%{$request->search}%");
+        });
+    }
+
+    $destinations = $query->orderBy('sort_order')->orderBy('name')->paginate(12);
+    $countries = Country::where('is_active', true)->orderBy('name')->get();
+    
+    // Get popular destinations - prioritize Uganda destinations (at least 5)
+    $ugandaDestinations = Destination::where('is_active', true)
+        ->whereHas('country', function($query) {
+            $query->where('code', 'UG'); // Uganda
+        })
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->limit(5)
+        ->get();
+    
+    // Get other popular destinations to fill up to 6 total
+    $otherPopular = Destination::where('is_active', true)
+        ->where('is_popular', true)
+        ->whereDoesntHave('country', function($query) {
+            $query->where('code', 'UG');
+        })
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->limit(1)
+        ->get();
+    
+    // Merge Uganda destinations with other popular ones
+    $popularDestinations = $ugandaDestinations->merge($otherPopular);
+
+    return view('destinations.index', compact('destinations', 'countries', 'popularDestinations'));
+}
     /**
      * PUBLIC: Show single destination
      */
