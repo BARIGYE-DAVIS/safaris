@@ -79,6 +79,12 @@ class Destination extends Model
         return $query->orderBy('sort_order')->orderBy('name');
     }
 
+        public function activities()
+    {
+        return $this->hasMany(Activity::class);
+    }
+
+    
     /**
      * Scope: Filter by country
      */

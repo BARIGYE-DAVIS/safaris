@@ -20,6 +20,7 @@ class Activity extends Model
         'is_popular',
         'is_active',
         'sort_order',
+        'destination_id',
     ];
 
     protected $casts = [
@@ -120,6 +121,12 @@ class Activity extends Model
         return null;
     }
 
+
+    // Add this to the relationships section
+public function destination()
+{
+    return $this->belongsTo(Destination::class);
+}
     /**
      * Get image URL
      */

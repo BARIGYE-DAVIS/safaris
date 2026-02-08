@@ -221,6 +221,11 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <a href="{{ route('destinations.index') }}" 
+                       class="nav-link {{ request()->routeIs('destinations.*') ? 'text-green-700 border-b-2 border-green-700' : 'text-gray-700 hover:text-green-700' }} px-3 py-2 text-sm font-medium transition-colors duration-200">
+                        Destinations
+                    </a>
 
                     <a href="{{ route('gallery.index') }}" 
                        class="nav-link {{ request()->routeIs('gallery.index') ? 'text-green-700 border-b-2 border-green-700' : 'text-gray-700 hover:text-green-700' }} px-3 py-2 text-sm font-medium transition-colors duration-200">

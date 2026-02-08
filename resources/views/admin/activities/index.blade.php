@@ -1,221 +1,228 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit Destination')
+@section('title', 'Activities')
 
 @section('content')
-<div class="container-fluid">
+<div class="container mx-auto px-4 py-6">
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">Edit Destination: {{ $destination->name }}</h1>
-        <a href="{{ route('admin.destinations.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to List
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Activities</h1>
+        <a href="{{ route('admin.activities.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg flex items-center gap-2 transition shadow-md">
+            <i class="fas fa-plus"></i> Add New Activity
         </a>
     </div>
 
-    <!-- Edit Form -->
-    <div class="card shadow">
-        <div class="card-body">
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-md p-5 mb-6">
+        <form method="GET" action="{{ route('admin.activities.index') }}">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div>
+                    <input type="text" name="search" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Search activities..." value="{{ request('search') }}">
+                </div>
+                <div>
+                    <select name="category_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <option value="">All Categories</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
                         @endforeach
-                    </ul>
+                    </select>
                 </div>
-            @endif
-
-            @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-
-            <form action="{{ route('admin.destinations.update', $destination) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PUT')
-
-                <div class="row">
-                    <!-- Country -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="country_id">Country <span class="text-danger">*</span></label>
-                            <select name="country_id" id="country_id" class="form-control @error('country_id') is-invalid @enderror" required>
-                                <option value="">Select Country</option>
-                                @foreach($countries as $country)
-                                    <option value="{{ $country->id }}" {{ old('country_id', $destination->country_id) == $country->id ? 'selected' : '' }}>
-                                        {{ $country->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('country_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <!-- Name -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="name">Destination Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $destination->name) }}" required>
-                            @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <!-- Slug -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="slug">Slug</label>
-                            <input type="text" name="slug" id="slug" class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug', $destination->slug) }}" placeholder="auto-generated if empty">
-                            @error('slug')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="form-text text-muted">URL-friendly version (leave empty to auto-generate)</small>
-                        </div>
-                    </div>
-
-                    <!-- Sort Order -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="sort_order">Sort Order</label>
-                            <input type="number" name="sort_order" id="sort_order" class="form-control @error('sort_order') is-invalid @enderror" value="{{ old('sort_order', $destination->sort_order) }}" min="0">
-                            @error('sort_order')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="form-text text-muted">Lower numbers appear first</small>
-                        </div>
-                    </div>
-
-                    <!-- Description -->
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="description">Description</label>
-                            <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror" rows="5">{{ old('description', $destination->description) }}</textarea>
-                            @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="form-text text-muted">Brief description of the destination</small>
-                        </div>
-                    </div>
-
-                    <!-- Current Image -->
-                    @if($destination->image)
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label>Current Image</label>
-                            <div>
-                                <img src="{{ asset('storage/' . $destination->image) }}" alt="{{ $destination->name }}" style="max-width: 300px; max-height: 200px;" class="img-thumbnail">
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-
-                    <!-- Image -->
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="image">Destination Image {{ $destination->image ? '(Upload new to replace)' : '' }}</label>
-                            <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror" accept="image/*">
-                            @error('image')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="form-text text-muted">Recommended size: 1200x800px (Max: 2MB)</small>
-                            <div id="image-preview" class="mt-2"></div>
-                        </div>
-                    </div>
-
-                    <!-- Popular -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="is_popular" name="is_popular" {{ old('is_popular', $destination->is_popular) ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="is_popular">Mark as Popular</label>
-                            </div>
-                            <small class="form-text text-muted">Popular destinations are featured prominently</small>
-                        </div>
-                    </div>
-
-                    <!-- Active -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" {{ old('is_active', $destination->is_active) ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="is_active">Active</label>
-                            </div>
-                            <small class="form-text text-muted">Inactive destinations won't be visible on the website</small>
-                        </div>
-                    </div>
+                <div>
+                    <select name="destination_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <option value="">All Destinations</option>
+                        @foreach($destinations as $destination)
+                            <option value="{{ $destination->id }}" {{ request('destination_id') == $destination->id ? 'selected' : '' }}>
+                                {{ $destination->name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
-
-                <!-- Submit Buttons -->
-                <div class="form-group mt-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Update Destination
+                <div>
+                    <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <option value="">All Status</option>
+                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition flex-1">
+                        Filter
                     </button>
-                    <a href="{{ route('admin.destinations.index') }}" class="btn btn-secondary">
-                        Cancel
+                    <a href="{{ route('admin.activities.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                        Reset
                     </a>
-                    <button type="button" class="btn btn-danger float-right" data-toggle="modal" data-target="#deleteModal">
-                        <i class="fas fa-trash"></i> Delete Destination
-                    </button>
                 </div>
-            </form>
+            </div>
+        </form>
+    </div>
+
+    <!-- Activities Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-5">
+            @if(session('success'))
+                <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
+                    <p class="flex items-center gap-2">
+                        <i class="fas fa-check-circle"></i>
+                        {{ session('success') }}
+                    </p>
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
+                    <p class="flex items-center gap-2">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ session('error') }}
+                    </p>
+                </div>
+            @endif
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left">
+                                <input type="checkbox" id="select-all" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Icon</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Destination</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Slug</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Popular</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($activities as $activity)
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4">
+                                <input type="checkbox" class="select-item rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" value="{{ $activity->id }}">
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($activity->icon)
+                                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600 text-xl">
+                                        <i class="{{ $activity->icon }}"></i>
+                                    </div>
+                                @elseif($activity->image)
+                                    <img src="{{ asset('storage/' . $activity->image) }}" alt="{{ $activity->name }}" class="w-10 h-10 object-cover rounded-lg shadow">
+                                @else
+                                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-hiking text-gray-400"></i>
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-semibold text-gray-900">{{ $activity->name }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($activity->category)
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                        <i class="{{ $activity->category->icon }} mr-1"></i>
+                                        {{ $activity->category->name }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-400 text-sm">No category</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($activity->destination)
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                        {{ $activity->destination->name }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-400 text-sm">No destination</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-xs text-gray-500">{{ $activity->slug }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $activity->is_popular ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800' }}">
+                                    {{ $activity->is_popular ? '⭐ Popular' : 'Regular' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $activity->is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                    {{ $activity->is_active ? '✓ Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium space-x-2">
+                                <a href="{{ route('admin.activities.edit', $activity) }}" class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ route('admin.activities.toggle-status', $activity) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="inline-flex items-center px-3 py-1 {{ $activity->is_active ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700' }} text-white rounded transition" title="Toggle Status">
+                                        <i class="fas fa-{{ $activity->is_active ? 'eye-slash' : 'eye' }}"></i>
+                                    </button>
+                                </form>
+                                <form action="{{ route('admin.activities.toggle-popular', $activity) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="inline-flex items-center px-3 py-1 {{ $activity->is_popular ? 'bg-gray-600 hover:bg-gray-700' : 'bg-yellow-600 hover:bg-yellow-700' }} text-white rounded transition" title="Toggle Popular">
+                                        <i class="fas fa-star"></i>
+                                    </button>
+                                </form>
+                                <form action="{{ route('admin.activities.destroy', $activity) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="9" class="px-6 py-12 text-center text-gray-500">
+                                <i class="fas fa-hiking text-4xl mb-3 text-gray-300"></i>
+                                <p class="text-lg">No activities found</p>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4">
+                {{ $activities->links() }}
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete <strong>{{ $destination->name }}</strong>?</p>
-                <p class="text-danger">This action cannot be undone!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <form action="{{ route('admin.destinations.destroy', $destination) }}" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
+    <!-- Bulk Actions -->
+    <div class="mt-4">
+        <form action="{{ route('admin.activities.bulk-delete') }}" method="POST" id="bulk-delete-form" onsubmit="return confirm('Are you sure?')">
+            @csrf
+            <input type="hidden" name="ids" id="bulk-ids">
+            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg flex items-center gap-2 transition">
+                <i class="fas fa-trash"></i> Delete Selected
+            </button>
+        </form>
     </div>
 </div>
 
 @push('scripts')
 <script>
-    // Auto-generate slug from name (only if slug is empty)
-    document.getElementById('name').addEventListener('input', function() {
-        let slugField = document.getElementById('slug');
-        if (slugField.value === '' || slugField.dataset.autoGenerated === 'true') {
-            let slug = this.value.toLowerCase()
-                .replace(/[^\w ]+/g, '')
-                .replace(/ +/g, '-');
-            slugField.value = slug;
-            slugField.dataset.autoGenerated = 'true';
-        }
+    // Select all checkboxes
+    document.getElementById('select-all').addEventListener('change', function() {
+        let checkboxes = document.querySelectorAll('.select-item');
+        checkboxes.forEach(cb => cb.checked = this.checked);
     });
 
-    // Image preview
-    document.getElementById('image').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('image-preview').innerHTML = 
-                    '<div class="mt-2"><strong>New Image Preview:</strong><br>' +
-                    '<img src="' + e.target.result + '" style="max-width: 300px; max-height: 200px;" class="img-thumbnail"></div>';
-            }
-            reader.readAsDataURL(file);
+    // Bulk delete
+    document.getElementById('bulk-delete-form').addEventListener('submit', function(e) {
+        let selected = Array.from(document.querySelectorAll('.select-item:checked')).map(cb => cb.value);
+        if (selected.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one activity');
+            return false;
         }
+        document.getElementById('bulk-ids').value = JSON.stringify(selected);
     });
 </script>
 @endpush

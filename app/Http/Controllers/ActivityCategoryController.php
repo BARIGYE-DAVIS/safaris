@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ActivityCategoryController extends Controller
 {
@@ -16,7 +17,8 @@ class ActivityCategoryController extends Controller
 
         // Search
         if ($request->filled('search')) {
-            $query->where('name', 'like', "%{$request->search}%");
+            $query->where('name', 'like', "%{$request->search}%")
+                  ->orWhere('description', 'like', "%{$request->search}%");
         }
 
         // Filter by status
@@ -24,9 +26,10 @@ class ActivityCategoryController extends Controller
             $query->where('is_active', $request->status === 'active');
         }
 
-        $categories = $query->ordered()->paginate(15);
+        // Fixed variable name from 'categories' to 'activityCategories'
+        $activityCategories = $query->orderBy('sort_order')->orderBy('name')->paginate(15);
 
-        return view('admin.activity-categories.index', compact('categories'));
+        return view('admin.activity-categories.index', compact('activityCategories'));
     }
 
     /**
@@ -44,10 +47,17 @@ class ActivityCategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|unique:activity_categories,slug',
+            'description' => 'nullable|string',
             'icon' => 'nullable|string|max:255',
             'is_active' => 'boolean',
-            'sort_order' => 'nullable|integer',
+            'sort_order' => 'nullable|integer|min:0',
         ]);
+
+        // Auto-generate slug if not provided
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
 
         $validated['is_active'] = $request->has('is_active');
         $validated['sort_order'] = $validated['sort_order'] ?? 0;
@@ -73,10 +83,17 @@ class ActivityCategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|unique:activity_categories,slug,' . $activityCategory->id,
+            'description' => 'nullable|string',
             'icon' => 'nullable|string|max:255',
             'is_active' => 'boolean',
-            'sort_order' => 'nullable|integer',
+            'sort_order' => 'nullable|integer|min:0',
         ]);
+
+        // Auto-generate slug if not provided
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
 
         $validated['is_active'] = $request->has('is_active');
         $validated['sort_order'] = $validated['sort_order'] ?? $activityCategory->sort_order;
@@ -122,16 +139,29 @@ class ActivityCategoryController extends Controller
      */
     public function adminBulkDelete(Request $request)
     {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:activity_categories,id'
-        ]);
+        $ids = json_decode($request->ids);
 
-        ActivityCategory::whereIn('id', $request->ids)
-                       ->whereDoesntHave('activities')
-                       ->delete();
+        if (empty($ids)) {
+            return redirect()->back()->with('error', 'No categories selected!');
+        }
 
-        return back()->with('success', 'Selected categories deleted successfully!');
+        $categories = ActivityCategory::whereIn('id', $ids)->get();
+        $deleted = 0;
+
+        foreach ($categories as $category) {
+            // Only delete if no activities exist
+            if ($category->activities()->count() === 0) {
+                $category->delete();
+                $deleted++;
+            }
+        }
+
+        if ($deleted === 0) {
+            return redirect()->back()->with('error', 'Cannot delete categories with existing activities!');
+        }
+
+        return redirect()->back()
+                        ->with('success', "{$deleted} category(ies) deleted successfully!");
     }
 
     /**
@@ -139,14 +169,14 @@ class ActivityCategoryController extends Controller
      */
     public function adminUpdateOrder(Request $request)
     {
-        $request->validate([
-            'orders' => 'required|array',
-            'orders.*.id' => 'required|exists:activity_categories,id',
-            'orders.*.sort_order' => 'required|integer',
-        ]);
+        $order = $request->order;
 
-        foreach ($request->orders as $order) {
-            ActivityCategory::where('id', $order['id'])->update(['sort_order' => $order['sort_order']]);
+        if (empty($order)) {
+            return response()->json(['success' => false, 'message' => 'No order data provided']);
+        }
+
+        foreach ($order as $index => $id) {
+            ActivityCategory::where('id', $id)->update(['sort_order' => $index]);
         }
 
         return response()->json(['success' => true, 'message' => 'Order updated successfully!']);
@@ -157,11 +187,12 @@ class ActivityCategoryController extends Controller
      */
     public function index()
     {
-        $categories = ActivityCategory::active()
+        $categories = ActivityCategory::where('is_active', true)
                                      ->withCount(['activities' => function ($query) {
                                          $query->where('is_active', true);
                                      }])
-                                     ->ordered()
+                                     ->orderBy('sort_order')
+                                     ->orderBy('name')
                                      ->get();
 
         return view('activity-categories.index', compact('categories'));
@@ -177,8 +208,9 @@ class ActivityCategoryController extends Controller
         }
 
         $activities = $activityCategory->activities()
-                                      ->active()
-                                      ->ordered()
+                                      ->where('is_active', true)
+                                      ->orderBy('sort_order')
+                                      ->orderBy('name')
                                       ->paginate(12);
 
         return view('activity-categories.show', compact('activityCategory', 'activities'));
@@ -189,7 +221,10 @@ class ActivityCategoryController extends Controller
      */
     public function getCategories()
     {
-        $categories = ActivityCategory::active()->ordered()->get();
+        $categories = ActivityCategory::where('is_active', true)
+                                     ->orderBy('sort_order')
+                                     ->orderBy('name')
+                                     ->get();
         
         return response()->json($categories);
     }
@@ -199,11 +234,13 @@ class ActivityCategoryController extends Controller
      */
     public function getActivitiesByCategory($categoryId)
     {
-        $activities = ActivityCategory::findOrFail($categoryId)
-                                     ->activities()
-                                     ->active()
-                                     ->ordered()
-                                     ->get();
+        $category = ActivityCategory::findOrFail($categoryId);
+        
+        $activities = $category->activities()
+                              ->where('is_active', true)
+                              ->orderBy('sort_order')
+                              ->orderBy('name')
+                              ->get();
 
         return response()->json($activities);
     }
