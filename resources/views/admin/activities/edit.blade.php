@@ -3,279 +3,911 @@
 @section('title', 'Edit Activity')
 
 @section('content')
-<div class="container-fluid">
+<div class="container mx-auto px-4 py-6">
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">Edit Activity: {{ $activity->name }}</h1>
-        <a href="{{ route('admin.activities.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to List
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Edit Activity: {{ $activity->name }}</h1>
+        <a href="{{ route('admin.activities.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back to List
         </a>
     </div>
 
+    <!-- Success Message -->
+    @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <!-- Error Messages -->
+    @if($errors->any())
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            <ul class="list-disc list-inside">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <!-- Edit Form -->
-    <div class="card shadow">
-        <div class="card-body">
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+    <form action="{{ route('admin.activities.update', $activity) }}" method="POST" enctype="multipart/form-data" class="bg-white shadow-lg rounded-lg">
+        @csrf
+        @method('PUT')
 
-            @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
+        <!-- Tabs Navigation -->
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <button type="button" class="tab-button active px-6 py-3 border-b-2 font-medium text-sm" data-tab="basic">
+                    Basic Information
+                </button>
+                <button type="button" class="tab-button px-6 py-3 border-b-2 font-medium text-sm" data-tab="detailed">
+                    Detailed Content
+                </button>
+                <button type="button" class="tab-button px-6 py-3 border-b-2 font-medium text-sm" data-tab="practical">
+                    Practical Info
+                </button>
+                <button type="button" class="tab-button px-6 py-3 border-b-2 font-medium text-sm" data-tab="pricing">
+                    Pricing & Booking
+                </button>
+                <button type="button" class="tab-button px-6 py-3 border-b-2 font-medium text-sm" data-tab="images">
+                    Images & Media
+                </button>
+                <button type="button" class="tab-button px-6 py-3 border-b-2 font-medium text-sm" data-tab="seo">
+                    SEO & Settings
+                </button>
+            </nav>
+        </div>
 
-            <form action="{{ route('admin.activities.update', $activity) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PUT')
-
-                <div class="row">
+        <div class="p-6">
+            <!-- TAB 1: Basic Information -->
+            <div id="tab-basic" class="tab-content">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Basic Information</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Name -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="name">Activity Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $activity->name) }}" required>
-                            @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <!-- Category -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="category_id">Category</label>
-                            <select name="category_id" id="category_id" class="form-control @error('category_id') is-invalid @enderror">
-                                <option value="">Select Category (Optional)</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" {{ old('category_id', $activity->category_id) == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('category_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Activity Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="name" id="name" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('name') border-red-500 @enderror"
+                               value="{{ old('name', $activity->name) }}" placeholder="e.g., Gorilla Trekking">
+                        @error('name')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Slug -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="slug">Slug</label>
-                            <input type="text" name="slug" id="slug" class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug', $activity->slug) }}" placeholder="auto-generated if empty">
-                            @error('slug')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="form-text text-muted">URL-friendly version (leave empty to auto-generate)</small>
-                        </div>
+                    <div>
+                        <label for="slug" class="block text-sm font-medium text-gray-700 mb-2">
+                            URL Slug
+                        </label>
+                        <input type="text" name="slug" id="slug"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('slug') border-red-500 @enderror"
+                               value="{{ old('slug', $activity->slug) }}" placeholder="auto-generated-from-name">
+                        @error('slug')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                        <p class="text-gray-500 text-xs mt-1">Leave empty to auto-generate from name</p>
+                    </div>
+
+                    <!-- Category -->
+                    <div>
+                        <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">
+                            Category
+                        </label>
+                        <select name="category_id" id="category_id"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('category_id') border-red-500 @enderror">
+                            <option value="">Select Category (Optional)</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ old('category_id', $activity->category_id) == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('category_id')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Destination -->
+                    <div>
+                        <label for="destination_id" class="block text-sm font-medium text-gray-700 mb-2">
+                            Primary Destination
+                        </label>
+                        <select name="destination_id" id="destination_id"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('destination_id') border-red-500 @enderror">
+                            <option value="">Select Destination (Optional)</option>
+                            @foreach($destinations as $destination)
+                                <option value="{{ $destination->id }}" {{ old('destination_id', $activity->destination_id) == $destination->id ? 'selected' : '' }}>
+                                    {{ $destination->name }} ({{ $destination->country->name }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('destination_id')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Sort Order -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="sort_order">Sort Order</label>
-                            <input type="number" name="sort_order" id="sort_order" class="form-control @error('sort_order') is-invalid @enderror" value="{{ old('sort_order', $activity->sort_order) }}" min="0">
-                            @error('sort_order')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="form-text text-muted">Lower numbers appear first</small>
-                        </div>
+                    <div>
+                        <label for="sort_order" class="block text-sm font-medium text-gray-700 mb-2">
+                            Sort Order
+                        </label>
+                        <input type="number" name="sort_order" id="sort_order" min="0"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                               value="{{ old('sort_order', $activity->sort_order) }}">
+                        <p class="text-gray-500 text-xs mt-1">Lower numbers appear first</p>
                     </div>
+                </div>
 
-                    <!-- Description -->
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="description">Description</label>
-                            <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror" rows="5">{{ old('description', $activity->description) }}</textarea>
-                            @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="form-text text-muted">Brief description of the activity</small>
-                        </div>
+                <!-- Description -->
+                <div class="mt-6">
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                        Short Description
+                    </label>
+                    <textarea name="description" id="description" rows="4"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('description') border-red-500 @enderror"
+                              placeholder="Brief overview of the activity (2-3 sentences)">{{ old('description', $activity->description) }}</textarea>
+                    @error('description')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Countries -->
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Available in Countries
+                    </label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        @foreach($countries as $country)
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" name="countries[]" value="{{ $country->id }}"
+                                   class="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                   {{ in_array($country->id, old('countries', $selectedCountries)) ? 'checked' : '' }}>
+                            <span class="text-sm text-gray-700">{{ $country->flag_icon }} {{ $country->name }}</span>
+                        </label>
+                        @endforeach
                     </div>
+                </div>
+            </div>
 
-                    <!-- Countries -->
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label>Available in Countries</label>
-                            <div class="row">
-                                @foreach($countries as $country)
-                                <div class="col-md-3">
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="country_{{ $country->id }}" name="countries[]" value="{{ $country->id }}" {{ in_array($country->id, old('countries', $selectedCountries)) ? 'checked' : '' }}>
-                                        <label class="custom-control-label" for="country_{{ $country->id }}">
-                                            {{ $country->name }}
-                                        </label>
-                                    </div>
+            <!-- TAB 2: Detailed Content -->
+            <div id="tab-detailed" class="tab-content hidden">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Detailed Content</h2>
+
+                <!-- Overview -->
+                <div class="mb-6">
+                    <label for="overview" class="block text-sm font-medium text-gray-700 mb-2">
+                        Overview
+                    </label>
+                    <textarea name="overview" id="overview" rows="5"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Comprehensive overview of the activity...">{{ old('overview', $activity->overview) }}</textarea>
+                </div>
+
+                <!-- What to Expect -->
+                <div class="mb-6">
+                    <label for="what_to_expect" class="block text-sm font-medium text-gray-700 mb-2">
+                        What to Expect
+                    </label>
+                    <textarea name="what_to_expect" id="what_to_expect" rows="6"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="What participants can expect during this activity...">{{ old('what_to_expect', $activity->what_to_expect) }}</textarea>
+                </div>
+
+                <!-- Highlights -->
+                <div class="mb-6">
+                    <label for="highlights" class="block text-sm font-medium text-gray-700 mb-2">
+                        Highlights
+                    </label>
+                    <textarea name="highlights" id="highlights" rows="4"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Key highlights and unique features...">{{ old('highlights', $activity->highlights) }}</textarea>
+                </div>
+
+                <!-- Dynamic Fields (Inclusions, Exclusions, etc.) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Inclusions -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            What's Included
+                        </label>
+                        <div id="inclusions-container">
+                            @if(old('inclusions', $activity->inclusions))
+                                @foreach(old('inclusions', $activity->inclusions ?? []) as $inclusion)
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" name="inclusions[]" value="{{ $inclusion }}"
+                                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
+                                           placeholder="e.g., Professional guide">
+                                    <button type="button" class="remove-field bg-red-500 text-white px-3 py-2 rounded-lg">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
                                 </div>
                                 @endforeach
-                            </div>
-                            <small class="form-text text-muted">Select countries where this activity is available</small>
+                            @else
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" name="inclusions[]" 
+                                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
+                                           placeholder="e.g., Professional guide">
+                                    <button type="button" class="add-field bg-green-500 text-white px-3 py-2 rounded-lg" data-container="inclusions-container">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            @endif
                         </div>
+                        <button type="button" class="add-field mt-2 text-green-600 text-sm" data-container="inclusions-container">
+                            + Add More
+                        </button>
                     </div>
 
-                    <!-- Current Icon -->
-                    @if($activity->icon)
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Current Icon</label>
-                            <div>
-                                <img src="{{ asset('storage/' . $activity->icon) }}" alt="{{ $activity->name }}" style="max-width: 100px; max-height: 100px;" class="img-thumbnail">
-                            </div>
+                    <!-- Exclusions -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            What's NOT Included
+                        </label>
+                        <div id="exclusions-container">
+                            @if(old('exclusions', $activity->exclusions))
+                                @foreach(old('exclusions', $activity->exclusions ?? []) as $exclusion)
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" name="exclusions[]" value="{{ $exclusion }}"
+                                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
+                                           placeholder="e.g., Personal expenses">
+                                    <button type="button" class="remove-field bg-red-500 text-white px-3 py-2 rounded-lg">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </div>
+                                @endforeach
+                            @else
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" name="exclusions[]" 
+                                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
+                                           placeholder="e.g., Personal expenses">
+                                    <button type="button" class="add-field bg-green-500 text-white px-3 py-2 rounded-lg" data-container="exclusions-container">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            @endif
                         </div>
+                        <button type="button" class="add-field mt-2 text-green-600 text-sm" data-container="exclusions-container">
+                            + Add More
+                        </button>
                     </div>
-                    @endif
 
-                    <!-- Current Image -->
-                    @if($activity->image)
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Current Image</label>
-                            <div>
-                                <img src="{{ asset('storage/' . $activity->image) }}" alt="{{ $activity->name }}" style="max-width: 300px; max-height: 200px;" class="img-thumbnail">
-                            </div>
+                    <!-- Equipment Provided -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Equipment Provided
+                        </label>
+                        <div id="equipment-container">
+                            @if(old('equipment_provided', $activity->equipment_provided))
+                                @foreach(old('equipment_provided', $activity->equipment_provided ?? []) as $equipment)
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" name="equipment_provided[]" value="{{ $equipment }}"
+                                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg">
+                                    <button type="button" class="remove-field bg-red-500 text-white px-3 py-2 rounded-lg">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </div>
+                                @endforeach
+                            @else
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" name="equipment_provided[]" 
+                                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg">
+                                    <button type="button" class="add-field bg-green-500 text-white px-3 py-2 rounded-lg" data-container="equipment-container">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            @endif
                         </div>
+                        <button type="button" class="add-field mt-2 text-green-600 text-sm" data-container="equipment-container">
+                            + Add More
+                        </button>
                     </div>
-                    @endif
 
+                    <!-- What to Bring -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            What to Bring
+                        </label>
+                        <div id="bring-container">
+                            @if(old('what_to_bring', $activity->what_to_bring))
+                                @foreach(old('what_to_bring', $activity->what_to_bring ?? []) as $item)
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" name="what_to_bring[]" value="{{ $item }}"
+                                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg">
+                                    <button type="button" class="remove-field bg-red-500 text-white px-3 py-2 rounded-lg">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </div>
+                                @endforeach
+                            @else
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" name="what_to_bring[]" 
+                                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg">
+                                    <button type="button" class="add-field bg-green-500 text-white px-3 py-2 rounded-lg" data-container="bring-container">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+                        <button type="button" class="add-field mt-2 text-green-600 text-sm" data-container="bring-container">
+                            + Add More
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: Practical Info -->
+            <div id="tab-practical" class="tab-content hidden">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Practical Information</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <!-- Duration -->
+                    <div>
+                        <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">
+                            Duration
+                        </label>
+                        <input type="text" name="duration" id="duration"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                               value="{{ old('duration', $activity->duration) }}" placeholder="e.g., Full Day, 2-8 hours">
+                    </div>
+
+                    <!-- Difficulty Level -->
+                    <div>
+                        <label for="difficulty_level" class="block text-sm font-medium text-gray-700 mb-2">
+                            Difficulty Level
+                        </label>
+                        <select name="difficulty_level" id="difficulty_level"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            <option value="">Select Difficulty</option>
+                            <option value="easy" {{ old('difficulty_level', $activity->difficulty_level) == 'easy' ? 'selected' : '' }}>Easy</option>
+                            <option value="moderate" {{ old('difficulty_level', $activity->difficulty_level) == 'moderate' ? 'selected' : '' }}>Moderate</option>
+                            <option value="challenging" {{ old('difficulty_level', $activity->difficulty_level) == 'challenging' ? 'selected' : '' }}>Challenging</option>
+                            <option value="extreme" {{ old('difficulty_level', $activity->difficulty_level) == 'extreme' ? 'selected' : '' }}>Extreme</option>
+                        </select>
+                    </div>
+
+                    <!-- Min Age -->
+                    <div>
+                        <label for="min_age" class="block text-sm font-medium text-gray-700 mb-2">
+                            Minimum Age
+                        </label>
+                        <input type="number" name="min_age" id="min_age" min="0" max="100"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                               value="{{ old('min_age', $activity->min_age) }}" placeholder="e.g., 15">
+                    </div>
+
+                    <!-- Max Group Size -->
+                    <div>
+                        <label for="max_group_size" class="block text-sm font-medium text-gray-700 mb-2">
+                            Max Group Size
+                        </label>
+                        <input type="number" name="max_group_size" id="max_group_size" min="1"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                               value="{{ old('max_group_size', $activity->max_group_size) }}" placeholder="e.g., 8">
+                    </div>
+                </div>
+
+                <!-- Regulations -->
+                <div class="mb-6">
+                    <label for="regulations" class="block text-sm font-medium text-gray-700 mb-2">
+                        Rules & Regulations
+                    </label>
+                    <textarea name="regulations" id="regulations" rows="5"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                              placeholder="Important rules, permits, and regulations...">{{ old('regulations', $activity->regulations) }}</textarea>
+                </div>
+
+                <!-- Safety Info -->
+                <div class="mb-6">
+                    <label for="safety_info" class="block text-sm font-medium text-gray-700 mb-2">
+                        Safety Information
+                    </label>
+                    <textarea name="safety_info" id="safety_info" rows="5"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                              placeholder="Safety guidelines and precautions...">{{ old('safety_info', $activity->safety_info) }}</textarea>
+                </div>
+
+                <!-- Health Requirements -->
+                <div class="mb-6">
+                    <label for="health_requirements" class="block text-sm font-medium text-gray-700 mb-2">
+                        Health Requirements
+                    </label>
+                    <textarea name="health_requirements" id="health_requirements" rows="4"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                              placeholder="Medical requirements, vaccinations, fitness level...">{{ old('health_requirements', $activity->health_requirements) }}</textarea>
+                </div>
+
+                <!-- Cultural Experience -->
+                <div class="mb-6">
+                    <label for="cultural_experience" class="block text-sm font-medium text-gray-700 mb-2">
+                        Cultural Experience
+                    </label>
+                    <textarea name="cultural_experience" id="cultural_experience" rows="4"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                              placeholder="Cultural aspects and community involvement...">{{ old('cultural_experience', $activity->cultural_experience) }}</textarea>
+                </div>
+
+                <!-- Conservation Info -->
+                <div class="mb-6">
+                    <label for="conservation_info" class="block text-sm font-medium text-gray-700 mb-2">
+                        Conservation & Sustainability
+                    </label>
+                    <textarea name="conservation_info" id="conservation_info" rows="4"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                              placeholder="Conservation efforts and sustainable practices...">{{ old('conservation_info', $activity->conservation_info) }}</textarea>
+                </div>
+            </div>
+
+            <!-- TAB 4: Pricing & Booking -->
+            <div id="tab-pricing" class="tab-content hidden">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Pricing & Booking Information</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <!-- Price From -->
+                    <div>
+                        <label for="price_from" class="block text-sm font-medium text-gray-700 mb-2">
+                            Price From
+                        </label>
+                        <input type="number" name="price_from" id="price_from" step="0.01" min="0"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                               value="{{ old('price_from', $activity->price_from) }}" placeholder="e.g., 150.00">
+                    </div>
+
+                    <!-- Price To -->
+                    <div>
+                        <label for="price_to" class="block text-sm font-medium text-gray-700 mb-2">
+                            Price To
+                        </label>
+                        <input type="number" name="price_to" id="price_to" step="0.01" min="0"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                               value="{{ old('price_to', $activity->price_to) }}" placeholder="e.g., 300.00">
+                    </div>
+
+                    <!-- Currency -->
+                    <div>
+                        <label for="currency" class="block text-sm font-medium text-gray-700 mb-2">
+                            Currency
+                        </label>
+                        <select name="currency" id="currency"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            <option value="USD" {{ old('currency', $activity->currency) == 'USD' ? 'selected' : '' }}>USD ($)</option>
+                            <option value="EUR" {{ old('currency', $activity->currency) == 'EUR' ? 'selected' : '' }}>EUR (€)</option>
+                            <option value="GBP" {{ old('currency', $activity->currency) == 'GBP' ? 'selected' : '' }}>GBP (£)</option>
+                            <option value="UGX" {{ old('currency', $activity->currency) == 'UGX' ? 'selected' : '' }}>UGX (USh)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Special Notes -->
+                <div class="mb-6">
+                    <label for="special_notes" class="block text-sm font-medium text-gray-700 mb-2">
+                        Special Notes & Additional Information
+                    </label>
+                    <textarea name="special_notes" id="special_notes" rows="5"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                              placeholder="Any additional important information...">{{ old('special_notes', $activity->special_notes) }}</textarea>
+                </div>
+            </div>
+
+            <!-- TAB 5: Images & Media -->
+            <div id="tab-images" class="tab-content hidden">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Images & Media</h2>
+
+                <!-- Current Images Section -->
+                <div class="mb-8 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Current Images</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Current Icon -->
+                        @if($activity->icon)
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Current Icon</label>
+                            <img src="{{ asset('storage/' . $activity->icon) }}" alt="{{ $activity->name }}" 
+                                 class="w-32 h-32 object-cover rounded-lg border-2 border-gray-300">
+                        </div>
+                        @endif
+
+                        <!-- Current Image -->
+                        @if($activity->image)
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Current Main Image</label>
+                            <img src="{{ asset('storage/' . $activity->image) }}" alt="{{ $activity->name }}" 
+                                 class="w-full h-48 object-cover rounded-lg border-2 border-gray-300">
+                        </div>
+                        @endif
+
+                        <!-- Current Featured Image -->
+                        @if($activity->featured_image)
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Current Featured Image</label>
+                            <img src="{{ asset('storage/' . $activity->featured_image) }}" alt="{{ $activity->name }}" 
+                                 class="w-full h-48 object-cover rounded-lg border-2 border-gray-300">
+                        </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Upload New Images -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <!-- Icon -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="icon">Activity Icon (Small) {{ $activity->icon ? '(Upload new to replace)' : '' }}</label>
-                            <input type="file" name="icon" id="icon" class="form-control-file @error('icon') is-invalid @enderror" accept="image/*">
-                            @error('icon')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="form-text text-muted">Small icon/logo (Recommended: 100x100px, Max: 1MB)</small>
-                            <div id="icon-preview" class="mt-2"></div>
-                        </div>
+                    <div>
+                        <label for="icon" class="block text-sm font-medium text-gray-700 mb-2">
+                            New Activity Icon (Small) {{ $activity->icon ? '(Replace current)' : '' }}
+                        </label>
+                        <input type="file" name="icon" id="icon" accept="image/*"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                        <p class="text-gray-500 text-xs mt-1">Recommended: 100x100px, Max: 1MB</p>
+                        <div id="icon-preview" class="mt-3"></div>
                     </div>
 
-                    <!-- Image -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="image">Activity Image (Large) {{ $activity->image ? '(Upload new to replace)' : '' }}</label>
-                            <input type="file" name="image" id="image" class="form-control-file @error('image') is-invalid @enderror" accept="image/*">
-                            @error('image')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="form-text text-muted">Featured image (Recommended: 1200x800px, Max: 2MB)</small>
-                            <div id="image-preview" class="mt-2"></div>
-                        </div>
-                    </div>
-
-                    <!-- Popular -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="is_popular" name="is_popular" {{ old('is_popular', $activity->is_popular) ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="is_popular">Mark as Popular</label>
-                            </div>
-                            <small class="form-text text-muted">Popular activities are featured prominently</small>
-                        </div>
-                    </div>
-
-                    <!-- Active -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" {{ old('is_active', $activity->is_active) ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="is_active">Active</label>
-                            </div>
-                            <small class="form-text text-muted">Inactive activities won't be visible on the website</small>
-                        </div>
+                    <!-- Main Image -->
+                    <div>
+                        <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
+                            New Main Thumbnail {{ $activity->image ? '(Replace current)' : '' }}
+                        </label>
+                        <input type="file" name="image" id="image" accept="image/*"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                        <p class="text-gray-500 text-xs mt-1">Recommended: 800x600px, Max: 2MB</p>
+                        <div id="image-preview" class="mt-3"></div>
                     </div>
                 </div>
 
-                <!-- Submit Buttons -->
-                <div class="form-group mt-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Update Activity
-                    </button>
-                    <a href="{{ route('admin.activities.index') }}" class="btn btn-secondary">
-                        Cancel
-                    </a>
-                    <button type="button" class="btn btn-danger float-right" data-toggle="modal" data-target="#deleteModal">
-                        <i class="fas fa-trash"></i> Delete Activity
-                    </button>
+                <!-- Featured Image -->
+                <div class="mb-6">
+                    <label for="featured_image" class="block text-sm font-medium text-gray-700 mb-2">
+                        New Featured Header Image {{ $activity->featured_image ? '(Replace current)' : '' }}
+                    </label>
+                    <input type="file" name="featured_image" id="featured_image" accept="image/*"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    <p class="text-gray-500 text-xs mt-1">Hero/header background. Recommended: 1920x1080px, Max: 5MB</p>
+                    <div id="featured-preview" class="mt-3"></div>
                 </div>
-            </form>
+
+                <!-- Gallery Images -->
+                <div class="border-t pt-6">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Gallery Images</h3>
+                    
+                    <!-- Existing Gallery Images -->
+                    @if($activity->images->count() > 0)
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Current Gallery ({{ $activity->images->count() }} images)</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="existing-gallery">
+                            @foreach($activity->images as $image)
+                            <div class="relative group gallery-item" data-image-id="{{ $image->id }}">
+                                <img src="{{ asset('storage/' . $image->image_path) }}" 
+                                     alt="{{ $image->title }}"
+                                     class="w-full h-40 object-cover rounded-lg border-2 {{ $image->is_featured ? 'border-yellow-400' : 'border-gray-300' }}">
+                                
+                                @if($image->is_featured)
+                                <div class="absolute top-2 left-2 bg-yellow-400 text-gray-900 px-2 py-1 rounded text-xs font-bold">
+                                    ⭐ Featured
+                                </div>
+                                @endif
+                                
+                                <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                                    @if(!$image->is_featured)
+                                    <button type="button" class="set-featured-btn bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm" 
+                                            data-image-id="{{ $image->id }}">
+                                        Set Featured
+                                    </button>
+                                    @endif
+                                    <button type="button" class="delete-image-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                                            data-image-id="{{ $image->id }}">
+                                        Delete
+                                    </button>
+                                </div>
+                                
+                                @if($image->title)
+                                <p class="text-xs text-gray-600 mt-1 truncate">{{ $image->title }}</p>
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Upload New Gallery Images -->
+                    <div>
+                        <label for="gallery_images" class="block text-sm font-medium text-gray-700 mb-2">
+                            Add More Gallery Images
+                        </label>
+                        <input type="file" name="gallery_images[]" id="gallery_images" accept="image/*" multiple
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                        <p class="text-gray-500 text-xs mt-1">Select multiple images. Recommended: 1200x800px, Max: 5MB each</p>
+                        <div id="gallery-preview" class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: SEO & Settings -->
+            <div id="tab-seo" class="tab-content hidden">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">SEO & Settings</h2>
+
+                <!-- Meta Title -->
+                <div class="mb-6">
+                    <label for="meta_title" class="block text-sm font-medium text-gray-700 mb-2">
+                        Meta Title
+                    </label>
+                    <input type="text" name="meta_title" id="meta_title" maxlength="60"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                           value="{{ old('meta_title', $activity->meta_title) }}" 
+                           placeholder="SEO title (leave empty to use activity name)">
+                    <p class="text-gray-500 text-xs mt-1">Recommended: 50-60 characters</p>
+                </div>
+
+                <!-- Meta Description -->
+                <div class="mb-6">
+                    <label for="meta_description" class="block text-sm font-medium text-gray-700 mb-2">
+                        Meta Description
+                    </label>
+                    <textarea name="meta_description" id="meta_description" rows="3" maxlength="160"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                              placeholder="SEO description">{{ old('meta_description', $activity->meta_description) }}</textarea>
+                    <p class="text-gray-500 text-xs mt-1">Recommended: 150-160 characters</p>
+                </div>
+
+                <!-- Meta Keywords -->
+                <div class="mb-6">
+                    <label for="meta_keywords" class="block text-sm font-medium text-gray-700 mb-2">
+                        Meta Keywords
+                    </label>
+                    <input type="text" name="meta_keywords" id="meta_keywords"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                           value="{{ old('meta_keywords', $activity->meta_keywords) }}" 
+                           placeholder="keyword1, keyword2, keyword3">
+                    <p class="text-gray-500 text-xs mt-1">Comma-separated keywords</p>
+                </div>
+
+                <!-- Status Checkboxes -->
+                <div class="border-t pt-6">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Status Settings</h3>
+                    
+                    <div class="space-y-3">
+                        <!-- Is Active -->
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" name="is_active" value="1"
+                                   class="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                   {{ old('is_active', $activity->is_active) ? 'checked' : '' }}>
+                            <div>
+                                <span class="text-sm font-medium text-gray-700">Active</span>
+                                <p class="text-xs text-gray-500">Make this activity visible on the website</p>
+                            </div>
+                        </label>
+
+                        <!-- Is Popular -->
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" name="is_popular" value="1"
+                                   class="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                   {{ old('is_popular', $activity->is_popular) ? 'checked' : '' }}>
+                            <div>
+                                <span class="text-sm font-medium text-gray-700">Mark as Popular</span>
+                                <p class="text-xs text-gray-500">Feature this activity prominently on homepage</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+
+        <!-- Form Actions -->
+        <div class="border-t bg-gray-50 px-6 py-4 flex justify-between items-center rounded-b-lg">
+            <div class="flex gap-3">
+                <a href="{{ route('admin.activities.index') }}" class="text-gray-600 hover:text-gray-800 font-medium">
+                    Cancel
+                </a>
+                <button type="button" class="text-red-600 hover:text-red-800 font-medium" onclick="document.getElementById('deleteModal').classList.remove('hidden')">
+                    <i class="fas fa-trash mr-1"></i> Delete Activity
+                </button>
+            </div>
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition flex items-center">
+                <i class="fas fa-save mr-2"></i> Update Activity
+            </button>
+        </div>
+    </form>
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
+<div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Confirm Delete</h3>
+            <p class="text-gray-600 mb-2">Are you sure you want to delete <strong>{{ $activity->name }}</strong>?</p>
+            <p class="text-red-600 text-sm">This action cannot be undone!</p>
+        </div>
+        <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
+            <button type="button" class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium" 
+                    onclick="document.getElementById('deleteModal').classList.add('hidden')">
+                Cancel
+            </button>
+            <form action="{{ route('admin.activities.destroy', $activity) }}" method="POST" class="inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium">
+                    Delete
                 </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete <strong>{{ $activity->name }}</strong>?</p>
-                <p class="text-danger">This action cannot be undone!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <form action="{{ route('admin.activities.destroy', $activity) }}" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
+            </form>
         </div>
     </div>
 </div>
 
 @push('scripts')
 <script>
-    // Auto-generate slug from name (only if slug is empty)
-    document.getElementById('name').addEventListener('input', function() {
-        let slugField = document.getElementById('slug');
-        if (slugField.value === '' || slugField.dataset.autoGenerated === 'true') {
-            let slug = this.value.toLowerCase()
-                .replace(/[^\w ]+/g, '')
-                .replace(/ +/g, '-');
-            slugField.value = slug;
-            slugField.dataset.autoGenerated = 'true';
-        }
+// Tab Switching
+document.querySelectorAll('.tab-button').forEach(button => {
+    button.addEventListener('click', function() {
+        const targetTab = this.dataset.tab;
+        
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active', 'border-green-500', 'text-green-600');
+            btn.classList.add('border-transparent', 'text-gray-500');
+        });
+        this.classList.add('active', 'border-green-500', 'text-green-600');
+        this.classList.remove('border-transparent', 'text-gray-500');
+        
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.add('hidden');
+        });
+        document.getElementById('tab-' + targetTab).classList.remove('hidden');
     });
+});
 
-    // Icon preview
-    document.getElementById('icon').addEventListener('change', function(e) {
+// Auto-generate slug
+document.getElementById('name').addEventListener('input', function() {
+    const slugField = document.getElementById('slug');
+    if (!slugField.dataset.manualEdit) {
+        slugField.value = this.value.toLowerCase()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+    }
+});
+
+document.getElementById('slug').addEventListener('input', function() {
+    this.dataset.manualEdit = 'true';
+});
+
+// Image Previews
+function previewImage(inputId, previewId, maxWidth = 300, maxHeight = 200) {
+    document.getElementById(inputId).addEventListener('change', function(e) {
         const file = e.target.files[0];
+        const preview = document.getElementById(previewId);
+        
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                document.getElementById('icon-preview').innerHTML = 
-                    '<div class="mt-2"><strong>New Icon Preview:</strong><br>' +
-                    '<img src="' + e.target.result + '" style="max-width: 100px; max-height: 100px;" class="img-thumbnail"></div>';
+                preview.innerHTML = `
+                    <div class="relative inline-block">
+                        <img src="${e.target.result}" class="rounded-lg shadow-md border border-gray-300" 
+                             style="max-width: ${maxWidth}px; max-height: ${maxHeight}px; object-fit: cover;">
+                        <div class="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">
+                            New Preview
+                        </div>
+                    </div>
+                `;
             }
             reader.readAsDataURL(file);
         }
     });
+}
 
-    // Image preview
-    document.getElementById('image').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('image-preview').innerHTML = 
-                    '<div class="mt-2"><strong>New Image Preview:</strong><br>' +
-                    '<img src="' + e.target.result + '" style="max-width: 300px; max-height: 200px;" class="img-thumbnail"></div>';
+previewImage('icon', 'icon-preview', 100, 100);
+previewImage('image', 'image-preview', 300, 200);
+previewImage('featured_image', 'featured-preview', 600, 400);
+
+// Gallery Images Preview
+document.getElementById('gallery_images').addEventListener('change', function(e) {
+    const files = e.target.files;
+    const preview = document.getElementById('gallery-preview');
+    preview.innerHTML = '';
+    
+    for(let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const div = document.createElement('div');
+            div.className = 'relative';
+            div.innerHTML = `
+                <img src="${e.target.result}" class="w-full h-32 object-cover rounded-lg shadow border border-gray-300">
+                <div class="absolute top-1 right-1 bg-blue-500 text-white px-2 py-1 rounded text-xs">
+                    New ${i + 1}
+                </div>
+            `;
+            preview.appendChild(div);
+        }
+        
+        reader.readAsDataURL(file);
+    }
+});
+
+// Dynamic Field Addition
+document.querySelectorAll('.add-field').forEach(button => {
+    button.addEventListener('click', function() {
+        const containerId = this.dataset.container;
+        const container = document.getElementById(containerId);
+        const fieldName = container.querySelector('input').name;
+        
+        const newField = document.createElement('div');
+        newField.className = 'flex gap-2 mb-2';
+        newField.innerHTML = `
+            <input type="text" name="${fieldName}" 
+                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg">
+            <button type="button" class="remove-field bg-red-500 text-white px-3 py-2 rounded-lg">
+                <i class="fas fa-minus"></i>
+            </button>
+        `;
+        
+        container.appendChild(newField);
+    });
+});
+
+// Remove field
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-field')) {
+        e.target.closest('.flex').remove();
+    }
+});
+
+// Delete Gallery Image
+document.querySelectorAll('.delete-image-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        if (!confirm('Delete this image?')) return;
+        
+        const imageId = this.dataset.imageId;
+        const response = await fetch(`/admin/activity-images/${imageId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
             }
-            reader.readAsDataURL(file);
+        });
+        
+        if (response.ok) {
+            this.closest('.gallery-item').remove();
+            alert('Image deleted successfully!');
+        } else {
+            alert('Failed to delete image');
         }
     });
+});
+
+// Set Featured Image
+document.querySelectorAll('.set-featured-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const imageId = this.dataset.imageId;
+        const response = await fetch(`/admin/activity-images/${imageId}/set-featured`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Failed to set featured image');
+        }
+    });
+});
 </script>
+
+<style>
+.tab-button.active {
+    border-color: #10b981;
+    color: #10b981;
+}
+.tab-button:not(.active) {
+    border-color: transparent;
+    color: #6b7280;
+}
+.tab-button:not(.active):hover {
+    color: #374151;
+    border-color: #d1d5db;
+}
+</style>
 @endpush
 @endsection

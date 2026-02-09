@@ -6,7 +6,7 @@
 <!-- Hero Section with Background Image -->
 <div class="relative h-96 bg-gray-900">
     <!-- Background Image -->
-    <img src="{{ asset('images/destinations-hero.jpg') }}" alt="Destinations" class="absolute inset-0 w-full h-full object-cover opacity-50">
+    <img src="{{ asset('images/elizabeth.jpg') }}" alt="Destinations" class="absolute inset-0 w-full h-full object-cover opacity-50">
     
     <!-- Overlay -->
     <div class="absolute inset-0 bg-gradient-to-r from-indigo-900/70 to-purple-900/70"></div>

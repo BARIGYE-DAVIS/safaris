@@ -11,6 +11,7 @@ use App\Http\Controllers\CountryController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\ActivityCategoryController;
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\ActivityImageController;
 use App\Http\Controllers\BudgetCategoryController;
 use App\Http\Controllers\AccommodationTypeController;
 use App\Http\Controllers\CustomTourRequestController;
@@ -143,7 +144,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/{activity}', [ActivityController::class, 'adminDestroy'])->name('destroy');
         Route::patch('/{activity}/toggle-status', [ActivityController::class, 'adminToggleStatus'])->name('toggle-status');
         Route::patch('/{activity}/toggle-popular', [ActivityController::class, 'adminTogglePopular'])->name('toggle-popular');
-        Route::post('/bulk-delete', [ActivityController::class, 'adminBulkDelete'])->name('bulk-delete');
+       // Route::post('/bulk-delete', [ActivityController::class, 'adminBulkDelete'])->name('bulk-delete');
         Route::post('/update-order', [ActivityController::class, 'adminUpdateOrder'])->name('update-order');
     });
 
@@ -193,4 +194,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/export/csv', [CustomTourRequestController::class, 'adminExport'])->name('export');
     });
 
+});
+
+
+
+// Admin Activity Routes
+Route::prefix('admin')->name('admin.')->group(function () {
+    
+    // Activity Quick Actions (NEW)
+    Route::patch('activities/{activity}/toggle-active', [ActivityController::class, 'adminToggleActive'])->name('activities.toggle-active');
+    Route::patch('activities/{activity}/toggle-popular', [ActivityController::class, 'adminTogglePopular'])->name('activities.toggle-popular');
+    Route::delete('activities/bulk-delete', [ActivityController::class, 'bulkDelete'])->name('activities.bulk-delete');
+    
+    // Activity Image Management (NEW)
+    Route::delete('activity-images/{activityImage}', [ActivityImageController::class, 'destroy'])->name('activity-images.destroy');
+    Route::post('activity-images/{activityImage}/set-featured', [ActivityImageController::class, 'setFeatured'])->name('activity-images.set-featured');
+    Route::put('activity-images/{activityImage}', [ActivityImageController::class, 'update'])->name('activity-images.update');
+    Route::post('activities/{activity}/images/reorder', [ActivityImageController::class, 'reorder'])->name('activities.images.reorder');
+    Route::post('activities/{activity}/images/upload', [ActivityImageController::class, 'upload'])->name('activities.images.upload');
+    
 });

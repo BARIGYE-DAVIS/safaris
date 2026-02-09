@@ -4,56 +4,132 @@ namespace App\Http\Controllers;
 
 use App\Models\Activity;
 use App\Models\ActivityCategory;
+use App\Models\ActivityImage;
 use App\Models\Destination;
+use App\Models\Country;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
 class ActivityController extends Controller
 {
+    // ============================================
+    // PUBLIC METHODS (Frontend)
+    // ============================================
+
     /**
-     * ADMIN: Display a listing of activities
+     * PUBLIC: Display list of activities
      */
-    public function adminIndex(Request $request)
+    public function index(Request $request)
     {
-        $query = Activity::with(['category', 'destination.country']);
+        $query = Activity::with(['category', 'destination.country'])->where('is_active', true);
 
         // Search
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
+            $query->where(function($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
                   ->orWhere('description', 'like', "%{$request->search}%");
             });
         }
 
         // Filter by category
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
         }
 
         // Filter by destination
-        if ($request->filled('destination_id')) {
-            $query->where('destination_id', $request->destination_id);
+        if ($request->filled('destination')) {
+            $query->where('destination_id', $request->destination);
         }
 
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('is_active', $request->status === 'active');
+        // Filter by difficulty
+        if ($request->filled('difficulty')) {
+            $query->where('difficulty_level', $request->difficulty);
         }
 
-        // Filter by popular
-        if ($request->filled('popular')) {
-            $query->where('is_popular', $request->popular === 'yes');
+        // Filter by price range
+        if ($request->filled('price_min') && $request->filled('price_max')) {
+            $query->whereBetween('price_from', [$request->price_min, $request->price_max]);
         }
 
-        $activities = $query->orderBy('sort_order')->orderBy('name')->paginate(15);
+        $activities = $query->orderBy('sort_order')->orderBy('name')->paginate(12);
         
-        // Get categories and destinations for filters
+        // Get all active categories and destinations for filters
         $categories = ActivityCategory::where('is_active', true)->orderBy('name')->get();
-        $destinations = Destination::where('is_active', true)->orderBy('name')->get();
+        $destinations = Destination::where('is_active', true)->with('country')->orderBy('name')->get();
 
-        return view('admin.activities.index', compact('activities', 'categories', 'destinations'));
+        return view('activities.index', compact('activities', 'categories', 'destinations'));
     }
+
+    /**
+     * PUBLIC: Display single activity details
+     */
+    public function show($slug)
+    {
+        $activity = Activity::with([
+            'category', 
+            'destination.country', 
+            'countries', 
+            'images' => function($query) {
+                $query->orderBy('sort_order');
+            }
+        ])
+        ->where('slug', $slug)
+        ->where('is_active', true)
+        ->firstOrFail();
+
+        // Get related activities (same category)
+        $relatedActivities = Activity::where('category_id', $activity->category_id)
+                                    ->where('id', '!=', $activity->id)
+                                    ->where('is_active', true)
+                                    ->orderBy('is_popular', 'desc')
+                                    ->limit(4)
+                                    ->get();
+
+        return view('activities.show', compact('activity', 'relatedActivities'));
+    }
+
+    // ============================================
+    // ADMIN METHODS (Dashboard)
+    // ============================================
+
+    /**
+     * ADMIN: Display list of all activities
+     */
+ public function adminIndex(Request $request)
+{
+    $query = Activity::with(['category', 'destination.country', 'images'])
+                     ->orderBy('sort_order')
+                     ->orderBy('name');
+
+    // Search
+    if ($request->filled('search')) {
+        $query->where(function($q) use ($request) {
+            $q->where('name', 'like', "%{$request->search}%")
+              ->orWhere('description', 'like', "%{$request->search}%")
+              ->orWhere('slug', 'like', "%{$request->search}%");
+        });
+    }
+
+    // Filter by category
+    if ($request->filled('category_id')) {
+        $query->where('category_id', $request->category_id);
+    }
+
+    // Filter by destination
+    if ($request->filled('destination_id')) {
+        $query->where('destination_id', $request->destination_id);
+    }
+
+    // Filter by status
+    if ($request->filled('status')) {
+        $query->where('is_active', $request->status === 'active');
+    }
+
+    $activities = $query->paginate(20)->withQueryString();
+
+    return view('admin.activities.index', compact('activities'));
+}
 
     /**
      * ADMIN: Show the form for creating a new activity
@@ -62,8 +138,9 @@ class ActivityController extends Controller
     {
         $categories = ActivityCategory::where('is_active', true)->orderBy('name')->get();
         $destinations = Destination::where('is_active', true)->with('country')->orderBy('name')->get();
+        $countries = Country::where('is_active', true)->orderBy('name')->get();
         
-        return view('admin.activities.create', compact('categories', 'destinations'));
+        return view('admin.activities.create', compact('categories', 'destinations', 'countries'));
     }
 
     /**
@@ -72,16 +149,50 @@ class ActivityController extends Controller
     public function adminStore(Request $request)
     {
         $validated = $request->validate([
-            'category_id' => 'required|exists:activity_categories,id',
-            'destination_id' => 'required|exists:destinations,id',
+            'category_id' => 'nullable|exists:activity_categories,id',
+            'destination_id' => 'nullable|exists:destinations,id',
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:activities,slug',
             'description' => 'nullable|string',
-            'icon' => 'nullable|string|max:255',
+            'overview' => 'nullable|string',
+            'what_to_expect' => 'nullable|string',
+            'highlights' => 'nullable|string',
+            'regulations' => 'nullable|string',
+            'safety_info' => 'nullable|string',
+            'health_requirements' => 'nullable|string',
+            'cultural_experience' => 'nullable|string',
+            'conservation_info' => 'nullable|string',
+            'special_notes' => 'nullable|string',
+            'duration' => 'nullable|string|max:100',
+            'difficulty_level' => 'nullable|in:easy,moderate,challenging,extreme',
+            'min_age' => 'nullable|integer|min:0|max:100',
+            'max_group_size' => 'nullable|integer|min:1',
+            'price_from' => 'nullable|numeric|min:0',
+            'price_to' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|string|size:3',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string',
+            'meta_keywords' => 'nullable|string',
+            'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:1024',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'is_popular' => 'boolean',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
+            'countries' => 'nullable|array',
+            'countries.*' => 'exists:countries,id',
+            
+            // JSON fields
+            'inclusions' => 'nullable|array',
+            'exclusions' => 'nullable|array',
+            'equipment_provided' => 'nullable|array',
+            'skill_levels' => 'nullable|array',
+            'best_times' => 'nullable|array',
+            'what_to_bring' => 'nullable|array',
+            'pricing_packages' => 'nullable|array',
+            'faqs' => 'nullable|array',
+            'booking_info' => 'nullable|array',
         ]);
 
         // Auto-generate slug if not provided
@@ -89,16 +200,47 @@ class ActivityController extends Controller
             $validated['slug'] = Str::slug($validated['name']);
         }
 
-        // Handle image upload
+        // Handle icon upload
+        if ($request->hasFile('icon')) {
+            $validated['icon'] = $request->file('icon')->store('activities/icons', 'public');
+        }
+
+        // Handle main image upload
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('activities', 'public');
         }
 
+        // Handle featured image upload
+        if ($request->hasFile('featured_image')) {
+            $validated['featured_image'] = $request->file('featured_image')->store('activities/featured', 'public');
+        }
+
+        // Set boolean fields
         $validated['is_popular'] = $request->has('is_popular');
         $validated['is_active'] = $request->has('is_active');
         $validated['sort_order'] = $validated['sort_order'] ?? 0;
+        $validated['currency'] = $validated['currency'] ?? 'USD';
 
-        Activity::create($validated);
+        // Create activity
+        $activity = Activity::create($validated);
+
+        // Sync countries relationship
+        if ($request->has('countries')) {
+            $activity->countries()->sync($request->countries);
+        }
+
+        // Handle gallery images
+        if ($request->hasFile('gallery_images')) {
+            foreach ($request->file('gallery_images') as $index => $image) {
+                $path = $image->store('activities/gallery', 'public');
+                
+                $activity->images()->create([
+                    'image_path' => $path,
+                    'sort_order' => $index + 1,
+                    'is_featured' => $index === 0 // First image is featured by default
+                ]);
+            }
+        }
 
         return redirect()->route('admin.activities.index')
                         ->with('success', 'Activity created successfully!');
@@ -111,8 +253,12 @@ class ActivityController extends Controller
     {
         $categories = ActivityCategory::where('is_active', true)->orderBy('name')->get();
         $destinations = Destination::where('is_active', true)->with('country')->orderBy('name')->get();
+        $countries = Country::where('is_active', true)->orderBy('name')->get();
         
-        return view('admin.activities.edit', compact('activity', 'categories', 'destinations'));
+        // Get currently selected countries for this activity
+        $selectedCountries = $activity->countries()->pluck('countries.id')->toArray();
+        
+        return view('admin.activities.edit', compact('activity', 'categories', 'destinations', 'countries', 'selectedCountries'));
     }
 
     /**
@@ -121,16 +267,50 @@ class ActivityController extends Controller
     public function adminUpdate(Request $request, Activity $activity)
     {
         $validated = $request->validate([
-            'category_id' => 'required|exists:activity_categories,id',
-            'destination_id' => 'required|exists:destinations,id',
+            'category_id' => 'nullable|exists:activity_categories,id',
+            'destination_id' => 'nullable|exists:destinations,id',
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:activities,slug,' . $activity->id,
             'description' => 'nullable|string',
-            'icon' => 'nullable|string|max:255',
+            'overview' => 'nullable|string',
+            'what_to_expect' => 'nullable|string',
+            'highlights' => 'nullable|string',
+            'regulations' => 'nullable|string',
+            'safety_info' => 'nullable|string',
+            'health_requirements' => 'nullable|string',
+            'cultural_experience' => 'nullable|string',
+            'conservation_info' => 'nullable|string',
+            'special_notes' => 'nullable|string',
+            'duration' => 'nullable|string|max:100',
+            'difficulty_level' => 'nullable|in:easy,moderate,challenging,extreme',
+            'min_age' => 'nullable|integer|min:0|max:100',
+            'max_group_size' => 'nullable|integer|min:1',
+            'price_from' => 'nullable|numeric|min:0',
+            'price_to' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|string|size:3',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string',
+            'meta_keywords' => 'nullable|string',
+            'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:1024',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'is_popular' => 'boolean',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
+            'countries' => 'nullable|array',
+            'countries.*' => 'exists:countries,id',
+            
+            // JSON fields
+            'inclusions' => 'nullable|array',
+            'exclusions' => 'nullable|array',
+            'equipment_provided' => 'nullable|array',
+            'skill_levels' => 'nullable|array',
+            'best_times' => 'nullable|array',
+            'what_to_bring' => 'nullable|array',
+            'pricing_packages' => 'nullable|array',
+            'faqs' => 'nullable|array',
+            'booking_info' => 'nullable|array',
         ]);
 
         // Auto-generate slug if not provided
@@ -138,35 +318,115 @@ class ActivityController extends Controller
             $validated['slug'] = Str::slug($validated['name']);
         }
 
-        // Handle image upload
+        // Handle icon upload
+        if ($request->hasFile('icon')) {
+            if ($activity->icon) {
+                Storage::disk('public')->delete($activity->icon);
+            }
+            $validated['icon'] = $request->file('icon')->store('activities/icons', 'public');
+        }
+
+        // Handle main image upload
         if ($request->hasFile('image')) {
-            // Delete old image
             if ($activity->image) {
                 Storage::disk('public')->delete($activity->image);
             }
             $validated['image'] = $request->file('image')->store('activities', 'public');
         }
 
+        // Handle featured image upload
+        if ($request->hasFile('featured_image')) {
+            if ($activity->featured_image) {
+                Storage::disk('public')->delete($activity->featured_image);
+            }
+            $validated['featured_image'] = $request->file('featured_image')->store('activities/featured', 'public');
+        }
+
+        // Set boolean fields
         $validated['is_popular'] = $request->has('is_popular');
         $validated['is_active'] = $request->has('is_active');
         $validated['sort_order'] = $validated['sort_order'] ?? $activity->sort_order;
 
+        // Update activity
         $activity->update($validated);
+        
+        // Sync countries relationship
+        if ($request->has('countries')) {
+            $activity->countries()->sync($request->countries);
+        } else {
+            $activity->countries()->detach();
+        }
+
+        // Handle gallery images
+        if ($request->hasFile('gallery_images')) {
+            $currentMaxSort = $activity->images()->max('sort_order') ?? 0;
+            
+            foreach ($request->file('gallery_images') as $index => $image) {
+                $path = $image->store('activities/gallery', 'public');
+                
+                $activity->images()->create([
+                    'image_path' => $path,
+                    'sort_order' => $currentMaxSort + $index + 1,
+                    'is_featured' => false
+                ]);
+            }
+        }
 
         return redirect()->route('admin.activities.index')
                         ->with('success', 'Activity updated successfully!');
     }
 
+
+public function bulkDelete(Request $request)
+{
+    $ids = json_decode($request->ids);
+    
+    if (empty($ids)) {
+        return back()->with('error', 'No activities selected');
+    }
+
+    $activities = Activity::whereIn('id', $ids)->get();
+    
+    foreach ($activities as $activity) {
+        // Delete images
+        if ($activity->icon) Storage::disk('public')->delete($activity->icon);
+        if ($activity->image) Storage::disk('public')->delete($activity->image);
+        if ($activity->featured_image) Storage::disk('public')->delete($activity->featured_image);
+        
+        foreach ($activity->images as $image) {
+            Storage::disk('public')->delete($image->image_path);
+            $image->delete();
+        }
+        
+        $activity->delete();
+    }
+
+    return redirect()->route('admin.activities.index')
+                    ->with('success', count($ids) . ' activities deleted successfully!');
+}
     /**
      * ADMIN: Remove the specified activity
      */
     public function adminDestroy(Activity $activity)
     {
-        // Delete image if exists
+        // Delete associated images from storage
+        if ($activity->icon) {
+            Storage::disk('public')->delete($activity->icon);
+        }
         if ($activity->image) {
             Storage::disk('public')->delete($activity->image);
         }
+        if ($activity->featured_image) {
+            Storage::disk('public')->delete($activity->featured_image);
+        }
 
+        // Delete gallery images
+        foreach ($activity->images as $image) {
+            Storage::disk('public')->delete($image->image_path);
+            $image->delete();
+        }
+
+        // Delete activity
         $activity->delete();
 
         return redirect()->route('admin.activities.index')
@@ -176,71 +436,22 @@ class ActivityController extends Controller
     /**
      * ADMIN: Toggle activity active status
      */
-    public function adminToggleStatus(Activity $activity)
+    public function adminToggleActive(Activity $activity)
     {
-        $activity->update([
-            'is_active' => !$activity->is_active
-        ]);
-
-        $status = $activity->is_active ? 'activated' : 'deactivated';
+        $activity->update(['is_active' => !$activity->is_active]);
         
+        $status = $activity->is_active ? 'activated' : 'deactivated';
         return back()->with('success', "Activity {$status} successfully!");
     }
 
     /**
-     * ADMIN: Toggle popular status
+     * ADMIN: Toggle activity popular status
      */
     public function adminTogglePopular(Activity $activity)
     {
-        $activity->update([
-            'is_popular' => !$activity->is_popular
-        ]);
-
-        $status = $activity->is_popular ? 'marked as popular' : 'unmarked as popular';
+        $activity->update(['is_popular' => !$activity->is_popular]);
         
+        $status = $activity->is_popular ? 'marked as popular' : 'unmarked as popular';
         return back()->with('success', "Activity {$status} successfully!");
-    }
-
-    /**
-     * ADMIN: Bulk delete activities
-     */
-    public function adminBulkDelete(Request $request)
-    {
-        $ids = json_decode($request->ids);
-
-        if (empty($ids)) {
-            return redirect()->back()->with('error', 'No activities selected!');
-        }
-
-        $activities = Activity::whereIn('id', $ids)->get();
-
-        foreach ($activities as $activity) {
-            // Delete image if exists
-            if ($activity->image) {
-                Storage::disk('public')->delete($activity->image);
-            }
-            $activity->delete();
-        }
-
-        return redirect()->back()
-                        ->with('success', count($ids) . ' activity(ies) deleted successfully!');
-    }
-
-    /**
-     * ADMIN: Update sort order
-     */
-    public function adminUpdateOrder(Request $request)
-    {
-        $order = $request->order;
-
-        if (empty($order)) {
-            return response()->json(['success' => false, 'message' => 'No order data provided']);
-        }
-
-        foreach ($order as $index => $id) {
-            Activity::where('id', $id)->update(['sort_order' => $index]);
-        }
-
-        return response()->json(['success' => true, 'message' => 'Order updated successfully!']);
     }
 }

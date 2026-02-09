@@ -50,7 +50,7 @@
     <nav class="bg-white border-b py-4">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center space-x-2 text-sm">
-                <a href="{{ route('home') }}" class="text-gray-500 hover:text-green-600">Home</a>
+                <a href="{{ route('index') }}" class="text-gray-500 hover:text-green-600">Home</a>
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>

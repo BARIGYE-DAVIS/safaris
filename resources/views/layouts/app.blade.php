@@ -10,7 +10,7 @@
     <!-- SEO Meta Tags -->
     <meta name="description" content="@yield('meta_description', 'Discover amazing safari adventures in East Africa. Wildlife tours, cultural experiences, and unforgettable journeys await you.')">
     <meta name="keywords" content="@yield('meta_keywords', 'safari, tours, wildlife, Africa, adventure, travel, booking')">
-    
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <!-- Open Graph Tags -->
     <meta property="og:title" content="@yield('og_title', 'Safari Tours - Adventure Awaits')">
     <meta property="og:description" content="@yield('og_description', 'Discover amazing safari adventures in East Africa.')">
