@@ -38,8 +38,8 @@ Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index
 Route::get('/gallery/{slug}', [GalleryController::class, 'show'])->name('gallery.show');
 
 // Blog
-Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
-Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
+Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
 
 // Contact
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');

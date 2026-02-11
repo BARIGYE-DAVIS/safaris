@@ -135,6 +135,16 @@
                     <i class="fas fa-envelope"></i>
                     Contact Messages
                 </a>
+                <a href="{{ route('admin.blogs.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                    <i class="fas fa-blog"></i>
+                    Blogs
+                </a>
+
+                <a href="{{ route('admin.blog-categories.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                    <i class="fas fa-tags"></i>
+                    Blog Categories
+
+                </a>
 
                 <div class="sidebar-divider"></div>
                         

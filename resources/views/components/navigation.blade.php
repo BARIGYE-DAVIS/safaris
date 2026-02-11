@@ -225,8 +225,8 @@
                         Gallery
                     </a>
                     
-                    <a href="{{ route('blog.index') }}" 
-                       class="nav-link {{ request()->routeIs('blog.*') ? 'text-green-700 border-b-2 border-green-700' : 'text-gray-700 hover:text-green-700' }} px-3 py-2 text-sm font-medium transition-colors duration-200">
+                    <a href="{{ route('blogs.index') }}" 
+                       class="nav-link {{ request()->routeIs('blogs.*') ? 'text-green-700 border-b-2 border-green-700' : 'text-gray-700 hover:text-green-700' }} px-3 py-2 text-sm font-medium transition-colors duration-200">
                         Blog
                     </a>
                     
@@ -288,8 +288,8 @@
                     📸 Gallery
                 </a>
                 
-                <a href="{{ route('blog.index') }}" 
-                   class="mobile-nav-link {{ request()->routeIs('blog.*') ? 'bg-green-50 text-green-700 border-l-4 border-green-700' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }} block px-3 py-2 text-base font-medium transition-all duration-200">
+                <a href="{{ route('blogs.index') }}" 
+                   class="mobile-nav-link {{ request()->routeIs('blogs.*') ? 'bg-green-50 text-green-700 border-l-4 border-green-700' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }} block px-3 py-2 text-base font-medium transition-all duration-200">
                     📝 Blog
                 </a>
                 

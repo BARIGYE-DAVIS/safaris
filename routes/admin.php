@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminAuthenticate;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\BlogController;
+use App\Http\Controllers\BlogCategoryController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminTourController;
 use App\Http\Controllers\ContactController;
@@ -214,3 +216,44 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('activities/{activity}/images/upload', [ActivityImageController::class, 'upload'])->name('activities.images.upload');
     
 });
+
+// Admin blog listing
+Route::get('/admin/blogs', [BlogController::class, 'adminIndex'])->name('admin.blogs.index');
+
+// Create new blog
+Route::get('/admin/blogs/create', [BlogController::class, 'create'])->name('admin.blogs.create');
+Route::post('/admin/blogs', [BlogController::class, 'store'])->name('admin.blogs.store');
+
+// Edit/update blog
+Route::get('/admin/blogs/{blog}/edit', [BlogController::class, 'edit'])->name('admin.blogs.edit');
+Route::put('/admin/blogs/{blog}', [BlogController::class, 'update'])->name('admin.blogs.update');
+
+// Delete blog
+Route::delete('/admin/blogs/{blog}', [BlogController::class, 'destroy'])->name('admin.blogs.destroy');
+
+// Toggle featured status (AJAX)
+Route::post('/admin/blogs/{blog}/toggle-featured', [BlogController::class, 'toggleFeatured'])->name('admin.blogs.toggleFeatured');
+
+// Upload inline images for editor
+Route::post('/admin/blogs/upload-image', [BlogController::class, 'uploadImage'])->name('admin.blogs.uploadImage');
+
+
+Route::prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+
+        // Resourceful routes for blog categories (index, create, store, edit, update, destroy)
+        Route::resource('blog-categories', BlogCategoryController::class)->except(['show']);
+
+        // Bulk delete selected categories
+        Route::post('blog-categories/bulk-destroy', [BlogCategoryController::class, 'bulkDestroy'])
+            ->name('blog-categories.bulk-destroy');
+
+        // Reorder categories (expects JSON payload)
+        Route::post('blog-categories/reorder', [BlogCategoryController::class, 'reorder'])
+            ->name('blog-categories.reorder');
+
+        // API endpoint for select inputs (e.g. select2) - returns id, name, slug
+        Route::get('blog-categories/api', [BlogCategoryController::class, 'apiList'])
+            ->name('blog-categories.api');
+    });

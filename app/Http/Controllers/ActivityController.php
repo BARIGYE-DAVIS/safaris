@@ -21,46 +21,53 @@ class ActivityController extends Controller
      * PUBLIC: Display list of activities
      */
     public function index(Request $request)
-    {
-        $query = Activity::with(['category', 'destination.country'])->where('is_active', true);
+{
+    $query = Activity::with(['category', 'destination.country', 'images'])->where('is_active', true);
 
-        // Search
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('description', 'like', "%{$request->search}%");
-            });
-        }
-
-        // Filter by category
-        if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
-        }
-
-        // Filter by destination
-        if ($request->filled('destination')) {
-            $query->where('destination_id', $request->destination);
-        }
-
-        // Filter by difficulty
-        if ($request->filled('difficulty')) {
-            $query->where('difficulty_level', $request->difficulty);
-        }
-
-        // Filter by price range
-        if ($request->filled('price_min') && $request->filled('price_max')) {
-            $query->whereBetween('price_from', [$request->price_min, $request->price_max]);
-        }
-
-        $activities = $query->orderBy('sort_order')->orderBy('name')->paginate(12);
-        
-        // Get all active categories and destinations for filters
-        $categories = ActivityCategory::where('is_active', true)->orderBy('name')->get();
-        $destinations = Destination::where('is_active', true)->with('country')->orderBy('name')->get();
-
-        return view('activities.index', compact('activities', 'categories', 'destinations'));
+    // Search
+    if ($request->filled('search')) {
+        $query->where(function($q) use ($request) {
+            $q->where('name', 'like', "%{$request->search}%")
+              ->orWhere('description', 'like', "%{$request->search}%")
+              ->orWhere('overview', 'like', "%{$request->search}%");
+        });
     }
 
+    // Filter by category
+    if ($request->filled('category')) {
+        $query->where('category_id', $request->category);
+    }
+
+    // Filter by destination
+    if ($request->filled('destination')) {
+        $query->where('destination_id', $request->destination);
+    }
+
+    // Filter by difficulty
+    if ($request->filled('difficulty')) {
+        $query->where('difficulty_level', $request->difficulty);
+    }
+
+    // Filter by price range
+    if ($request->filled('price_min') && $request->filled('price_max')) {
+        $query->whereBetween('price_from', [$request->price_min, $request->price_max]);
+    }
+
+    $activities = $query->orderBy('sort_order')->orderBy('name')->paginate(12);
+    
+    // Get all active categories and destinations for filters
+    $categories = ActivityCategory::where('is_active', true)->orderBy('name')->get();
+    $destinations = Destination::where('is_active', true)->with('country')->orderBy('name')->get();
+
+    // Get ALL active activities for hero carousel (no conditions, no limits)
+    $featuredActivities = Activity::where('is_active', true)
+        ->with(['category', 'destination.country', 'images'])
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->get();
+
+    return view('activities.index', compact('activities', 'categories', 'destinations', 'featuredActivities'));
+}
     /**
      * PUBLIC: Display single activity details
      */

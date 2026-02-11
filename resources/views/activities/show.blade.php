@@ -7,6 +7,36 @@
 @section('og_description', Str::limit(strip_tags($activity->overview ?? $activity->description), 200))
 @section('og_image', $activity->featured_image_url)
 
+@php
+// Content formatting helper function
+function formatContent($text) {
+    if (empty($text)) return '';
+    
+    // Convert **text** to green headings
+    $text = preg_replace_callback(
+        '/\*\*([^*]+)\*\*/',
+        function ($matches) {
+            return '<h3 class="text-xl font-bold text-green-700 mt-6 mb-3 pb-2 border-b-2 border-green-200">' . trim($matches[1]) . '</h3>';
+        },
+        $text
+    );
+    
+    // Replace - at start of lines with bullet points
+    $text = preg_replace('/^[\s]*-[\s]+(.+)$/m', '• $1', $text);
+    
+    // Remove multiple hyphens (decorative separators)
+    $text = preg_replace('/[-]{3,}/', "\n\n", $text);
+    
+    // Clean up multiple newlines
+    $text = preg_replace('/\n{3,}/', "\n\n", $text);
+    
+    // Convert newlines to <br> tags
+    $text = nl2br($text);
+    
+    return $text;
+}
+@endphp
+
 @section('content')
 <div class="bg-gray-50">
     <!-- Hero Section with Featured Image -->
@@ -159,7 +189,9 @@
                         <i class="fas fa-info-circle text-blue-600 mr-3"></i>
                         Quick Overview
                     </h2>
-                    <p class="text-gray-700 leading-relaxed text-lg">{{ $activity->description }}</p>
+                    <div class="formatted-content text-gray-700 leading-relaxed text-lg">
+                        {!! formatContent($activity->description) !!}
+                    </div>
                 </div>
                 @endif
 
@@ -170,8 +202,8 @@
                         <i class="fas fa-book-open text-green-600 mr-3"></i>
                         Detailed Overview
                     </h2>
-                    <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                        {!! nl2br(e($activity->overview)) !!}
+                    <div class="formatted-content text-gray-700 leading-relaxed">
+                        {!! formatContent($activity->overview) !!}
                     </div>
                 </div>
                 @endif
@@ -223,8 +255,8 @@
                         <i class="fas fa-binoculars text-teal-600 mr-3"></i>
                         What to Expect
                     </h2>
-                    <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                        {!! nl2br(e($activity->what_to_expect)) !!}
+                    <div class="formatted-content text-gray-700 leading-relaxed">
+                        {!! formatContent($activity->what_to_expect) !!}
                     </div>
                 </div>
                 @endif
@@ -236,8 +268,8 @@
                         <i class="fas fa-star text-yellow-500 mr-3"></i>
                         Highlights
                     </h2>
-                    <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                        {!! nl2br(e($activity->highlights)) !!}
+                    <div class="formatted-content text-gray-700 leading-relaxed">
+                        {!! formatContent($activity->highlights) !!}
                     </div>
                 </div>
                 @endif
@@ -331,8 +363,8 @@
                         <i class="fas fa-exclamation-triangle text-yellow-600 mr-3"></i>
                         Rules & Regulations
                     </h2>
-                    <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                        {!! nl2br(e($activity->regulations)) !!}
+                    <div class="formatted-content text-gray-700 leading-relaxed">
+                        {!! formatContent($activity->regulations) !!}
                     </div>
                 </div>
                 @endif
@@ -344,8 +376,8 @@
                         <i class="fas fa-shield-alt text-red-600 mr-3"></i>
                         Safety Information
                     </h2>
-                    <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                        {!! nl2br(e($activity->safety_info)) !!}
+                    <div class="formatted-content text-gray-700 leading-relaxed">
+                        {!! formatContent($activity->safety_info) !!}
                     </div>
                 </div>
                 @endif
@@ -357,8 +389,8 @@
                         <i class="fas fa-heartbeat text-pink-600 mr-3"></i>
                         Health Requirements
                     </h2>
-                    <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                        {!! nl2br(e($activity->health_requirements)) !!}
+                    <div class="formatted-content text-gray-700 leading-relaxed">
+                        {!! formatContent($activity->health_requirements) !!}
                     </div>
                 </div>
                 @endif
@@ -370,8 +402,8 @@
                         <i class="fas fa-users text-indigo-600 mr-3"></i>
                         Cultural Experience
                     </h2>
-                    <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                        {!! nl2br(e($activity->cultural_experience)) !!}
+                    <div class="formatted-content text-gray-700 leading-relaxed">
+                        {!! formatContent($activity->cultural_experience) !!}
                     </div>
                 </div>
                 @endif
@@ -383,8 +415,8 @@
                         <i class="fas fa-leaf text-green-600 mr-3"></i>
                         Conservation & Sustainability
                     </h2>
-                    <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                        {!! nl2br(e($activity->conservation_info)) !!}
+                    <div class="formatted-content text-gray-700 leading-relaxed">
+                        {!! formatContent($activity->conservation_info) !!}
                     </div>
                 </div>
                 @endif
@@ -396,8 +428,8 @@
                         <i class="fas fa-sticky-note text-blue-600 mr-3"></i>
                         Important Notes
                     </h2>
-                    <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                        {!! nl2br(e($activity->special_notes)) !!}
+                    <div class="formatted-content text-gray-700 leading-relaxed">
+                        {!! formatContent($activity->special_notes) !!}
                     </div>
                 </div>
                 @endif
@@ -703,6 +735,33 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+/* Formatted Content Styles */
+.formatted-content {
+    line-height: 1.8;
+}
+
+.formatted-content h3 {
+    color: #059669;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #d1fae5;
+}
+
+.formatted-content p {
+    margin-bottom: 1rem;
+}
+
+/* Style bullet points */
+.formatted-content br + •,
+.formatted-content • {
+    color: #059669;
+    font-weight: bold;
+    font-size: 1.2em;
 }
 
 .prose {

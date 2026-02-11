@@ -73,10 +73,10 @@
     </div>
 
     <!-- Slideshow Controls -->
-    <button class="slide-control prev absolute left-4 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-white/50 backdrop-blur-sm text-white p-4 rounded-full transition z-10">
+    <button class="slide-control prev absolute left-4 top-1/2 -translate-y-1/2 bg-gray-700 hover:bg-white/50 backdrop-blur-sm text-white p-4 rounded-full transition z-10">
         <i class="fas fa-chevron-left text-white"></i>
     </button>
-    <button class="slide-control next absolute right-4 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-white/50 backdrop-blur-sm text-white p-4 rounded-full transition z-10">
+    <button class="slide-control next absolute right-4 top-1/2 -translate-y-1/2 bg-gray-700 hover:bg-white/50 backdrop-blur-sm text-white p-4 rounded-full transition z-10">
         <i class="fas fa-chevron-right text-white"></i>
     </button>
 

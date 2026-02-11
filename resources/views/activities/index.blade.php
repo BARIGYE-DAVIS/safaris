@@ -9,25 +9,199 @@
 
 @section('content')
 <div class="bg-gray-50 min-h-screen">
-    <!-- Hero Section -->
-    <div class="relative bg-gradient-to-r from-green-600 via-teal-600 to-blue-600 text-white py-24 overflow-hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
-        <div class="absolute inset-0 bg-[url('/images/pattern.svg')] opacity-10"></div>
-        
-        <div class="container mx-auto px-4 text-center relative z-10">
-            <h1 class="text-5xl md:text-6xl font-bold mb-4 animate-fade-in">Safari Activities in East Africa</h1>
-            <p class="text-xl md:text-2xl mb-6">Discover amazing adventures across Uganda, Kenya, Tanzania & Rwanda</p>
-            <div class="flex justify-center gap-4 text-sm">
-                <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                    <i class="fas fa-hiking mr-2"></i>{{ $activities->total() }}+ Activities
-                </span>
-                <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                    <i class="fas fa-globe mr-2"></i>4 Countries
-                </span>
-                <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                    <i class="fas fa-star mr-2"></i>Unforgettable Experiences
-                </span>
+    <!-- Hero Carousel Section -->
+    <div class="relative h-[70vh] md:h-[80vh] overflow-hidden">
+        <!-- Carousel Slides -->
+        <div id="hero-carousel" class="relative h-full">
+            @php
+                $heroActivities = $featuredActivities ?? $activities->take(5);
+                $totalSlides = $heroActivities->count();
+                // Group indicators: show max 5 dots regardless of number of slides
+                $maxIndicators = 5;
+                $showGroupedIndicators = $totalSlides > $maxIndicators;
+            @endphp
+
+            @foreach($heroActivities as $index => $heroActivity)
+            <div class="carousel-slide {{ $index === 0 ? 'active' : '' }} absolute inset-0 transition-opacity duration-1000 ease-in-out {{ $index === 0 ? 'opacity-100' : 'opacity-0' }}">
+                <!-- Background Image -->
+                <div class="absolute inset-0">
+                    @if($heroActivity->featured_image)
+                        <img src="{{ asset('storage/' . $heroActivity->featured_image) }}" 
+                             alt="{{ $heroActivity->name }}" 
+                             class="w-full h-full object-cover">
+                    @elseif($heroActivity->image)
+                        <img src="{{ asset('storage/' . $heroActivity->image) }}" 
+                             alt="{{ $heroActivity->name }}" 
+                             class="w-full h-full object-cover">
+                    @else
+                        <div class="w-full h-full bg-gradient-to-br from-green-600 via-teal-600 to-blue-600"></div>
+                    @endif
+                </div>
+
+                <!-- Gradient Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20"></div>
+
+                <!-- Content -->
+                <div class="absolute inset-0 flex items-center">
+                    <div class="container mx-auto px-4 md:px-8 lg:px-16">
+                        <div class="max-w-3xl">
+                            <!-- Badges -->
+                            <div class="flex flex-wrap gap-2 mb-4 animate-fade-in">
+                                @if($heroActivity->is_popular)
+                                <span class="bg-yellow-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                                    <i class="fas fa-star mr-1"></i> Popular
+                                </span>
+                                @endif
+
+                                @if($heroActivity->category)
+                                <span class="bg-purple-600/90 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium">
+                                    @if($heroActivity->category->icon)
+                                    <i class="{{ $heroActivity->category->icon }} mr-1"></i>
+                                    @endif
+                                    {{ $heroActivity->category->name }}
+                                </span>
+                                @endif
+
+                                @if($heroActivity->difficulty_level)
+                                <span class="backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-bold
+                                    {{ $heroActivity->difficulty_level == 'easy' ? 'bg-green-600/90' : '' }}
+                                    {{ $heroActivity->difficulty_level == 'moderate' ? 'bg-blue-600/90' : '' }}
+                                    {{ $heroActivity->difficulty_level == 'challenging' ? 'bg-orange-600/90' : '' }}
+                                    {{ $heroActivity->difficulty_level == 'extreme' ? 'bg-red-600/90' : '' }}">
+                                    <i class="fas fa-chart-line mr-1"></i> {{ ucfirst($heroActivity->difficulty_level) }}
+                                </span>
+                                @endif
+                            </div>
+
+                            <!-- Title -->
+                            <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight drop-shadow-lg animate-slide-up">
+                                {{ $heroActivity->name }}
+                            </h1>
+
+                            <!-- Description -->
+                            <p class="text-base md:text-lg lg:text-xl text-white/90 mb-6 leading-relaxed max-w-2xl animate-slide-up" style="animation-delay: 0.2s">
+                                {{ Str::limit($heroActivity->description ?? $heroActivity->overview, 150) }}
+                            </p>
+
+                            <!-- Meta Info -->
+                            <div class="flex flex-wrap gap-4 text-white/90 text-sm md:text-base mb-6 animate-slide-up" style="animation-delay: 0.3s">
+                                @if($heroActivity->destination)
+                                <div class="flex items-center">
+                                    <i class="fas fa-map-marker-alt text-green-400 mr-2"></i>
+                                    <span>{{ $heroActivity->destination->name }}</span>
+                                </div>
+                                @endif
+
+                                @if($heroActivity->duration)
+                                <div class="flex items-center">
+                                    <i class="far fa-clock text-blue-400 mr-2"></i>
+                                    <span>{{ $heroActivity->duration }}</span>
+                                </div>
+                                @endif
+
+                                @if($heroActivity->price_from)
+                                <div class="flex items-center">
+                                    <i class="fas fa-tag text-yellow-400 mr-2"></i>
+                                    <span>From {{ $heroActivity->currency }} {{ number_format($heroActivity->price_from, 0) }}</span>
+                                </div>
+                                @endif
+                            </div>
+
+                            <!-- CTA Buttons -->
+                            <div class="flex flex-wrap gap-3 md:gap-4 animate-slide-up" style="animation-delay: 0.4s">
+                                <a href="{{ route('activities.show', $heroActivity->slug) }}" 
+                                   class="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-2 md:py-3 rounded-lg font-bold transition shadow-lg inline-flex items-center text-sm md:text-base">
+                                    <i class="fas fa-info-circle mr-2"></i> Learn More
+                                </a>
+                                <a href="{{ route('contact', ['activity' => $heroActivity->slug]) }}" 
+                                   class="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-6 md:px-8 py-2 md:py-3 rounded-lg font-bold transition border-2 border-white inline-flex items-center text-sm md:text-base">
+                                    <i class="fas fa-envelope mr-2"></i> Book Now
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+            @endforeach
+        </div>
+
+        <!-- Navigation Arrows - FIXED POSITIONING -->
+        @if($totalSlides > 1)
+        <button onclick="previousSlide()" 
+                class="absolute left-2 md:left-4 lg:left-8 top-1/2 -translate-y-1/2  hover:bg-green-700 text-white-100 w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full backdrop-blur-sm transition-all z-30 group shadow-lg hover:scale-110">
+            <i class="fas fa-chevron-left text-lg  text-white md:text-xl lg:text-2xl"></i>
+        </button>
+        
+        <button onclick="nextSlide()" 
+                class="absolute right-2 md:right-4 lg:right-8 top-1/2 -translate-y-1/2  hover:bg-green-700 text-white-100 w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full backdrop-blur-sm transition-all z-30 group shadow-lg hover:scale-110">
+            <i class="fas fa-chevron-right text-lg text-white md:text-xl lg:text-2xl"></i>
+        </button>
+        @endif
+
+        <!-- Indicators - PROFESSIONAL GROUPED STYLE -->
+        @if($totalSlides > 1)
+        <div class="absolute bottom-20 md:bottom-24 lg:bottom-28 left-1/2 -translate-x-1/2 z-30">
+            <div class="bg-black/40 backdrop-blur-md rounded-full px-4 md:px-6 py-3 md:py-4">
+                <div class="flex items-center gap-2 md:gap-3">
+                    @if($showGroupedIndicators)
+                        <!-- Show 5 grouped indicators for many slides -->
+                        @for($i = 0; $i < $maxIndicators; $i++)
+                            <button onclick="goToSlideGroup({{ $i }})" 
+                                    class="carousel-indicator-group transition-all rounded-full
+                                           {{ $i === 0 ? 'bg-white w-8 md:w-10 h-2' : 'bg-white/40 w-6 md:w-8 h-2' }}"
+                                    aria-label="Go to slide group {{ $i + 1 }}"
+                                    data-group="{{ $i }}">
+                            </button>
+                        @endfor
+                        <!-- Slide counter -->
+                        <span class="text-white text-xs md:text-sm font-medium ml-2 md:ml-3 min-w-[60px] md:min-w-[70px] text-center">
+                            <span id="current-slide">1</span> / {{ $totalSlides }}
+                        </span>
+                    @else
+                        <!-- Show individual indicators for few slides (≤5) -->
+                        @foreach($heroActivities as $index => $heroActivity)
+                            <button onclick="goToSlide({{ $index }})" 
+                                    class="carousel-indicator transition-all rounded-full
+                                           {{ $index === 0 ? 'bg-white w-8 md:w-10 h-2' : 'bg-white/40 w-6 md:w-8 h-2' }}"
+                                    aria-label="Go to slide {{ $index + 1 }}"
+                                    data-index="{{ $index }}">
+                            </button>
+                        @endforeach
+                        <!-- Slide counter for clarity -->
+                        <span class="text-white text-xs md:text-sm font-medium ml-2 md:ml-3">
+                            <span id="current-slide">1</span> / {{ $totalSlides }}
+                        </span>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Stats Overlay -->
+        <div class="absolute bottom-4 md:bottom-6 right-2 md:right-4 lg:right-8 z-20">
+            <div class="bg-black/50 backdrop-blur-md rounded-xl p-3 md:p-4 lg:p-6 text-white">
+                <div class="flex flex-col md:flex-row gap-3 md:gap-4 lg:gap-6">
+                    <div class="text-center">
+                        <div class="text-xl md:text-2xl lg:text-3xl font-bold">{{ $activities->total() }}+</div>
+                        <div class="text-[10px] md:text-xs lg:text-sm text-white/80">Activities</div>
+                    </div>
+                    <div class="hidden md:block w-px bg-white/30"></div>
+                    <div class="text-center">
+                        <div class="text-xl md:text-2xl lg:text-3xl font-bold">4</div>
+                        <div class="text-[10px] md:text-xs lg:text-sm text-white/80">Countries</div>
+                    </div>
+                    <div class="hidden md:block w-px bg-white/30"></div>
+                    <div class="text-center">
+                        <div class="text-xl md:text-2xl lg:text-3xl font-bold">100%</div>
+                        <div class="text-[10px] md:text-xs lg:text-sm text-white/80">Adventure</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Down Indicator -->
+        <div class="absolute bottom-2 md:bottom-4 left-1/2 -translate-x-1/2 animate-bounce z-20 hidden md:block">
+            <i class="fas fa-chevron-down text-white text-xl md:text-2xl opacity-70"></i>
         </div>
     </div>
 
@@ -88,7 +262,7 @@
                         <option value="extreme" {{ request('difficulty') == 'extreme' ? 'selected' : '' }}>Extreme</option>
                     </select>
 
-                    <button type="submit" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition font-medium shadow-md">
+                    <button type="submit" class="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition font-medium shadow-md">
                         <i class="fas fa-search mr-2"></i> Search
                     </button>
 
@@ -324,7 +498,7 @@
                     We couldn't find any activities matching your search criteria. 
                     Try adjusting your filters or search terms.
                 </p>
-                <div class="flex justify-center gap-3">
+                <div class="flex justify-center gap-3 flex-wrap">
                     <a href="{{ route('activities.index') }}" class="bg-green-600 text-white px-6 py-3 rounded-lg inline-flex items-center hover:bg-green-700 transition shadow-md">
                         <i class="fas fa-list mr-2"></i> View All Activities
                     </a>
@@ -343,7 +517,7 @@
             <p class="text-xl mb-8 max-w-2xl mx-auto">
                 Let us create a customized safari experience tailored to your interests and preferences
             </p>
-            <div class="flex justify-center gap-4">
+            <div class="flex justify-center gap-4 flex-wrap">
                 <a href="{{ route('contact') }}" class="bg-white text-green-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition shadow-lg">
                     <i class="fas fa-paper-plane mr-2"></i> Plan Your Safari
                 </a>
@@ -354,6 +528,171 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+// Hero Carousel
+let currentSlide = 0;
+const slides = document.querySelectorAll('.carousel-slide');
+const totalSlides = slides.length;
+const maxIndicators = 5;
+const showGroupedIndicators = totalSlides > maxIndicators;
+let autoPlayInterval;
+
+function updateSlideCounter() {
+    const counter = document.getElementById('current-slide');
+    if (counter) {
+        counter.textContent = currentSlide + 1;
+    }
+}
+
+function updateIndicators() {
+    if (showGroupedIndicators) {
+        // Update grouped indicators
+        const groups = document.querySelectorAll('.carousel-indicator-group');
+        const groupSize = Math.ceil(totalSlides / maxIndicators);
+        const activeGroup = Math.floor(currentSlide / groupSize);
+        
+        groups.forEach((group, index) => {
+            if (index === activeGroup) {
+                group.classList.remove('bg-white/40', 'w-6', 'md:w-8');
+                group.classList.add('bg-white', 'w-8', 'md:w-10');
+            } else {
+                group.classList.remove('bg-white', 'w-8', 'md:w-10');
+                group.classList.add('bg-white/40', 'w-6', 'md:w-8');
+            }
+        });
+    } else {
+        // Update individual indicators
+        const indicators = document.querySelectorAll('.carousel-indicator');
+        indicators.forEach((indicator, index) => {
+            if (index === currentSlide) {
+                indicator.classList.remove('bg-white/40', 'w-6', 'md:w-8');
+                indicator.classList.add('bg-white', 'w-8', 'md:w-10');
+            } else {
+                indicator.classList.remove('bg-white', 'w-8', 'md:w-10');
+                indicator.classList.add('bg-white/40', 'w-6', 'md:w-8');
+            }
+        });
+    }
+}
+
+function showSlide(index) {
+    // Hide all slides
+    slides.forEach(slide => {
+        slide.classList.remove('active', 'opacity-100');
+        slide.classList.add('opacity-0');
+    });
+    
+    // Show current slide
+    if (slides[index]) {
+        slides[index].classList.add('active', 'opacity-100');
+        slides[index].classList.remove('opacity-0');
+    }
+    
+    updateIndicators();
+    updateSlideCounter();
+}
+
+function nextSlide() {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    showSlide(currentSlide);
+    resetAutoPlay();
+}
+
+function previousSlide() {
+    currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+    showSlide(currentSlide);
+    resetAutoPlay();
+}
+
+function goToSlide(index) {
+    currentSlide = index;
+    showSlide(currentSlide);
+    resetAutoPlay();
+}
+
+function goToSlideGroup(groupIndex) {
+    const groupSize = Math.ceil(totalSlides / maxIndicators);
+    const targetSlide = groupIndex * groupSize;
+    currentSlide = Math.min(targetSlide, totalSlides - 1);
+    showSlide(currentSlide);
+    resetAutoPlay();
+}
+
+function startAutoPlay() {
+    if (totalSlides > 1) {
+        autoPlayInterval = setInterval(() => {
+            nextSlide();
+        }, 5000);
+    }
+}
+
+function resetAutoPlay() {
+    clearInterval(autoPlayInterval);
+    startAutoPlay();
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft') {
+        previousSlide();
+    } else if (e.key === 'ArrowRight') {
+        nextSlide();
+    }
+});
+
+// Touch/Swipe support for mobile
+let touchStartX = 0;
+let touchEndX = 0;
+
+const carousel = document.getElementById('hero-carousel');
+
+if (carousel) {
+    carousel.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+
+    carousel.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+}
+
+function handleSwipe() {
+    if (touchEndX < touchStartX - 50) {
+        nextSlide();
+    }
+    if (touchEndX > touchStartX + 50) {
+        previousSlide();
+    }
+}
+
+// Start autoplay when page loads
+if (totalSlides > 1) {
+    startAutoPlay();
+}
+
+// Pause autoplay when user hovers over carousel (desktop)
+if (carousel) {
+    carousel.addEventListener('mouseenter', () => {
+        clearInterval(autoPlayInterval);
+    });
+
+    carousel.addEventListener('mouseleave', () => {
+        if (totalSlides > 1) {
+            startAutoPlay();
+        }
+    });
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateIndicators();
+    updateSlideCounter();
+});
+</script>
+@endpush
 
 <style>
 .line-clamp-2 {
@@ -367,6 +706,83 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+/* Carousel Animations */
+.carousel-slide {
+    transition: opacity 1000ms ease-in-out;
+}
+
+.carousel-slide.active {
+    opacity: 1 !important;
+}
+
+/* Slide-up Animation */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.8s ease-out forwards;
+    opacity: 0;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* Indicator hover effect */
+.carousel-indicator,
+.carousel-indicator-group {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.carousel-indicator:hover,
+.carousel-indicator-group:hover {
+    background-color: rgba(255, 255, 255, 0.7) !important;
+    transform: scaleY(1.3);
+}
+
+/* Navigation button styles */
+button[onclick*="Slide"] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .carousel-slide h1 {
+        font-size: 1.875rem;
+        line-height: 1.2;
+    }
+    
+    .carousel-slide p {
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .carousel-slide h1 {
+        font-size: 1.5rem;
+    }
 }
 </style>
 @endsection
