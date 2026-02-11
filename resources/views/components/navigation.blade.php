@@ -124,7 +124,13 @@
                         <div class="absolute left-0 mt-2 w-80 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 translate-y-2 group-hover:translate-y-0 border border-gray-100">
                             <div class="p-4">
                                 @if($destinations->count() > 0)
-                                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">All Destinations</h3>
+                             
+                                <a href="{{ route('destinations.index') }}">
+                                    <div class="mb-4 text-center text-sm font-medium text-green-600 hover:text-green-700">
+                                        View All {{ $destinations->count() }} Destinations →
+                                    </div>
+                                </a>
+
                                 <div class="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto">
                                     @foreach($destinations as $destination)
                                     <a href="{{ route('destinations.show', $destination->slug) }}" class="group/item">
@@ -233,10 +239,9 @@
 
             <!-- CTA Button (Desktop) -->
             <div class="hidden md:block">
-                <a href="{{ route('booking.create') }}" 
-                   class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg">
-                    Book Safari
-                </a>
+ <a href="{{ route('custom-tour-requests.create') }}" class="nav-link">
+    <i class="fas fa-map-marked-alt mr-2"></i>Plan Custom Tour
+</a>
             </div>
 
             <!-- Mobile menu button -->
@@ -293,12 +298,11 @@
                     📞 Contact
                 </a>
                 
-                <div class="px-3 py-4 border-t border-gray-200 mt-4">
-                    <a href="{{ route('booking.create') }}" 
-                       class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-full text-sm font-medium transition-all duration-300 inline-block text-center">
-                        🎯 Book Safari Now
-                    </a>
-                </div>
+                 <a href="{{ route('custom-tour-requests.create') }}" class="nav-link">
+
+                    <i class="fas fa-map-marked-alt mr-2"></i>Plan Custom Tour
+                </a>
+
             </div>
         </div>
     </div>

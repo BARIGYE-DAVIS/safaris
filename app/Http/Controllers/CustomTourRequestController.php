@@ -6,10 +6,12 @@ use App\Models\CustomTourRequest;
 use App\Models\Country;
 use App\Models\Destination;
 use App\Models\Activity;
+use App\Models\ActivityCategory;
 use App\Models\BudgetCategory;
 use App\Models\AccommodationType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class CustomTourRequestController extends Controller
 {
@@ -63,12 +65,71 @@ class CustomTourRequestController extends Controller
     /**
      * ADMIN: Show single custom tour request
      */
-    public function adminShow(CustomTourRequest $customTourRequest)
-    {
-        $customTourRequest->load(['destinationsDetails', 'activitiesDetails']);
-
-        return view('admin.custom-tour-requests.show', compact('customTourRequest'));
+  /**
+ * ADMIN: Show single custom tour request (Simplified version)
+ */
+public function adminShow(CustomTourRequest $customTourRequest)
+{
+        $title = 'Tour Request Details - ' . $customTourRequest->reference_number;
+    // Accessor attributes will be loaded automatically when accessed in the view
+    // But we can pre-load some related data for better performance
+    
+    // Pre-load destinations with countries
+    if ($customTourRequest->destinations && is_array($customTourRequest->destinations)) {
+        $destinations = Destination::whereIn('id', $customTourRequest->destinations)
+            ->with('country')
+            ->get();
+        $customTourRequest->setRelation('destinations_details', $destinations);
     }
+    
+    // Pre-load activities with categories
+    if ($customTourRequest->activities && is_array($customTourRequest->activities)) {
+        $activities = Activity::whereIn('id', $customTourRequest->activities)
+            ->when(class_exists('App\Models\ActivityCategory'), function ($query) {
+                return $query->with('category');
+            })
+            ->get();
+        $customTourRequest->setRelation('activities_details', $activities);
+    }
+    
+    // Load budget category if applicable
+    if ($customTourRequest->budget_category && class_exists('App\Models\BudgetCategory')) {
+        $budgetCategory = \App\Models\BudgetCategory::where('slug', $customTourRequest->budget_category)
+            ->orWhere('name', $customTourRequest->budget_category)
+            ->first();
+        $customTourRequest->setRelation('budget_category_details', $budgetCategory);
+    }
+    
+    // Get country details
+    if ($customTourRequest->country) {
+        $countryDetails = Country::where('name', $customTourRequest->country)->first();
+        $customTourRequest->setRelation('country_relation', $countryDetails);
+    }
+    
+    // Get similar requests for recommendations
+    $similarRequests = CustomTourRequest::where('id', '!=', $customTourRequest->id)
+        ->where(function ($query) use ($customTourRequest) {
+            $query->where('country', $customTourRequest->country)
+                  ->orWhere(function ($q) use ($customTourRequest) {
+                      if ($customTourRequest->destinations && is_array($customTourRequest->destinations)) {
+                          $q->whereJsonContains('destinations', $customTourRequest->destinations[0] ?? null);
+                      }
+                  });
+        })
+        ->where('status', '!=', CustomTourRequest::STATUS_CANCELLED)
+        ->latest()
+        ->limit(5)
+        ->get();
+    
+    // Format admin notes for better display
+    $formattedAdminNotes = $customTourRequest->formatted_admin_notes ?? [];
+    
+    return view('admin.custom-tour-requests.show', compact(
+        'customTourRequest',
+        'similarRequests',
+        'formattedAdminNotes'
+    ));
+}
 
     /**
      * ADMIN: Show edit form
@@ -234,20 +295,61 @@ class CustomTourRequestController extends Controller
     }
 
     /**
-     * PUBLIC: Show custom tour request form
+     * PUBLIC: Show custom tour request form (Multi-step wizard)
      */
     public function create()
     {
-        $countries = Country::active()->ordered()->get();
-        $destinations = Destination::active()->ordered()->get();
-        $activities = Activity::active()->ordered()->get();
-        $budgetCategories = BudgetCategory::active()->ordered()->get();
-        $accommodationTypes = AccommodationType::active()->ordered()->get();
+        // Get all active countries with their destinations
+        $countries = Country::where('is_active', true)
+                    ->with(['destinations' => function($query) {
+                        $query->where('is_active', true)->orderBy('name');
+                    }])
+                    ->orderBy('name')
+                    ->get();
+
+        // Get all destinations for filtering
+        $destinations = Destination::where('is_active', true)
+                        ->with('country')
+                        ->orderBy('name')
+                        ->get();
+
+        // Get all activities
+        $activities = Activity::where('is_active', true)
+                    ->orderBy('name')
+                    ->get();
+
+        // Get activity categories if they exist
+        $activityCategories = collect();
+        if (class_exists('App\Models\ActivityCategory')) {
+            $activityCategories = ActivityCategory::where('is_active', true)
+                                ->with(['activities' => function($query) {
+                                    $query->where('is_active', true)->orderBy('name');
+                                }])
+                                ->orderBy('name')
+                                ->get();
+        }
+
+        // Get budget categories if they exist
+        $budgetCategories = collect();
+        if (class_exists('App\Models\BudgetCategory')) {
+            $budgetCategories = BudgetCategory::where('is_active', true)
+                            ->orderBy('sort_order')
+                            ->get();
+        }
+
+        // Get accommodation types if they exist
+        $accommodationTypes = collect();
+        if (class_exists('App\Models\AccommodationType')) {
+            $accommodationTypes = AccommodationType::where('is_active', true)
+                                ->orderBy('sort_order')
+                                ->get();
+        }
 
         return view('custom-tour-requests.create', compact(
             'countries',
             'destinations',
             'activities',
+            'activityCategories',
             'budgetCategories',
             'accommodationTypes'
         ));
@@ -258,70 +360,117 @@ class CustomTourRequestController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            // Personal Information
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:20',
-            'country' => 'required|string|max:255',
-            'language' => 'nullable|string|max:50',
+        try {
+            // Validate the request
+            $validated = $request->validate([
+                // Step 1: Personal Information
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'phone' => 'nullable|string|max:50',
+                'country' => 'nullable|string|max:255',
+                'language' => 'nullable|string|max:50',
+                
+                // Step 2: Travel Details
+                'travel_date_from' => 'nullable|date|after_or_equal:today',
+                'travel_date_to' => 'nullable|date|after:travel_date_from',
+                'flexible_dates' => 'nullable|boolean',
+                'duration' => 'nullable|string|max:100',
+                'adults_count' => 'required|integer|min:1|max:50',
+                'children_count' => 'nullable|integer|min:0|max:50',
+                'infants_count' => 'nullable|integer|min:0|max:50',
+                
+                // Step 3: Destinations & Activities
+                'destinations' => 'nullable|array',
+                'destinations.*' => 'exists:destinations,id',
+                'activities' => 'nullable|array',
+                'activities.*' => 'exists:activities,id',
+                
+                // Step 4: Preferences
+                'budget_category' => 'nullable|string|max:100',
+                'approximate_budget' => 'nullable|string|max:255',
+                'accommodation_preference' => 'nullable|string|max:255',
+                
+                // Step 5: Special Requirements
+                'special_requirements' => 'nullable|array',
+                'dietary_restrictions' => 'nullable|string',
+                'medical_conditions' => 'nullable|string',
+                'special_requests' => 'nullable|string',
+                'heard_from' => 'nullable|string|max:255',
+            ]);
 
-            // Travel Details
-            'travel_date_from' => 'nullable|date|after_or_equal:today',
-            'travel_date_to' => 'nullable|date|after_or_equal:travel_date_from',
-            'flexible_dates' => 'boolean',
-            'duration' => 'nullable|string|max:50',
-            'adults_count' => 'required|integer|min:1|max:50',
-            'children_count' => 'nullable|integer|min:0|max:50',
-            'infants_count' => 'nullable|integer|min:0|max:50',
+            // Set defaults
+            $validated['flexible_dates'] = $request->has('flexible_dates');
+            $validated['children_count'] = $validated['children_count'] ?? 0;
+            $validated['infants_count'] = $validated['infants_count'] ?? 0;
+            $validated['status'] = CustomTourRequest::STATUS_NEW;
 
-            // Tour Preferences
-            'budget_category' => 'nullable|string|max:100',
-            'destinations' => 'nullable|array',
-            'destinations.*' => 'exists:destinations,id',
-            'activities' => 'nullable|array',
-            'activities.*' => 'exists:activities,id',
-            'accommodation_preference' => 'nullable|string|max:255',
+            // Create the request
+            $tourRequest = CustomTourRequest::create($validated);
 
-            // Special Requirements
-            'special_requirements' => 'nullable|array',
-            'dietary_restrictions' => 'nullable|string',
-            'medical_conditions' => 'nullable|string',
-            'special_requests' => 'nullable|string',
+            // Log the creation
+            Log::info('Custom tour request created', [
+                'id' => $tourRequest->id,
+                'reference' => $tourRequest->reference_number,
+                'email' => $tourRequest->email
+            ]);
 
-            // Additional Info
-            'heard_from' => 'nullable|string|max:255',
-            'approximate_budget' => 'nullable|string|max:100',
-        ]);
+            // Send notification email to admin (optional - uncomment when ready)
+            // try {
+            //     Mail::to(config('mail.admin_email'))->send(new NewTourRequestNotification($tourRequest));
+            // } catch (\Exception $e) {
+            //     Log::error('Failed to send admin notification email', ['error' => $e->getMessage()]);
+            // }
 
-        $validated['flexible_dates'] = $request->has('flexible_dates');
-        $validated['children_count'] = $validated['children_count'] ?? 0;
-        $validated['infants_count'] = $validated['infants_count'] ?? 0;
-        $validated['status'] = CustomTourRequest::STATUS_NEW;
+            // Send confirmation email to customer (optional - uncomment when ready)
+            // try {
+            //     Mail::to($tourRequest->email)->send(new TourRequestConfirmation($tourRequest));
+            // } catch (\Exception $e) {
+            //     Log::error('Failed to send customer confirmation email', ['error' => $e->getMessage()]);
+            // }
 
-        $tourRequest = CustomTourRequest::create($validated);
+            return redirect()->route('custom-tour-requests.success', $tourRequest->id)
+                           ->with('success', 'Your custom tour request has been submitted successfully!')
+                           ->with('reference_number', $tourRequest->reference_number);
 
-        // Send notification email to admin (optional)
-        // Mail::to(config('mail.admin_email'))->send(new NewTourRequestNotification($tourRequest));
-
-        // Send confirmation email to customer (optional)
-        // Mail::to($tourRequest->email)->send(new TourRequestConfirmation($tourRequest));
-
-        return redirect()->route('custom-tour-requests.success')
-                        ->with('success', 'Your custom tour request has been submitted successfully!')
-                        ->with('reference_number', $tourRequest->reference_number);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Validation failed for custom tour request', ['errors' => $e->errors()]);
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Error creating custom tour request', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'An error occurred while submitting your request. Please try again.')
+                       ->withInput();
+        }
     }
 
     /**
      * PUBLIC: Success page after submission
      */
-    public function success()
+    public function success($id = null)
     {
+        // If ID is provided, find the request
+        if ($id) {
+            $request = CustomTourRequest::findOrFail($id);
+            return view('custom-tour-requests.success', compact('request'));
+        }
+
+        // Fallback to session data
         if (!session()->has('success')) {
             return redirect()->route('custom-tour-requests.create');
         }
 
-        return view('custom-tour-requests.success');
+        // Try to get request from session reference number
+        $referenceNumber = session('reference_number');
+        $request = null;
+        
+        if ($referenceNumber) {
+            $id = ltrim(str_replace('CTR-', '', $referenceNumber), '0');
+            $request = CustomTourRequest::find($id);
+        }
+
+        return view('custom-tour-requests.success', compact('request'));
     }
 
     /**
@@ -353,29 +502,42 @@ class CustomTourRequestController extends Controller
     }
 
     /**
-     * API: Get destinations by country
+     * API: Get destinations by country (AJAX)
      */
     public function getDestinationsByCountry($countryId)
     {
         $destinations = Destination::where('country_id', $countryId)
-                                   ->active()
-                                   ->ordered()
-                                   ->get();
+                                   ->where('is_active', true)
+                                   ->orderBy('name')
+                                   ->get(['id', 'name', 'slug', 'image', 'description', 'type']);
 
         return response()->json($destinations);
     }
 
     /**
-     * API: Get activities by country
+     * API: Get activities by country (AJAX)
      */
     public function getActivitiesByCountry($countryId)
     {
-        $activities = Activity::whereHas('countries', function ($q) use ($countryId) {
-                          $q->where('countries.id', $countryId);
+        $activities = Activity::whereHas('destinations', function ($q) use ($countryId) {
+                          $q->where('country_id', $countryId);
                       })
-                      ->active()
-                      ->ordered()
-                      ->get();
+                      ->where('is_active', true)
+                      ->orderBy('name')
+                      ->get(['id', 'name', 'slug', 'icon', 'image', 'description']);
+
+        return response()->json($activities);
+    }
+
+    /**
+     * API: Get activities by category (AJAX)
+     */
+    public function getActivitiesByCategory($categoryId)
+    {
+        $activities = Activity::where('category_id', $categoryId)
+                    ->where('is_active', true)
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'slug', 'icon', 'image', 'description', 'duration']);
 
         return response()->json($activities);
     }

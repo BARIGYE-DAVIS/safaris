@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class ActivityCategory extends Model
 {
@@ -11,7 +12,10 @@ class ActivityCategory extends Model
 
     protected $fillable = [
         'name',
+        'slug',           // ✅ ADDED
+        'description',    // ✅ ADDED
         'icon',
+        'image',          // ✅ ADDED
         'is_active',
         'sort_order',
     ];
@@ -20,6 +24,26 @@ class ActivityCategory extends Model
         'is_active' => 'boolean',
         'sort_order' => 'integer',
     ];
+
+    /**
+     * Boot method to auto-generate slug
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($category) {
+            if (empty($category->slug)) {
+                $category->slug = Str::slug($category->name);
+            }
+        });
+
+        static::updating(function ($category) {
+            if ($category->isDirty('name') && empty($category->slug)) {
+                $category->slug = Str::slug($category->name);
+            }
+        });
+    }
 
     /**
      * Get all activities in this category
@@ -51,5 +75,16 @@ class ActivityCategory extends Model
     public function getActiveActivitiesCountAttribute()
     {
         return $this->activities()->where('is_active', true)->count();
+    }
+
+    /**
+     * Get the image URL
+     */
+    public function getImageUrlAttribute()
+    {
+        if ($this->image) {
+            return asset('storage/' . $this->image);
+        }
+        return null;
     }
 }

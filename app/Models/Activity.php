@@ -309,6 +309,26 @@ class Activity extends Model
                $this->images()->count() > 0;
     }
 
+
+    /**
+ * Check if this activity is in any custom tour requests
+ */
+public function getCustomTourRequestsCountAttribute()
+{
+    return CustomTourRequest::whereJsonContains('activities', $this->id)->count();
+}
+
+
+/**
+ * Get custom tour requests that include this activity
+ */
+public function getCustomTourRequestsAttribute()
+{
+    return CustomTourRequest::whereJsonContains('activities', $this->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+}
+
     /**
      * Get meta title for SEO (fallback to name)
      */
