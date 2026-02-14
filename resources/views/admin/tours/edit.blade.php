@@ -9,6 +9,21 @@
         <p class="mt-2 text-sm text-gray-600">Update the details below to modify the tour package</p>
     </div>
 
+    @if (session('success'))
+<div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6 rounded-r-lg">
+    <div class="flex">
+        <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 10-1.414 1.414L9 13.414l4.707-4.707z" clip-rule="evenodd"/>
+            </svg>
+        </div>
+        <div class="ml-3">
+            <p class="text-sm font-medium text-green-800">Success</p>
+            <p class="mt-1 text-sm text-green-700">{{ session('success') }}</p>
+        </div>
+    </div>
+</div>
+@endif
     @if ($errors->any())
         <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
             <div class="flex">
@@ -29,7 +44,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.tours.update', $tour->id) }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+    <form id="edit-tour-form" action="{{ route('admin.tours.update', $tour->id) }}" method="POST" enctype="multipart/form-data" class="space-y-8">
         @csrf
         @method('PUT')
         
@@ -335,6 +350,23 @@
 document.addEventListener('DOMContentLoaded', function() {
     const STORAGE_KEY = 'tour_edit_form_data_{{ $tour->id }}';
 
+    // --- small helpers ---
+    function uuid() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+    function tempId() {
+        return 'tmp-' + Math.random().toString(36).substr(2, 9);
+    }
+
+    // --- AUTO-RESIZE TEXTAREA ---
+    function autoResize(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
     // --- LOAD SAVED DATA FROM LOCALSTORAGE ---
     function loadSavedData() {
         const savedData = localStorage.getItem(STORAGE_KEY);
@@ -368,12 +400,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- SAVE DATA TO LOCALSTORAGE ---
+    // --- SAVE TO LOCALSTORAGE ---
     function saveFormData() {
         const formFields = {};
         const inputs = document.querySelectorAll('input[type="text"], input[type="number"], textarea, select');
         inputs.forEach(input => {
-            if (input.name && !input.name.startsWith('itinerary[') && !input.name.startsWith('prices[') && input.name !== 'meta_keywords' && !input.name.includes('images[') && !input.name.includes('delete_images[')) {
+            if (input.name && !input.name.startsWith('itinerary[') && !input.name.startsWith('prices[') && input.name !== 'meta_keywords' && !input.name.includes('images[') && !input.name.includes('delete_images[') && !input.name.includes('uploads[')) {
                 formFields[input.name] = input.value;
             }
         });
@@ -383,70 +415,77 @@ document.addEventListener('DOMContentLoaded', function() {
             itineraryDays,
             prices,
             metaKeywords,
-            imagesList: imagesList.map(img => ({preview: img.preview}))
+            imagesList: imagesList.map(img => ({preview: img.preview, id: img.id || null, path: img.path || null}))
         };
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
-    // --- AUTO-SAVE ON INPUT CHANGE ---
-    document.querySelectorAll('input, textarea, select').forEach(element => {
-        element.addEventListener('input', saveFormData);
-        element.addEventListener('change', saveFormData);
-    });
-
-    // --- CLEAR STORAGE ON SUCCESSFUL SUBMIT ---
-    document.querySelector('form').addEventListener('submit', function() {
+    // --- CLEAR STORAGE ON SUBMIT (attach content_blocks first) ---
+    document.getElementById('edit-tour-form').addEventListener('submit', function(e) {
+        buildAndAttachContentBlocks();
         localStorage.removeItem(STORAGE_KEY);
     });
 
-    // --- AUTO-RESIZE TEXTAREA ---
-    function autoResize(textarea) {
-        textarea.style.height = 'auto';
-        textarea.style.height = textarea.scrollHeight + 'px';
-    }
-
     // --- FEATURED IMAGE PREVIEW ---
-    document.getElementById('featured_image').addEventListener('change', function(e) {
-        let preview = document.getElementById('featured_image_preview');
-        preview.innerHTML = '';
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                preview.innerHTML = `
-                    <div>
-                        <p class="text-sm font-medium text-gray-700 mb-2">New Image Preview:</p>
-                        <div class="relative inline-block">
-                            <img src="${ev.target.result}" class="h-32 w-auto rounded-lg border-2 border-gray-200 shadow-md">
-                            <div class="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-1">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                </svg>
+    const featuredInput = document.getElementById('featured_image');
+    if (featuredInput) {
+        featuredInput.addEventListener('change', function(e) {
+            let preview = document.getElementById('featured_image_preview');
+            preview.innerHTML = '';
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    preview.innerHTML = `
+                        <div>
+                            <p class="text-sm font-medium text-gray-700 mb-2">New Image Preview:</p>
+                            <div class="relative inline-block">
+                                <img src="${ev.target.result}" class="h-32 w-auto rounded-lg border-2 border-gray-200 shadow-md">
+                                <div class="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-1">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
 
-    // --- LOAD EXISTING ITINERARY DATA ---
+    // --- PRELOAD ITINERARY DAYS WITH EXISTING ITINERARY + IMAGES + content_blocks ---
     let itineraryDays = [];
     @if($tour->itinerary && count($tour->itinerary) > 0)
         itineraryDays = {!! json_encode($tour->itinerary->map(function($item) {
+            $images = [];
+            if (method_exists($item, 'images') && $item->images && count($item->images) > 0) {
+                $images = $item->images->map(function($img) {
+                    return [
+                        'existingMediaId' => $img->id,
+                        'preview' => $img->thumbnail_path ? asset('storage/' . ltrim($img->thumbnail_path, '/')) : ($img->storage_path ? asset('storage/' . ltrim($img->storage_path, '/')) : null),
+                        'caption' => $img->caption,
+                        'blockId' => $img->block_id,
+                        'storage_path' => $img->storage_path,
+                        'thumbnail_path' => $img->thumbnail_path,
+                    ];
+                })->values()->toArray();
+            }
             return [
                 'id' => $item->id ?? null,
                 'activity' => $item->activity ?? '',
                 'day_title' => $item->day_title ?? '',
                 'accommodation' => $item->accommodation ?? '',
-                'meals' => $item->meals ?? ''
+                'meals' => $item->meals ?? '',
+                'blocks' => $item->content_blocks ?? null,
+                'images' => $images
             ];
         })->values()->toArray()) !!};
     @endif
 
-    // --- DYNAMIC ITINERARIES ---
+    // --- DYNAMIC ITINERARIES RENDERING (supports existing images and blocks) ---
     function renderItinerary() {
         const container = document.getElementById('itinerary-days');
         const noMessage = document.getElementById('no-itinerary-message');
@@ -462,6 +501,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         itineraryDays.forEach((day, i) => {
             const dayNum = i + 1;
+            if (!Array.isArray(day.images)) day.images = [];
+            // ensure each client-side image object has tempId + blockId
+            day.images.forEach(img => {
+                if (!img.tempId && !img.existingMediaId) img.tempId = tempId();
+                if (!img.blockId) img.blockId = 'blk-' + uuid();
+            });
+
             const el = document.createElement('div');
             el.className = "relative bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6 border-2 border-indigo-200 hover:border-indigo-300 transition duration-150";
             el.innerHTML = `
@@ -470,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <input type="hidden" name="itinerary[${dayNum}][day_number]" value="${dayNum}">
                 ${day.id ? `<input type="hidden" name="itinerary[${dayNum}][id]" value="${day.id}">` : ''}
-                
+                <input type="hidden" data-contentblock-input name="itinerary[${dayNum}][content_blocks]" value="">
                 <div class="ml-14 space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -515,6 +561,18 @@ document.addEventListener('DOMContentLoaded', function() {
                                 placeholder="e.g., B, L, D">
                         </div>
                     </div>
+
+                    <!-- Itinerary Day Images -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Day Images (optional)</label>
+                        <div id="day-images-${dayNum}" class="space-y-3"></div>
+                        <div class="flex gap-2 mt-3">
+                            <button type="button" class="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 add-day-image" data-index="${i}">
+                                Add Image
+                            </button>
+                            <p class="text-sm text-gray-500">Add images to appear inline with this day's description. Each image can have a caption.</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <button 
@@ -528,43 +586,215 @@ document.addEventListener('DOMContentLoaded', function() {
                     Remove
                 </button>
             `;
-            
+
+            // Remove day action
             el.querySelector('.remove-day').onclick = function() {
                 itineraryDays.splice(i, 1);
                 renderItinerary();
                 saveFormData();
             };
-            
+
+            // append element, then set the content_blocks hidden input using JS (avoid server-side json_encode in template)
+            container.appendChild(el);
+
+            // Set the hidden content_blocks input value safely from the JS data
+            const cbInput = el.querySelector('[data-contentblock-input]');
+            try {
+                cbInput.value = day.blocks && Array.isArray(day.blocks) ? JSON.stringify(day.blocks) : '';
+            } catch (err) {
+                // fallback - ensure it's a string
+                cbInput.value = '';
+                console.error('Error serializing blocks for day', dayNum, err);
+            }
+
+            // render day images (existing + new)
+            const dayImagesContainer = document.getElementById(`day-images-${dayNum}`);
+            function renderDayImages() {
+                dayImagesContainer.innerHTML = '';
+                day.images.forEach((imgObj, imgIndex) => {
+                    // ensure ids
+                    if (!imgObj.tempId && !imgObj.existingMediaId) imgObj.tempId = tempId();
+                    if (!imgObj.blockId) imgObj.blockId = 'blk-' + uuid();
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'flex items-start gap-4 bg-white p-3 rounded-lg border border-gray-200';
+                    wrapper.innerHTML = `
+                        <div class="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                            <img id="it-${dayNum}-img-preview-${imgIndex}" src="${imgObj.preview || ''}" class="w-full h-full object-cover" style="display:${imgObj.preview ? 'block':'none'}">
+                            <svg class="w-8 h-8 text-gray-400" style="display:${imgObj.preview ? 'none':'block'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            ${imgObj.existingMediaId ? `
+                                <input type="hidden" name="itinerary[${dayNum}][existing_media_ids][]" value="${imgObj.existingMediaId}">
+                                <p class="text-sm font-medium mb-1">Existing image</p>
+                                <p class="text-xs text-gray-500 truncate">${imgObj.storage_path || imgObj.preview || ''}</p>
+                                <input type="text" name="itinerary[${dayNum}][image_captions][]" value="${imgObj.caption || ''}" placeholder="Caption (optional)" class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg caption-input">
+                            ` : `
+                                <!-- new upload keyed by tempId -->
+                                <input type="file" accept="image/*" name="itinerary[${dayNum}][uploads][${imgObj.tempId}]" class="w-full image-input" data-day="${i}" data-img="${imgIndex}">
+                                <input type="text" name="itinerary[${dayNum}][image_captions][]" value="${imgObj.caption || ''}" placeholder="Caption (optional)" class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg caption-input">
+                            `}
+                        </div>
+                        <div class="flex-shrink-0">
+                            <button type="button" class="bg-red-600 hover:bg-red-700 text-white rounded-lg px-3 py-2 remove-day-image" data-day="${i}" data-img="${imgIndex}">
+                                Remove
+                            </button>
+                        </div>
+                    `;
+                    dayImagesContainer.appendChild(wrapper);
+
+                    // file input change listener for new uploads
+                    const fileInput = wrapper.querySelector('.image-input');
+                    if (fileInput) {
+                        fileInput.addEventListener('change', function() {
+                            const file = this.files[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = function(ev) {
+                                    imgObj.preview = ev.target.result;
+                                    const imgEl = document.getElementById(`it-${dayNum}-img-preview-${imgIndex}`);
+                                    imgEl.src = ev.target.result;
+                                    imgEl.style.display = 'block';
+                                    if (imgEl.nextElementSibling) imgEl.nextElementSibling.style.display = 'none';
+                                    saveFormData();
+                                };
+                                reader.readAsDataURL(file);
+                            }
+                        });
+                    }
+
+                    // caption listener
+                    const captionInput = wrapper.querySelector('.caption-input');
+                    if (captionInput) {
+                        captionInput.addEventListener('input', function() {
+                            imgObj.caption = this.value;
+                            saveFormData();
+                        });
+                    }
+
+                    // remove image handler
+                    wrapper.querySelector('.remove-day-image').addEventListener('click', function() {
+                        const toRemove = day.images[imgIndex];
+                        // If it's an existing image, mark for deletion via hidden input
+                        if (toRemove && toRemove.existingMediaId) {
+                            const hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.name = 'delete_itinerary_image_ids[]';
+                            hiddenInput.value = toRemove.existingMediaId;
+                            document.querySelector('form').appendChild(hiddenInput);
+                        }
+                        day.images.splice(imgIndex, 1);
+                        renderDayImages();
+                        saveFormData();
+                    });
+                });
+            }
+
+            // add-day-image button
+            el.querySelector('.add-day-image').addEventListener('click', function() {
+                day.images.push({preview: '', caption: '', tempId: tempId(), blockId: 'blk-' + uuid(), existingMediaId: null});
+                renderDayImages();
+                saveFormData();
+            });
+
+            // textarea auto-resize + data binding
             const activityTextarea = el.querySelector('.auto-resize');
             activityTextarea.addEventListener('input', function() {
                 autoResize(this);
                 day.activity = this.value;
                 saveFormData();
             });
-            
-            el.querySelectorAll('input, textarea').forEach(input => {
+
+            // map top-level inputs back to day object
+            el.querySelectorAll('input[name^="itinerary"], textarea[name^="itinerary"]').forEach(input => {
                 input.addEventListener('input', function() {
-                    // Update the day object with new values
-                    if (this.name.includes('[activity]')) day.activity = this.value;
-                    if (this.name.includes('[day_title]')) day.day_title = this.value;
-                    if (this.name.includes('[accommodation]')) day.accommodation = this.value;
-                    if (this.name.includes('[meals]')) day.meals = this.value;
+                    const name = this.getAttribute('name');
+                    const match = name.match(/itinerary\[\d+\]\[([^\]]+)\]/);
+                    if (match) {
+                        const key = match[1];
+                        if (key === 'day_number' || key === 'id' || key === 'content_blocks') return;
+                        if (key !== 'images' && key !== 'image_captions' && key !== 'uploads' && key !== 'existing_media_ids') {
+                            day[key] = this.value;
+                        }
+                    }
                     saveFormData();
                 });
             });
-            
-            container.appendChild(el);
+
+            // initial render of images for this day
+            renderDayImages();
+
+            // initial textarea resize
             autoResize(activityTextarea);
         });
     }
-    
+
     document.getElementById('add-itinerary-day').onclick = function() {
-        itineraryDays.push({activity:"", day_title:"", accommodation:"", meals:""});
+        itineraryDays.push({activity:"", day_title:"", accommodation:"", meals:"", images:[], blocks:[]});
         renderItinerary();
         saveFormData();
     };
 
-    // --- LOAD EXISTING PRICES DATA ---
+
+    // --- BUILD AND ATTACH content_blocks HIDDEN INPUTS BEFORE SUBMIT ---
+    function buildAndAttachContentBlocks() {
+        const container = document.getElementById('itinerary-days');
+        const hiddenInputs = container.querySelectorAll('[data-contentblock-input]');
+
+        hiddenInputs.forEach((hiddenInput, idx) => {
+            const dayIndex = idx;
+            const dayNum = idx + 1;
+            const dayData = itineraryDays[dayIndex];
+            if (!dayData) return;
+
+            let blocks = [];
+
+            // Prefer explicit blocks if present (from DB)
+            if (Array.isArray(dayData.blocks) && dayData.blocks.length > 0) {
+                // ensure image blocks have block ids and map existing media ids to blocks if present
+                dayData.blocks.forEach(b => {
+                    if (b.type === 'image') {
+                        if (!b.id) b.id = 'blk-' + uuid();
+                        // if block already has media_id keep it; otherwise attempt to map by caption or preview
+                        if (!b.media_id && !b.temp_media_id) {
+                            const match = dayData.images.find(im => (im.existingMediaId && im.existingMediaId.toString() === (b.media_id ? b.media_id.toString() : '')) || im.caption === b.caption || im.preview === b.preview);
+                            if (match) {
+                                if (match.existingMediaId) b.media_id = match.existingMediaId;
+                                else if (match.tempId) b.temp_media_id = match.tempId;
+                            }
+                        }
+                    }
+                    blocks.push(b);
+                });
+            } else {
+                // create a text block for activity
+                if (dayData.activity && dayData.activity.trim() !== '') {
+                    blocks.push({
+                        id: 'blk-' + uuid(),
+                        type: 'text',
+                        text: dayData.activity.trim()
+                    });
+                }
+                // append image blocks
+                dayData.images.forEach(img => {
+                    blocks.push({
+                        id: img.blockId || ('blk-' + uuid()),
+                        type: 'image',
+                        caption: img.caption || '',
+                        // prefer existingMediaId if present, otherwise reference temp id for upload mapping
+                        media_id: img.existingMediaId || undefined,
+                        temp_media_id: img.existingMediaId ? undefined : img.tempId
+                    });
+                });
+            }
+
+            hiddenInput.value = JSON.stringify(blocks);
+        });
+    }
+
+    // --- PRICES & META KEYWORDS & TOUR-LEVEL IMAGES (same patterns as create) ---
     let prices = [];
     @if($tour->prices && count($tour->prices) > 0)
         prices = {!! json_encode($tour->prices->map(function($item) {
@@ -576,20 +806,16 @@ document.addEventListener('DOMContentLoaded', function() {
         })->values()->toArray()) !!};
     @endif
 
-    // --- DYNAMIC PRICES ---
     function renderPrices() {
         const container = document.getElementById('prices');
         const noMessage = document.getElementById('no-prices-message');
-        
         if (prices.length === 0) {
             noMessage.style.display = 'block';
             container.innerHTML = '';
             return;
         }
-        
         noMessage.style.display = 'none';
         container.innerHTML = '';
-        
         prices.forEach((price, i) => {
             const prNum = i + 1;
             const el = document.createElement('div');
@@ -650,43 +876,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     Remove
                 </button>
             `;
-            
             el.querySelector('.remove-price').onclick = function() {
                 prices.splice(i, 1);
                 renderPrices();
                 saveFormData();
             };
-            
             el.querySelectorAll('input').forEach(input => {
                 input.addEventListener('input', function() {
-                    // Update the price object with new values
                     if (this.name.includes('[group_size]')) price.group_size = this.value;
                     if (this.name.includes('[price]')) price.price = this.value;
                     saveFormData();
                 });
             });
-            
             container.appendChild(el);
         });
     }
-    
     document.getElementById('add-price').onclick = function() {
         prices.push({group_size:"", price:""});
         renderPrices();
         saveFormData();
     };
 
-    // --- META KEYWORDS (tags input) ---
+    // --- META KEYWORDS ---
     let metaKeywords = [];
     @if($tour->meta_keywords)
         metaKeywords = {!! json_encode(array_filter(explode(',', $tour->meta_keywords))) !!};
     @endif
-    
     let $input = document.getElementById('meta_keyword_input');
     let $addBtn = document.getElementById('add-meta-keyword');
     let $tags = document.getElementById('meta_keywords_tags');
     let $hidden = document.getElementById('meta_keywords');
-    
+
     function renderKeywords() {
         $tags.innerHTML = '';
         metaKeywords.forEach((kw, idx) => {
@@ -709,7 +929,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         $hidden.value = metaKeywords.join(',');
     }
-    
     $addBtn.onclick = function() {
         let val = $input.value.trim();
         if(val && !metaKeywords.includes(val)) {
@@ -719,7 +938,6 @@ document.addEventListener('DOMContentLoaded', function() {
             saveFormData();
         }
     };
-    
     $input.addEventListener('keydown', function(e){
         if(e.key === 'Enter') {
             e.preventDefault();
@@ -727,7 +945,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- LOAD EXISTING IMAGES ---
+    // --- LOAD EXISTING TOUR-LEVEL IMAGES ---
     let imagesList = [];
     @if($tour->images && count($tour->images) > 0)
         imagesList = {!! json_encode($tour->images->map(function($item) {
@@ -739,7 +957,6 @@ document.addEventListener('DOMContentLoaded', function() {
         })->toArray()) !!};
     @endif
 
-    // --- MULTI-IMAGES PREVIEW ---
     function renderImagesList() {
         const imagesListDiv = document.getElementById('images-list');
         const noMessage = document.getElementById('no-images-message');
@@ -762,7 +979,6 @@ document.addEventListener('DOMContentLoaded', function() {
             wrapper.className = `flex items-center gap-4 ${bgColor} p-4 rounded-lg border-2 ${borderColor} transition duration-150`;
             
             if (isExisting) {
-                // Existing image - show preview, allow deletion
                 wrapper.innerHTML = `
                     <div class="flex-shrink-0">
                         <div class="w-20 h-20 bg-gray-100 rounded-lg border-2 border-gray-300 overflow-hidden">
@@ -786,7 +1002,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 
                 wrapper.querySelector('.delete-img').onclick = function() {
-                    // Add hidden input to mark for deletion
                     const hiddenInput = document.createElement('input');
                     hiddenInput.type = 'hidden';
                     hiddenInput.name = 'delete_images[]';
@@ -798,7 +1013,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     saveFormData();
                 };
             } else {
-                // New image - show file input and preview
                 wrapper.innerHTML = `
                     <div class="flex-shrink-0">
                         <div class="w-20 h-20 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
@@ -867,8 +1081,8 @@ document.addEventListener('DOMContentLoaded', function() {
     renderPrices();
     renderKeywords();
     renderImagesList();
-    
-    // --- LOAD SAVED DATA ON PAGE LOAD ---
+
+    // --- LOAD SAVED DATA IF ANY ---
     loadSavedData();
 });
 </script>

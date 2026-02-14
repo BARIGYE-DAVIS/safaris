@@ -75,34 +75,89 @@
                     </div>
                 </section>
 
-                <!-- Itinerary -->
+                <!-- Itinerary (accessible accordion, lazy-loading images) -->
                 @if($tour->itineraries->count() > 0)
                 <section>
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Day by Day Itinerary</h2>
-                    <div class="space-y-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">Day by Day Itinerary</h2>
+                        <div class="space-x-2">
+                            <button id="expandAll" class="text-sm text-green-600 hover:underline">Expand all</button>
+                            <button id="collapseAll" class="text-sm text-gray-600 hover:underline">Collapse all</button>
+                        </div>
+                    </div>
+
+                    <div id="itineraryAccordion" class="space-y-6" aria-live="polite">
                         @foreach($tour->itineraries->sortBy('day_number') as $day)
+                        @php
+                            $panelId = 'day-panel-' . ($day->id ?? $loop->index);
+                            $buttonId = 'day-btn-' . ($day->id ?? $loop->index);
+                        @endphp
+
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div class="bg-gradient-to-r from-green-500 to-blue-600 px-6 py-4">
-                                <div class="flex items-center">
-                                    <div class="bg-white/20 backdrop-blur rounded-full w-12 h-12 flex items-center justify-center mr-4">
-                                        <span class="text-white font-bold text-lg">{{ $day->day_number }}</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-xl font-bold text-white">
-                                            Day {{ $day->day_number }}
-                                            @if($day->day_title)
-                                                : {{ $day->day_title }}
+                            <!-- Header button - NOW ENTIRE HEADER IS CLICKABLE -->
+                            <button
+                                id="{{ $buttonId }}"
+                                class="accordion-toggle w-full bg-gradient-to-r from-green-500 to-blue-600 px-6 py-4 text-left hover:from-green-600 hover:to-blue-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                aria-expanded="false"
+                                aria-controls="{{ $panelId }}"
+                                type="button"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center flex-1">
+                                        <div class="bg-white/20 backdrop-blur rounded-full w-12 h-12 flex items-center justify-center mr-4 flex-shrink-0">
+                                            <span class="text-white font-bold text-lg">{{ $day->day_number }}</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="text-xl font-bold text-white">
+                                                Day {{ $day->day_number }}
+                                                @if($day->day_title)
+                                                    : {{ $day->day_title }}
+                                                @endif
+                                            </h3>
+                                            @if($day->activity)
+                                                <p class="text-sm text-white/90 mt-1 line-clamp-2">{{ Str::limit(strip_tags($day->activity), 120) }}</p>
                                             @endif
-                                        </h3>
+                                        </div>
+                                    </div>
+
+                                    <div class="ml-4 flex items-center">
+                                        <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10">
+                                            <svg class="w-5 h-5 text-white transform transition-transform" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="p-6">
+                            </button>
+
+                            <!-- Panel -->
+                            <div id="{{ $panelId }}" role="region" aria-labelledby="{{ $buttonId }}" class="p-6 hidden" data-day-number="{{ $day->day_number }}">
                                 <div class="prose max-w-none text-gray-700 mb-4">
                                     {!! nl2br(e($day->activity)) !!}
                                 </div>
+
+                                {{-- Itinerary day images (lazy-loaded) - NOW BEFORE ACCOMMODATION --}}
+                                @if(method_exists($day, 'images') && $day->images && $day->images->count() > 0)
+                                <div class="mt-6 mb-6 grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    @foreach($day->images as $img)
+                                    @php
+                                        // Prefer thumbnail_path if available
+                                        $preview = $img->thumbnail_path ?: $img->storage_path ?: $img->image_path ?? null;
+                                    @endphp
+                                    <div class="aspect-square overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                                        <img
+                                            data-src="{{ $preview ? asset('storage/' . ltrim($preview, '/')) : '' }}"
+                                            alt="{{ $img->caption ?? 'Itinerary image' }}"
+                                            class="w-full h-full object-cover lazy-day-image hover:scale-105 transition-transform duration-300"
+                                            loading="lazy"
+                                        >
+                                    </div>
+                                    @endforeach
+                                </div>
+                                @endif
+
                                 @if($day->accommodation || $day->meals)
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-4 border-t border-gray-100">
                                     @if($day->accommodation)
                                     <div class="flex items-center text-sm text-gray-600">
                                         <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -579,41 +634,164 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
+
+    /* Visual for opened accordion (rotate chevron) */
+    .accordion-toggle[aria-expanded="true"] svg {
+        transform: rotate(180deg);
+    }
+
+    /* Smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script>
-// Price calculation
-function calculateTotal() {
-    const groupSelect = document.getElementById('group_size');
-    const selectedOption = groupSelect.options[groupSelect.selectedIndex];
-    const totalCostDiv = document.getElementById('totalCost');
-    const totalAmountSpan = document.getElementById('totalAmount');
-    
-    if (selectedOption && selectedOption.dataset.price) {
-        const price = parseFloat(selectedOption.dataset.price);
-        const groupSize = selectedOption.value;
-        
-        // Extract number from group size if it's a number (e.g., "2" from "2 People")
-        const groupNumber = parseInt(groupSize) || 1;
-        const total = price * groupNumber;
-        
-        totalAmountSpan.textContent = '$' + total.toLocaleString();
-        totalCostDiv.classList.remove('hidden');
-    } else {
-        totalCostDiv.classList.add('hidden');
+/* ---------- IMPROVED Accordion: accessible + auto-close + lazy image loading ---------- */
+(function () {
+    const accordion = document.getElementById('itineraryAccordion');
+    if (!accordion) return;
+
+    const toggles = accordion.querySelectorAll('.accordion-toggle');
+
+    function openPanel(btn) {
+        const panelId = btn.getAttribute('aria-controls');
+        const panel = document.getElementById(panelId);
+        if (!panel) return;
+        btn.setAttribute('aria-expanded', 'true');
+        panel.classList.remove('hidden');
+
+        // lazy-load images inside this panel
+        panel.querySelectorAll('img.lazy-day-image').forEach(img => {
+            if (!img.src || img.src === '') {
+                const ds = img.dataset.src;
+                if (ds) img.src = ds;
+            }
+        });
     }
-}
 
-// Smooth scroll to booking
-function scrollToBooking() {
-    document.getElementById('booking').scrollIntoView({ 
-        behavior: 'smooth' 
+    function closePanel(btn) {
+        const panelId = btn.getAttribute('aria-controls');
+        const panel = document.getElementById(panelId);
+        if (!panel) return;
+        btn.setAttribute('aria-expanded', 'false');
+        panel.classList.add('hidden');
+    }
+
+    // Click handler with AUTO-CLOSE functionality
+    toggles.forEach(btn => {
+        btn.addEventListener('click', function () {
+            const expanded = this.getAttribute('aria-expanded') === 'true';
+            
+            if (expanded) {
+                // Close this panel
+                closePanel(this);
+            } else {
+                // AUTO-CLOSE all other panels first
+                toggles.forEach(otherBtn => {
+                    if (otherBtn !== this && otherBtn.getAttribute('aria-expanded') === 'true') {
+                        closePanel(otherBtn);
+                    }
+                });
+                
+                // Then open this panel
+                openPanel(this);
+                
+                // Smooth scroll to the opened panel
+                const panel = document.getElementById(this.getAttribute('aria-controls'));
+                if (panel) {
+                    setTimeout(() => {
+                        const top = panel.getBoundingClientRect().top + window.scrollY - 120;
+                        window.scrollTo({ top: top, behavior: 'smooth' });
+                    }, 100);
+                }
+            }
+        });
+
+        // Keyboard navigation support
+        btn.addEventListener('keydown', function (e) {
+            const key = e.key;
+            const btns = Array.from(toggles);
+            const idx = btns.indexOf(this);
+            if (key === 'ArrowDown') {
+                e.preventDefault();
+                const next = btns[idx + 1] || btns[0];
+                next.focus();
+            } else if (key === 'ArrowUp') {
+                e.preventDefault();
+                const prev = btns[idx - 1] || btns[btns.length - 1];
+                prev.focus();
+            }
+        });
     });
+
+    // Expand all
+    const expandAllBtn = document.getElementById('expandAll');
+    if (expandAllBtn) {
+        expandAllBtn.addEventListener('click', function () {
+            toggles.forEach(btn => openPanel(btn));
+        });
+    }
+
+    // Collapse all
+    const collapseAllBtn = document.getElementById('collapseAll');
+    if (collapseAllBtn) {
+        collapseAllBtn.addEventListener('click', function () {
+            toggles.forEach(btn => closePanel(btn));
+            const top = accordion.getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top: top, behavior: 'smooth' });
+        });
+    }
+
+    // Open panel from URL hash on load
+    function openPanelFromHash() {
+        const hash = location.hash.replace('#', '');
+        if (!hash) return;
+        
+        const panel = document.getElementById(hash);
+        if (panel) {
+            const btnId = panel.getAttribute('aria-labelledby');
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                openPanel(btn);
+                setTimeout(() => {
+                    const top = panel.getBoundingClientRect().top + window.scrollY - 120;
+                    window.scrollTo({ top: top, behavior: 'smooth' });
+                }, 100);
+            }
+        } else {
+            // Try day number hash
+            const panels = accordion.querySelectorAll('[data-day-number]');
+            panels.forEach(p => {
+                if ('day-' + p.dataset.dayNumber === hash) {
+                    const btnId = p.getAttribute('aria-labelledby');
+                    const btn = document.getElementById(btnId);
+                    if (btn) {
+                        openPanel(btn);
+                        setTimeout(() => {
+                            const top = p.getBoundingClientRect().top + window.scrollY - 120;
+                            window.scrollTo({ top: top, behavior: 'smooth' });
+                        }, 100);
+                    }
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', openPanelFromHash);
+})();
+
+/* ---------- Smooth scroll to booking ---------- */
+function scrollToBooking() {
+    const el = document.getElementById('booking');
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ behavior: 'smooth', top });
 }
 
-// Gallery functionality
+/* ---------- Gallery functionality ---------- */
 @if($tour->images && $tour->images->count() > 0)
 const galleryImages = @json($tour->images->pluck('image_path'));
 
@@ -634,7 +812,6 @@ function closeGallery() {
     modal.classList.remove('flex');
 }
 
-// Close gallery with escape key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeGallery();
@@ -642,85 +819,100 @@ document.addEventListener('keydown', function(e) {
 });
 @endif
 
-// Price option selection
+/* ---------- Price calculation + booking form ---------- */
+function calculateTotal() {
+    const groupSelect = document.getElementById('group_size');
+    if (!groupSelect) return;
+    const selectedOption = groupSelect.options[groupSelect.selectedIndex];
+    const totalCostDiv = document.getElementById('totalCost');
+    const totalAmountSpan = document.getElementById('totalAmount');
+    
+    if (selectedOption && selectedOption.dataset.price) {
+        const price = parseFloat(selectedOption.dataset.price);
+        const groupSize = selectedOption.value;
+        const groupNumber = parseInt(groupSize) || 1;
+        const total = price * groupNumber;
+        totalAmountSpan.textContent = '$' + total.toLocaleString();
+        totalCostDiv.classList.remove('hidden');
+    } else {
+        totalCostDiv.classList.add('hidden');
+    }
+}
+
 document.querySelectorAll('.price-option').forEach(option => {
     option.addEventListener('click', function() {
         const groupSize = this.dataset.groupSize;
         const groupSelect = document.getElementById('group_size');
-        
-        // Select the corresponding option
+        if (!groupSelect) return;
         for (let opt of groupSelect.options) {
             if (opt.value === groupSize) {
                 opt.selected = true;
                 break;
             }
         }
-        
         calculateTotal();
         scrollToBooking();
     });
 });
 
-// Quick book function for related tours
 function quickBook(tourSlug) {
     window.location.href = `/tours/${tourSlug}#booking`;
 }
 
-// BOOKING FORM SUBMISSION
-document.getElementById('bookingForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    
-    // Show processing state
-    submitBtn.innerHTML = '<svg class="w-5 h-5 mr-2 inline animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Sending Request...';
-    submitBtn.disabled = true;
-    
-    // Get form data
-    const formData = new FormData(this);
-    
-    try {
-        const response = await fetch('{{ route("booking.store") }}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            }
-        });
-        
-        if (response.ok) {
+/* ---------- Booking form submission ---------- */
+const bookingForm = document.getElementById('bookingForm');
+if (bookingForm) {
+    bookingForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (!submitBtn) return;
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<svg class="w-5 h-5 mr-2 inline animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Sending Request...';
+        submitBtn.disabled = true;
+
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch('{{ route("booking.store") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+
             const result = await response.json();
-            
-            if (result.success) {
+
+            if (response.ok && result.success) {
+                // Redirect directly to success page without popup
                 window.location.href = '{{ route("booking.success") }}';
+                return;
             } else {
+                // Handle validation errors
                 if (result.errors) {
-                    let errorMsg = 'Please fix these errors:\n';
+                    let errorMsg = 'Please fix these errors:\n\n';
                     Object.values(result.errors).forEach(error => {
                         errorMsg += '• ' + error[0] + '\n';
                     });
                     alert(errorMsg);
                 } else {
-                    alert(result.message || 'Please try again');
+                    alert(result.message || 'Something went wrong. Please try again.');
                 }
-                
+            }
+        } catch (err) {
+            console.error('Booking submission error:', err);
+            alert('⚠️ Network error. Please check your connection and try again.');
+        } finally {
+            // Only re-enable button if there was an error (not redirecting)
+            if (!window.location.href.includes('booking.success')) {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
-        } else {
-            alert('Please try again or contact us directly');
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
         }
-        
-    } catch (error) {
-        console.log('Processing booking...');
-        setTimeout(() => {
-            window.location.href = '{{ route("booking.success") }}';
-        }, 2000);
-    }
-});
+    });
+}
 </script>
 @endpush
 @endsection

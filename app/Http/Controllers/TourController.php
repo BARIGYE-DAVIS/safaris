@@ -4,130 +4,165 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Tour;
+use App\Models\TourPrice;
+use Illuminate\Support\Str;
 
 class TourController extends Controller
 {
     public function index(Request $request)
     {
-        // Get all tours for filtering data
-        $allTours = Tour::with(['itineraries', 'prices'])->get();
-        
-        // Extract unique values for filters from database
+        // --- Build available filter lists efficiently ---
         $availableCategories = Tour::whereNotNull('category')
-                                  ->where('category', '!=', '')
-                                  ->distinct()
-                                  ->pluck('category')
-                                  ->filter()
-                                  ->sort();
-                                  
-        $availableTypes = Tour::whereNotNull('type')
-                             ->where('type', '!=', '')
-                             ->distinct()
-                             ->pluck('type')
-                             ->filter()
-                             ->sort();
-                             
-        $availableDestinations = Tour::whereNotNull('destinations')
-                                    ->where('destinations', '!=', '')
-                                    ->get()
-                                    ->flatMap(function ($tour) {
-                                        // Split destinations by comma and clean up
-                                        return array_map('trim', explode(',', $tour->destinations));
-                                    })
-                                    ->unique()
-                                    ->filter()
-                                    ->sort();
-                                    
-        // Get duration options from actual itinerary counts
-        $availableDurations = Tour::with('itineraries')
-                                 ->get()
-                                 ->map(function ($tour) {
-                                     return $tour->itineraries->count();
-                                 })
-                                 ->filter()
-                                 ->unique()
-                                 ->sort();
-                                 
-        // Get price ranges from actual prices
-        $priceRanges = [
-            'min' => Tour::with('prices')->get()->flatMap(function ($tour) {
-                return $tour->prices->pluck('price');
-            })->min() ?: 0,
-            'max' => Tour::with('prices')->get()->flatMap(function ($tour) {
-                return $tour->prices->pluck('price');
-            })->max() ?: 0,
-        ];
+            ->where('category', '!=', '')
+            ->select('category')
+            ->distinct()
+            ->pluck('category')
+            ->filter()
+            ->sort()
+            ->values();
 
-        // Start building the query
-        $query = Tour::with(['itineraries', 'prices']);
-        
-        // Apply filters
+        $availableTypes = Tour::whereNotNull('type')
+            ->where('type', '!=', '')
+            ->select('type')
+            ->distinct()
+            ->pluck('type')
+            ->filter()
+            ->sort()
+            ->values();
+
+        // destinations is a comma-separated column; pluck strings only, then explode & clean
+        $destinationStrings = Tour::whereNotNull('destinations')
+            ->where('destinations', '!=', '')
+            ->pluck('destinations');
+
+        $availableDestinations = collect($destinationStrings)
+            ->flatMap(function ($destString) {
+                return collect(explode(',', $destString))->map(fn($d) => trim($d));
+            })
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        // available durations (number of itinerary days) using withCount to avoid loading all itinerary models
+        $availableDurations = Tour::withCount('itineraries')
+            ->get()
+            ->pluck('itineraries_count')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        // Price ranges (min / max) from TourPrice model (faster and accurate)
+        $minPrice = TourPrice::min('price') ?? 0;
+        $maxPrice = TourPrice::max('price') ?? 0;
+        $priceRanges = ['min' => (float) $minPrice, 'max' => (float) $maxPrice];
+
+        // --- Build base query ---
+        // select('tours.*') added so selectSub can be appended safely
+        $query = Tour::with(['itineraries', 'prices'])->withCount('itineraries')->select('tours.*');
+
+        // --- Search ---
+        if ($request->filled('q')) {
+            $term = trim($request->q);
+            $query->where(function ($q) use ($term) {
+                $q->where('title', 'like', "%{$term}%")
+                  ->orWhere('description', 'like', "%{$term}%")
+                  ->orWhere('destinations', 'like', "%{$term}%");
+            });
+        }
+
+        // --- Filters ---
         if ($request->filled('category')) {
             $query->where('category', $request->category);
         }
-        
+
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
-        
+
         if ($request->filled('destination')) {
+            // simple substring match; you might normalize destinations in DB for better matching
             $query->where('destinations', 'like', '%' . $request->destination . '%');
         }
-        
+
         if ($request->filled('duration')) {
-            $query->whereHas('itineraries', function ($q) use ($request) {
-                $q->havingRaw('COUNT(*) = ?', [$request->duration]);
-            });
+            // because we used withCount('itineraries') earlier, we can filter by the computed count
+            $duration = (int) $request->duration;
+            $query->having('itineraries_count', $duration);
         }
-        
-        if ($request->filled('price_range')) {
-            $priceRange = $request->price_range;
-            if (isset($priceRanges['min']) && isset($priceRanges['max']) && $priceRanges['max'] > 0) {
-                $step = ($priceRanges['max'] - $priceRanges['min']) / 4;
-                $ranges = [
-                    'low' => ['min' => $priceRanges['min'], 'max' => $priceRanges['min'] + $step],
-                    'mid-low' => ['min' => $priceRanges['min'] + $step, 'max' => $priceRanges['min'] + ($step * 2)],
-                    'mid-high' => ['min' => $priceRanges['min'] + ($step * 2), 'max' => $priceRanges['min'] + ($step * 3)],
-                    'high' => ['min' => $priceRanges['min'] + ($step * 3), 'max' => $priceRanges['max']],
-                ];
-                
-                if (isset($ranges[$priceRange])) {
-                    $query->whereHas('prices', function ($q) use ($ranges, $priceRange) {
-                        $q->whereBetween('price', [$ranges[$priceRange]['min'], $ranges[$priceRange]['max']]);
-                    });
-                }
+
+        if ($request->filled('price_range') && $priceRanges['max'] > 0) {
+            // Divide min-max into four buckets like before, but computed from TourPrice
+            $rangeKey = $request->price_range;
+            $min = $priceRanges['min'];
+            $max = $priceRanges['max'];
+
+            // avoid division by zero
+            $step = $max > $min ? ($max - $min) / 4 : 0;
+
+            $ranges = [
+                'low' => ['min' => $min, 'max' => $min + $step],
+                'mid-low' => ['min' => $min + $step, 'max' => $min + ($step * 2)],
+                'mid-high' => ['min' => $min + ($step * 2), 'max' => $min + ($step * 3)],
+                'high' => ['min' => $min + ($step * 3), 'max' => $max],
+            ];
+
+            if (isset($ranges[$rangeKey])) {
+                $r = $ranges[$rangeKey];
+                $query->whereHas('prices', function ($q) use ($r) {
+                    $q->whereBetween('price', [$r['min'], $r['max']]);
+                });
             }
         }
-        
-        // Apply sorting
+
+        // --- Sorting ---
+        // For price sorting we use a subquery that selects the minimum price for the tour (min_price)
         if ($request->filled('sort')) {
             switch ($request->sort) {
                 case 'price_low':
-                    $query->join('tour_prices', 'tours.id', '=', 'tour_prices.tour_id')
-                          ->orderBy('tour_prices.price', 'asc');
+                    // select subquery min price and order ascending
+                    $query->selectSub(function ($sub) {
+                        $sub->from('tour_prices')
+                            ->selectRaw('MIN(price)')
+                            ->whereColumn('tour_prices.tour_id', 'tours.id');
+                    }, 'min_price');
+                    $query->orderBy('min_price', 'asc');
                     break;
+
                 case 'price_high':
-                    $query->join('tour_prices', 'tours.id', '=', 'tour_prices.tour_id')
-                          ->orderBy('tour_prices.price', 'desc');
+                    $query->selectSub(function ($sub) {
+                        $sub->from('tour_prices')
+                            ->selectRaw('MIN(price)')
+                            ->whereColumn('tour_prices.tour_id', 'tours.id');
+                    }, 'min_price');
+                    $query->orderBy('min_price', 'desc');
                     break;
+
                 case 'duration_short':
-                    $query->withCount('itineraries')->orderBy('itineraries_count', 'asc');
+                    $query->orderBy('itineraries_count', 'asc');
                     break;
+
                 case 'duration_long':
-                    $query->withCount('itineraries')->orderBy('itineraries_count', 'desc');
+                    $query->orderBy('itineraries_count', 'desc');
                     break;
+
                 case 'newest':
                     $query->orderBy('created_at', 'desc');
                     break;
+
                 case 'oldest':
                     $query->orderBy('created_at', 'asc');
                     break;
+
                 case 'title_az':
                     $query->orderBy('title', 'asc');
                     break;
+
                 case 'title_za':
                     $query->orderBy('title', 'desc');
                     break;
+
                 default:
                     $query->orderBy('created_at', 'desc');
                     break;
@@ -135,50 +170,54 @@ class TourController extends Controller
         } else {
             $query->orderBy('created_at', 'desc');
         }
-        
-        // Paginate results
-        $tours = $query->paginate(12);
-        
+
+        // --- Pagination (preserve filters in links) ---
+        $tours = $query->paginate(12)->appends($request->except('page'));
+
         return view('tours.index', compact(
             'tours',
             'availableCategories',
-            'availableTypes', 
+            'availableTypes',
             'availableDestinations',
             'availableDurations',
             'priceRanges'
         ));
     }
-    
-    // Rest of your existing methods...
+
     public function show($slug)
     {
-        $tour = Tour::where('slug', $slug)->with(['itineraries', 'prices', 'images'])->firstOrFail();
-        
-        // Get related tours
+        $tour = Tour::where('slug', $slug)
+            ->with(['itineraries', 'prices', 'images', 'itineraries.images'])
+            ->firstOrFail();
+
         $relatedTours = Tour::where('category', $tour->category)
-                           ->where('id', '!=', $tour->id)
-                           ->limit(4)
-                           ->get();
-        
+            ->where('id', '!=', $tour->id)
+            ->limit(4)
+            ->get();
+
         return view('tours.show', compact('tour', 'relatedTours'));
     }
-    
+
     public function category($category)
     {
-        $tours = Tour::where('category', $category)->paginate(12);
-        $categoryName = ucfirst($category);
-        
+        $tours = Tour::where('category', $category)
+            ->with(['itineraries', 'prices'])
+            ->paginate(12);
+
+        $categoryName = Str::title($category);
+
         return view('tours.category', compact('tours', 'category', 'categoryName'));
     }
 
     public function duration($days)
     {
-    $tours = Tour::whereHas('itineraries', function ($query) use ($days) {
-        $query->havingRaw('COUNT(*) = ?', [$days]);
-    })->with(['itineraries', 'prices'])->paginate(12);
-    
-    $durationType = $days . ' Day' . ($days != 1 ? 's' : '');
-    
-    return view('tours.duration', compact('tours', 'days', 'durationType'));
+        $tours = Tour::withCount('itineraries')
+            ->having('itineraries_count', $days)
+            ->with(['itineraries', 'prices'])
+            ->paginate(12);
+
+        $durationType = $days . ' Day' . ($days != 1 ? 's' : '');
+
+        return view('tours.duration', compact('tours', 'days', 'durationType'));
     }
 }

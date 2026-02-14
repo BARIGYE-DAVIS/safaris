@@ -29,7 +29,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.tours.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+    <form id="create-tour-form" action="{{ route('admin.tours.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
         @csrf
         
         <!-- Basic Information Section -->
@@ -318,6 +318,19 @@
 document.addEventListener('DOMContentLoaded', function() {
     const STORAGE_KEY = 'tour_create_form_data';
 
+    // Helpers for IDs
+    function uuid() {
+        // simple uuid v4-ish helper for client side (sufficiently unique)
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    function tempId() {
+        return 'tmp-' + Math.random().toString(36).substr(2, 9);
+    }
+
     // --- LOAD SAVED DATA FROM LOCALSTORAGE ---
     function loadSavedData() {
         const savedData = localStorage.getItem(STORAGE_KEY);
@@ -379,7 +392,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- CLEAR STORAGE ON SUCCESSFUL SUBMIT ---
-    document.querySelector('form').addEventListener('submit', function() {
+    document.getElementById('create-tour-form').addEventListener('submit', function(e) {
+        // Before submit, build content_blocks hidden inputs for each day
+        buildAndAttachContentBlocks();
+        // allow submit to continue (do not remove localStorage here so we can inspect if needed; server redirect can clear)
         localStorage.removeItem(STORAGE_KEY);
     });
 
@@ -413,7 +429,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- DYNAMIC ITINERARIES ---
+    // itineraryDays structure:
+    // {
+    //   activity: string,
+    //   day_title: string,
+    //   accommodation: string,
+    //   meals: string,
+    //   images: [ { tempId: 'tmp-abc', preview: 'data:', caption: '' , blockId: 'blk-uuid' , existingMediaId: null } ],
+    //   blocks: [ ... optional explicit blocks ... ]
+    // }
     let itineraryDays = [];
+
     function renderItinerary() {
         const container = document.getElementById('itinerary-days');
         const noMessage = document.getElementById('no-itinerary-message');
@@ -429,6 +455,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         itineraryDays.forEach((day, i) => {
             const dayNum = i + 1;
+            // Ensure day.images exists (for older saved data)
+            if (!Array.isArray(day.images)) day.images = [];
+
+            // Ensure each image has a tempId (for new client-side images)
+            day.images.forEach(img => {
+                if (!img.tempId) img.tempId = tempId();
+                if (!img.blockId) img.blockId = 'blk-' + uuid();
+            });
+
             const el = document.createElement('div');
             el.className = "relative bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6 border-2 border-indigo-200 hover:border-indigo-300 transition duration-150";
             el.innerHTML = `
@@ -436,6 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${dayNum}
                 </div>
                 <input type="hidden" name="itinerary[${dayNum}][day_number]" value="${dayNum}">
+                <input type="hidden" data-contentblock-input name="itinerary[${dayNum}][content_blocks]" value="">
                 
                 <div class="ml-14 space-y-4">
                     <div>
@@ -481,6 +517,18 @@ document.addEventListener('DOMContentLoaded', function() {
                                 placeholder="e.g., B, L, D">
                         </div>
                     </div>
+
+                    <!-- Itinerary Day Images -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Day Images (optional)</label>
+                        <div id="day-images-${dayNum}" class="space-y-3"></div>
+                        <div class="flex gap-2 mt-3">
+                            <button type="button" class="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 add-day-image" data-index="${i}">
+                                Add Image
+                            </button>
+                            <p class="text-sm text-gray-500">Add images to appear inline with this day's description. Each image can have a caption.</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <button 
@@ -502,6 +550,82 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveFormData();
             };
             
+            container.appendChild(el);
+            
+            // Render images for this day
+            const dayImagesContainer = document.getElementById(`day-images-${dayNum}`);
+            function renderDayImages() {
+                dayImagesContainer.innerHTML = '';
+                day.images.forEach((imgObj, imgIndex) => {
+                    // ensure tempId and blockId exist
+                    if (!imgObj.tempId) imgObj.tempId = tempId();
+                    if (!imgObj.blockId) imgObj.blockId = 'blk-' + uuid();
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'flex items-start gap-4 bg-white p-3 rounded-lg border border-gray-200';
+                    wrapper.innerHTML = `
+                        <div class="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                            <img id="it-${dayNum}-img-preview-${imgIndex}" src="${imgObj.preview || ''}" class="w-full h-full object-cover" style="display:${imgObj.preview ? 'block':'none'}">
+                            <svg class="w-8 h-8 text-gray-400" style="display:${imgObj.preview ? 'none':'block'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <!-- file input name keyed by tempId so server can map upload => temp id -->
+                            <input type="file" accept="image/*" name="itinerary[${dayNum}][uploads][${imgObj.tempId}]" class="w-full image-input" data-day="${i}" data-img="${imgIndex}">
+                            <input type="text" name="itinerary[${dayNum}][image_captions][]" value="${imgObj.caption || ''}" placeholder="Caption (optional)" class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg caption-input" data-day="${i}" data-img="${imgIndex}">
+                            <!-- If this image corresponds to an existing media id (editing case) include hidden input -->
+                            ${imgObj.existingMediaId ? `<input type="hidden" name="itinerary[${dayNum}][existing_media_ids][]" value="${imgObj.existingMediaId}">` : ''}
+                        </div>
+                        <div class="flex-shrink-0">
+                            <button type="button" class="bg-red-600 hover:bg-red-700 text-white rounded-lg px-3 py-2 remove-day-image" data-day="${i}" data-img="${imgIndex}">
+                                Remove
+                            </button>
+                        </div>
+                    `;
+                    dayImagesContainer.appendChild(wrapper);
+
+                    // File input change listener
+                    const fileInput = wrapper.querySelector('.image-input');
+                    fileInput.addEventListener('change', function() {
+                        const file = this.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(ev) {
+                                imgObj.preview = ev.target.result;
+                                const imgEl = document.getElementById(`it-${dayNum}-img-preview-${imgIndex}`);
+                                imgEl.src = ev.target.result;
+                                imgEl.style.display = 'block';
+                                if (imgEl.nextElementSibling) imgEl.nextElementSibling.style.display = 'none';
+                                saveFormData();
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+
+                    // Caption input listener
+                    wrapper.querySelector('.caption-input').addEventListener('input', function() {
+                        imgObj.caption = this.value;
+                        saveFormData();
+                    });
+
+                    // Remove image listener
+                    wrapper.querySelector('.remove-day-image').addEventListener('click', function() {
+                        day.images.splice(imgIndex, 1);
+                        renderDayImages();
+                        saveFormData();
+                    });
+                });
+            }
+
+            // Hook up add-day-image button
+            el.querySelector('.add-day-image').addEventListener('click', function() {
+                // push image object with tempId and blockId; preview/caption empty by default
+                day.images.push({preview: '', caption: '', tempId: tempId(), blockId: 'blk-' + uuid(), existingMediaId: null});
+                renderDayImages();
+                saveFormData();
+            });
+
             // Add auto-resize functionality to activity textarea
             const activityTextarea = el.querySelector('.auto-resize');
             activityTextarea.addEventListener('input', function() {
@@ -510,141 +634,211 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveFormData();
             });
             
-            // Add event listeners to all inputs for saving
-            el.querySelectorAll('input, textarea').forEach(input => {
-                input.addEventListener('input', saveFormData);
+            // Add event listeners to other inputs to update the model and save
+            const inputs = el.querySelectorAll('input[name^="itinerary"], textarea[name^="itinerary"]');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    // map field back to day object
+                    const name = this.getAttribute('name'); // e.g., itinerary[1][day_title]
+                    const match = name.match(/itinerary\[\d+\]\[([^\]]+)\]/);
+                    if (match) {
+                        const key = match[1];
+                        if (key === 'day_number' || key === 'content_blocks') return;
+                        if (key !== 'images' && key !== 'image_captions' && key !== 'uploads' && key !== 'existing_media_ids') {
+                            day[key] = this.value;
+                        }
+                    }
+                    saveFormData();
+                });
             });
-            
-            container.appendChild(el);
-            
+
+            // initial render of images for this day
+            renderDayImages();
+
             // Initial resize
             autoResize(activityTextarea);
         });
     }
     
     document.getElementById('add-itinerary-day').onclick = function() {
-        itineraryDays.push({activity:"", day_title:"", accommodation:"", meals:""});
+        // include images array to support per-day images
+        itineraryDays.push({activity:"", day_title:"", accommodation:"", meals:"", images:[], blocks:[]});
         renderItinerary();
         saveFormData();
     };
 
-// --- DYNAMIC PRICES ---
-let prices = [];
+    // Build content_blocks from the current day data and attach as hidden inputs
+    function buildAndAttachContentBlocks() {
+        const container = document.getElementById('itinerary-days');
+        const dayEls = container.querySelectorAll('[data-contentblock-input]');
 
-function renderPrices() {
-    const container = document.getElementById('prices');
-    const noMessage = document.getElementById('no-prices-message');
-    
-    if (prices.length === 0) {
-        noMessage.style.display = 'block';
-        container.innerHTML = '';
-        return;
+        // For each day, build content_blocks: start with a text block using activity, then append image blocks for day.images
+        dayEls.forEach((hiddenInput, idx) => {
+            const dayIndex = idx; // 0-based
+            const dayNum = idx + 1;
+            const dayData = itineraryDays[dayIndex];
+            if (!dayData) return;
+
+            const blocks = [];
+
+            // If the user provided explicit blocks (advanced editor) keep them; otherwise create a simple structure.
+            if (Array.isArray(dayData.blocks) && dayData.blocks.length > 0) {
+                // ensure every image block has blockId and tempId where needed
+                dayData.blocks.forEach(b => {
+                    if (b.type === 'image') {
+                        if (!b.id) b.id = 'blk-' + uuid();
+                        if (!b.temp_media_id && !b.media_id) {
+                            // attempt to link to first matching image in dayData.images by caption or preview
+                            const match = dayData.images.find(im => im.caption === b.caption || im.preview === b.preview);
+                            if (match) b.temp_media_id = match.tempId;
+                        }
+                    }
+                    blocks.push(b);
+                });
+            } else {
+                // Create a simple text block for the activity if present
+                if (dayData.activity && dayData.activity.trim() !== '') {
+                    blocks.push({
+                        id: 'blk-' + uuid(),
+                        type: 'text',
+                        text: dayData.activity.trim()
+                    });
+                }
+
+                // Append image blocks for each image
+                dayData.images.forEach(img => {
+                    blocks.push({
+                        id: img.blockId || ('blk-' + uuid()),
+                        type: 'image',
+                        // important: reference temp id so server can find the file input
+                        temp_media_id: img.tempId,
+                        caption: img.caption || ''
+                    });
+                });
+            }
+
+            // Attach JSON to the hidden input for this day
+            hiddenInput.value = JSON.stringify(blocks);
+        });
     }
-    
-    noMessage.style.display = 'none';
-    container.innerHTML = '';
-    
-    prices.forEach((price, i) => {
-        const prNum = i + 1;
-        const el = document.createElement('div');
-        el.className = "relative bg-green-50 rounded-lg p-6 border-2 border-green-200 hover:border-green-300 transition duration-150";
-        el.innerHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Group Size <span class="text-red-500">*</span>
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
+
+    // --- DYNAMIC PRICES ---
+    let prices = [];
+
+    function renderPrices() {
+        const container = document.getElementById('prices');
+        const noMessage = document.getElementById('no-prices-message');
+        
+        if (prices.length === 0) {
+            noMessage.style.display = 'block';
+            container.innerHTML = '';
+            return;
+        }
+        
+        noMessage.style.display = 'none';
+        container.innerHTML = '';
+        
+        prices.forEach((price, i) => {
+            const prNum = i + 1;
+            const el = document.createElement('div');
+            el.className = "relative bg-green-50 rounded-lg p-6 border-2 border-green-200 hover:border-green-300 transition duration-150";
+            el.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Group Size <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                            </div>
+                            <input 
+                                type="text" 
+                                name="prices[${prNum}][group_size]" 
+                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 group-size-input" 
+                                required 
+                                value="${price.group_size || ''}"
+                                placeholder="e.g., 2 People, Solo Traveler, 5-8 People"
+                                data-index="${i}">
                         </div>
-                        <input 
-                            type="text" 
-                            name="prices[${prNum}][group_size]" 
-                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 group-size-input" 
-                            required 
-                            value="${price.group_size || ''}"
-                            placeholder="e.g., 2 People, Solo Traveler, 5-8 People"
-                            data-index="${i}">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Price (USD) <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 font-medium">$</span>
+                            </div>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                name="prices[${prNum}][price]" 
+                                class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 price-input" 
+                                min="0" 
+                                required 
+                                value="${price.price || ''}"
+                                placeholder="0.00"
+                                data-index="${i}">
+                        </div>
                     </div>
                 </div>
                 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Price (USD) <span class="text-red-500">*</span>
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span class="text-gray-500 font-medium">$</span>
-                        </div>
-                        <input 
-                            type="number" 
-                            step="0.01" 
-                            name="prices[${prNum}][price]" 
-                            class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 price-input" 
-                            min="0" 
-                            required 
-                            value="${price.price || ''}"
-                            placeholder="0.00"
-                            data-index="${i}">
-                    </div>
-                </div>
-            </div>
+                <button 
+                    type="button" 
+                    class="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white rounded-lg px-3 py-2 transition duration-150 flex items-center gap-2 font-medium text-sm shadow-sm remove-price" 
+                    data-index="${i}" 
+                    title="Remove Price">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Remove
+                </button>
+            `;
             
-            <button 
-                type="button" 
-                class="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white rounded-lg px-3 py-2 transition duration-150 flex items-center gap-2 font-medium text-sm shadow-sm remove-price" 
-                data-index="${i}" 
-                title="Remove Price">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
-                Remove
-            </button>
-        `;
-        
-        el.querySelector('.remove-price').onclick = function() {
-            prices.splice(i, 1);
-            renderPrices();
-            saveFormData();
-        };
-        
-        // Add real-time input event listeners using data-index
-        const groupSizeInput = el.querySelector('.group-size-input');
-        const priceInput = el.querySelector('.price-input');
-        
-        groupSizeInput.addEventListener('input', function() {
-            const idx = parseInt(this.getAttribute('data-index'));
-            prices[idx].group_size = this.value;
-            saveFormData();
+            el.querySelector('.remove-price').onclick = function() {
+                prices.splice(i, 1);
+                renderPrices();
+                saveFormData();
+            };
+            
+            // Add real-time input event listeners using data-index
+            const groupSizeInput = el.querySelector('.group-size-input');
+            const priceInput = el.querySelector('.price-input');
+            
+            groupSizeInput.addEventListener('input', function() {
+                const idx = parseInt(this.getAttribute('data-index'));
+                prices[idx].group_size = this.value;
+                saveFormData();
+            });
+            
+            priceInput.addEventListener('input', function() {
+                const idx = parseInt(this.getAttribute('data-index'));
+                prices[idx].price = this.value;
+                saveFormData();
+            });
+            
+            container.appendChild(el);
         });
-        
-        priceInput.addEventListener('input', function() {
-            const idx = parseInt(this.getAttribute('data-index'));
-            prices[idx].price = this.value;
-            saveFormData();
-        });
-        
-        container.appendChild(el);
-    });
-}
+    }
 
-document.getElementById('add-price').onclick = function() {
-    // Add new empty price
-    prices.push({group_size:"", price:""});
-    renderPrices();
-    saveFormData();
-    
-    // Focus on the new group size input
-    setTimeout(() => {
-        const newInputs = document.querySelectorAll('#prices .group-size-input');
-        if (newInputs.length > 0) {
-            newInputs[newInputs.length - 1].focus();
-        }
-    }, 100);
-};
+    document.getElementById('add-price').onclick = function() {
+        // Add new empty price
+        prices.push({group_size:"", price:""});
+        renderPrices();
+        saveFormData();
+        
+        // Focus on the new group size input
+        setTimeout(() => {
+            const newInputs = document.querySelectorAll('#prices .group-size-input');
+            if (newInputs.length > 0) {
+                newInputs[newInputs.length - 1].focus();
+            }
+        }, 100);
+    };
 
     // --- META KEYWORDS (tags input) ---
     let metaKeywords = [];
@@ -698,7 +892,7 @@ document.getElementById('add-price').onclick = function() {
         renderKeywords();
     @endif
 
-    // --- MULTI-IMAGES PREVIEW ---
+    // --- MULTI-IMAGES PREVIEW (tour-level) ---
     let imagesList = [];
     function renderImagesList() {
         const imagesListDiv = document.getElementById('images-list');

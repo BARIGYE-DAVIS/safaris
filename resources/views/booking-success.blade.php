@@ -1,29 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking Successful | Safari Uganda</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body class="bg-gray-50 font-sans">
-    <!-- Header -->
-    <header class="bg-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center">
-                    <a href="{{ route('tours.index') }}" class="text-2xl font-bold text-green-600">Safari Uganda</a>
-                </div>
-                <nav class="hidden md:flex space-x-8">
-                    <a href="#" class="text-gray-700 hover:text-green-600 font-medium">Home</a>
-                    <a href="{{ route('tours.index') }}" class="text-gray-700 hover:text-green-600 font-medium">Tours</a>
-                    <a href="#" class="text-gray-700 hover:text-green-600 font-medium">About</a>
-                    <a href="#" class="text-gray-700 hover:text-green-600 font-medium">Contact</a>
-                </nav>
-            </div>
-        </div>
-    </header>
+@extends('layouts.app')
+@section('content')
+   
 
     <div class="min-h-screen flex items-center justify-center py-12">
         <div class="max-w-2xl w-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -103,7 +80,7 @@
                             Browse More Tours
                         </a>
                         <div>
-                            <a href="#" class="text-gray-600 hover:text-green-600 font-medium">
+                            <a href="{{ route('index') }}" class="text-gray-600 hover:text-green-600 font-medium">
                                 Return to Homepage
                             </a>
                         </div>
@@ -120,5 +97,4 @@
             </div>
         </div>
     </div>
-</body>
-</html>
+@endsection

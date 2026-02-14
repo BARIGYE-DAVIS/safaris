@@ -69,18 +69,19 @@ class BookingController extends Controller
                 Log::warning('Email sending failed but booking saved: ' . $e->getMessage());
             }
 
-            if ($request->expectsJson()) {
+            // FIXED: Always return JSON for AJAX requests
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Booking request submitted successfully!',
                     'booking_id' => $booking->id
-                ]);
+                ], 200); // Explicitly set 200 status code
             }
 
             return redirect()->route('booking.success')->with('booking_id', $booking->id);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            if ($request->expectsJson()) {
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Please check your input.',
@@ -92,11 +93,13 @@ class BookingController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Booking creation failed: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             
-            if ($request->expectsJson()) {
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Please try again or contact us directly.'
+                    'message' => 'Please try again or contact us directly.',
+                    'error' => config('app.debug') ? $e->getMessage() : null
                 ], 500);
             }
 
@@ -395,7 +398,7 @@ class BookingController extends Controller
         
         $message .= "\nBooking ID: #{$booking->id}";
 
-        return "https://wa.me/256700000000?text=" . urlencode($message);
+        return "https://wa.me/256752088768?text=" . urlencode($message);
     }
 
     /**
