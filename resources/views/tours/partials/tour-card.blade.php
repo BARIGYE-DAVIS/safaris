@@ -1,5 +1,6 @@
 <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group">
     <!-- Tour Image -->
+     <h1 class="sr-only">HOW ARE YOU</h1>
     <div class="relative h-64 overflow-hidden">
         @if($tour->featured_image)
             <img src="{{ asset('storage/' . $tour->featured_image) }}" 

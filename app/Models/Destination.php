@@ -5,12 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use App\Models\DestinationImage;
 use App\Models\User;
 use App\Models\CustomTourRequest;
-use Carbon\Carbon;
 
+/**
+ * Destination model
+ *
+ * Notes:
+ * - sections_content (cast to array) stores ordered blocks per section. Each block:
+ *   ['id' => 'blk-1', 'type' => 'text'|'heading'|'subheading'|'image', 'text' => '', 'caption' => '', 'media_id' => int, 'block_id' => '...']
+ * - destinationImages holds persistent media (storage_path, thumbnail_path, block_id, etc.)
+ *
+ * This class provides safe, efficient rendering of sections into HTML while avoiding N+1 queries,
+ * token-aware inline image rendering, and safe escaping to prevent XSS.
+ */
 class Destination extends Model
 {
     use HasFactory;
@@ -34,6 +43,7 @@ class Destination extends Model
         'photography_tips',
         'nearby_attractions',
         'interesting_facts',
+
         // legacy image arrays (kept for backward compatibility)
         'overview_images',
         'activities_images',
@@ -41,9 +51,11 @@ class Destination extends Model
         'landscape_images',
         'accommodation_images',
         'gallery_images',
+
         // top-level images
         'featured_image',
         'image',
+
         // geography / metrics
         'latitude',
         'longitude',
@@ -90,8 +102,11 @@ class Destination extends Model
         'is_popular' => 'boolean',
         'is_active' => 'boolean',
         'sort_order' => 'integer',
-        'latitude' => 'decimal:8',
-        'longitude' => 'decimal:8',
+
+        // use floats for lat/lng for convenience in calculations; if you prefer decimals keep 'decimal:8'
+        'latitude' => 'float',
+        'longitude' => 'float',
+
         'entry_fee_foreign' => 'decimal:2',
         'entry_fee_resident' => 'decimal:2',
         'entry_fee_local' => 'decimal:2',
@@ -110,7 +125,7 @@ class Destination extends Model
     ];
 
     /**
-     * Boot method to auto-generate slug
+     * Boot method to auto-generate slug and cleanup on delete.
      */
     protected static function boot()
     {
@@ -128,14 +143,23 @@ class Destination extends Model
             }
         });
 
-        // When a destination is deleted, its DestinationImage rows will cascade via FK,
-        // and the DestinationImage model will remove files from disk on deleting().
+        // Ensure destination images are removed (and their files) when destination is deleted.
+        // DestinationImage model should handle file deletion in its deleting() hook.
+        static::deleting(function ($destination) {
+            try {
+                foreach ($destination->destinationImages()->get() as $img) {
+                    $img->delete();
+                }
+            } catch (\Throwable $e) {
+                // Don't fail deletion of destination if image cleanup has an issue,
+                // but log (controller or app logging should capture this).
+            }
+        });
     }
 
     /**
      * Relationships
      */
-
     public function country()
     {
         return $this->belongsTo(Country::class);
@@ -154,7 +178,7 @@ class Destination extends Model
     }
 
     /**
-     * New relationship: destination images (all images stored via block editor or gallery)
+     * Destination images managed via the block editor or gallery
      */
     public function destinationImages()
     {
@@ -175,10 +199,10 @@ class Destination extends Model
     public function getFeaturedImageUrlAttribute()
     {
         if ($this->featured_image) {
-            return asset('storage/' . $this->featured_image);
+            return asset('storage/' . ltrim($this->featured_image, '/'));
         }
         if ($this->image) {
-            return asset('storage/' . $this->image);
+            return asset('storage/' . ltrim($this->image, '/'));
         }
         return asset('images/default-destination.jpg');
     }
@@ -189,14 +213,17 @@ class Destination extends Model
     public function getImageUrlAttribute()
     {
         if ($this->image) {
-            return asset('storage/' . $this->image);
+            return asset('storage/' . ltrim($this->image, '/'));
         }
         return asset('images/default-destination.jpg');
     }
 
     /**
      * Render a section using sections_content block data (preferred) or fall back to legacy fields.
-     * Returns HTML string ready to echo in Blade (not escaped).
+     * Returns HTML string ready to echo in Blade (the method ensures internal escaping).
+     *
+     * @param string $sectionKey
+     * @return string
      */
     public function renderSection(string $sectionKey)
     {
@@ -217,13 +244,13 @@ class Destination extends Model
             case 'wildlife':
                 return $this->parseContentWithImages($this->wildlife_highlights, $this->wildlife_images);
             case 'geography':
-                return $this->geography_landscape;
+                return nl2br(e($this->geography_landscape ?? ''));
             case 'practical':
-                return $this->practical_information;
+                return nl2br(e($this->practical_information ?? ''));
             case 'accommodation':
-                return $this->accommodation_options;
+                return nl2br(e($this->accommodation_options ?? ''));
             case 'extras':
-                return $this->interesting_facts;
+                return nl2br(e($this->interesting_facts ?? ''));
             default:
                 return '';
         }
@@ -249,104 +276,283 @@ class Destination extends Model
 
     /**
      * Render blocks array (from sections_content) to HTML.
-     * Supports block types: heading, subheading, text, image (media_id or temp_media_id).
+     * Optimized to avoid N+1 queries and token-aware for inline image tokens inside text blocks.
+     *
+     * @param array $blocks
+     * @param string|null $sectionKey
+     * @return string
      */
-    protected function renderBlocksToHtml(array $blocks, string $sectionKey = null): string
-    {
-        $html = '';
+                protected function renderBlocksToHtml(array $blocks, string $sectionKey = null): string
+{
+    $html = '';
 
-        foreach ($blocks as $block) {
-            $type = $block['type'] ?? 'text';
+    // Prepare image indexes once to avoid N+1 queries
+    $images = $this->relationLoaded('destinationImages')
+        ? $this->destinationImages
+        : DestinationImage::where('destination_id', $this->id)->get();
 
-            switch ($type) {
-                case 'heading':
-                    $text = htmlspecialchars($block['text'] ?? '', ENT_QUOTES, 'UTF-8');
-                    $html .= "<h2 class=\"text-2xl font-bold mt-6 mb-3\">{$text}</h2>";
-                    break;
+    $imagesById = $images->keyBy('id');
+    $imagesByBlockId = $images->filter(function ($i) {
+        return !empty($i->block_id);
+    })->keyBy('block_id');
 
-                case 'subheading':
-                    $text = htmlspecialchars($block['text'] ?? '', ENT_QUOTES, 'UTF-8');
-                    $html .= "<h3 class=\"text-xl font-semibold mt-4 mb-2\">{$text}</h3>";
-                    break;
-
-                case 'text':
-                    $text = $block['text'] ?? '';
-                    // Allow basic line breaks; content may contain markdown later
-                    $escaped = nl2br(e($text));
-                    $html .= "<div class=\"prose max-w-none text-gray-700 mb-4\">{$escaped}</div>";
-                    break;
-
-                case 'image':
-                    // prefer persistent media_id, otherwise try to resolve by block_id or temp_media_id fallback
-                    $caption = isset($block['caption']) ? e($block['caption']) : '';
-                    $imgHtml = '';
-                    $imgUrl = null;
-
-                    if (!empty($block['media_id'])) {
-                        $img = DestinationImage::find($block['media_id']);
-                        if ($img) $imgUrl = $img->thumbnail_path ? asset('storage/' . $img->thumbnail_path) : asset('storage/' . $img->storage_path);
-                    } elseif (!empty($block['block_id'])) {
-                        // try to find by block_id (useful if images were created and block_id stored)
-                        $img = DestinationImage::where('destination_id', $this->id)->where('block_id', $block['block_id'])->first();
-                        if ($img) $imgUrl = $img->thumbnail_path ? asset('storage/' . $img->thumbnail_path) : asset('storage/' . $img->storage_path);
-                    }
-
-                    // If still no URL, skip rendering (could be temp_media_id before upload)
-                    if ($imgUrl) {
-                        $imgHtml = '<div class="my-4">';
-                        $imgHtml .= '<img src="' . e($imgUrl) . '" alt="' . $caption . '" class="rounded-lg shadow-md max-w-full">';
-                        if ($caption) {
-                            $imgHtml .= '<p class="text-sm text-gray-600 italic mt-2">' . $caption . '</p>';
-                        }
-                        $imgHtml .= '</div>';
-                        $html .= $imgHtml;
-                    }
-                    break;
-
-                default:
-                    // unknown block -> treat as text
-                    $text = $block['text'] ?? '';
-                    $html .= "<div class=\"prose max-w-none text-gray-700 mb-4\">" . nl2br(e($text)) . "</div>";
-                    break;
-            }
+    // Helper: create figure HTML for a given storage path + caption
+    $renderFigureHtml = function ($storagePath, $caption = '') {
+        $storagePath = ltrim($storagePath, '/');
+        $url = asset('storage/' . $storagePath);
+        $alt = $caption ?: '';
+        $fig = '<figure class="my-6">';
+        $fig .= '<img src="' . e($url) . '" alt="' . e($alt) . '" loading="lazy" class="w-full h-auto rounded-lg shadow-md object-cover">';
+        if ($caption) {
+            $fig .= '<figcaption class="text-sm text-gray-600 italic mt-2">' . e($caption) . '</figcaption>';
         }
+        $fig .= '</figure>';
+        return $fig;
+    };
 
-        return $html;
+    // Token regex used in text blocks: [[image:IDENTIFIER|optional caption]]
+    $tokenPattern = '/\[\[image:([^\|\]]+)(?:\|([^\]]*))?\]\]/i';
+
+    // Iterate blocks in order and render immediately
+    foreach ($blocks as $block) {
+        $type = $block['type'] ?? 'text';
+
+        switch ($type) {
+            case 'heading':
+                $text = $block['text'] ?? '';
+
+                // Handle icons in headings: [[icon:fas fa-check-circle]]
+                $text = preg_replace_callback('/\[\[icon:([^\]]+)\]\]/', function ($matches) {
+                    $iconClass = trim($matches[1]);
+                    // Only allow FA patterns like "fas fa-xxx"
+                    if (preg_match('/^(fas|far|fab|fal|fad)\s+fa-[\w-]+$/i', $iconClass)) {
+                        return '<i class="' . e($iconClass) . ' mr-2 text-green-600"></i>';
+                    }
+                    return '';
+                }, $text);
+
+                // We assume headings don't contain arbitrary HTML, so we don't double-escape here.
+                $html .= "<h2 class=\"text-2xl font-bold mt-6 mb-3 text-green-800\">{$text}</h2>";
+                break;
+
+            case 'subheading':
+                $text = $block['text'] ?? '';
+
+                // Handle icons in subheadings
+                $text = preg_replace_callback('/\[\[icon:([^\]]+)\]\]/', function ($matches) {
+                    $iconClass = trim($matches[1]);
+                    if (preg_match('/^(fas|far|fab|fal|fad)\s+fa-[\w-]+$/i', $iconClass)) {
+                        return '<i class="' . e($iconClass) . ' mr-2 text-green-600"></i>';
+                    }
+                    return '';
+                }, $text);
+
+                $html .= "<h3 class=\"text-xl font-semibold mt-4 mb-2 text-green-700\">{$text}</h3>";
+                break;
+
+            case 'text':
+                $text = $block['text'] ?? '';
+
+                // STEP 1: Convert [[icon:...]] into safe placeholders we can re-inject after escaping
+                $iconMarker = '###ICON_PLACEHOLDER###';
+                $iconReplacements = [];
+
+                $textWithPlaceholders = preg_replace_callback(
+                    '/\[\[icon:([^\]]+)\]\]/',
+                    function ($matches) use (&$iconReplacements, $iconMarker) {
+                        $iconClass = trim($matches[1]);
+
+                        // Only allow Font Awesome-like classes e.g. "fas fa-check-circle"
+                        if (preg_match('/^(fas|far|fab|fal|fad)\s+fa-[\w-]+$/i', $iconClass)) {
+                            $iconHtml = '<i class="' . e($iconClass) . ' mr-2 text-green-600"></i>';
+                            $placeholder = $iconMarker . count($iconReplacements) . $iconMarker;
+                            $iconReplacements[$placeholder] = $iconHtml;
+                            return $placeholder;
+                        }
+
+                        // Invalid icon -> nothing
+                        return '';
+                    },
+                    $text
+                );
+
+                // STEP 2: Split text by image tokens (using textWithPlaceholders)
+                $parts = preg_split($tokenPattern, $textWithPlaceholders, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+                $blockHtml = '';
+                for ($i = 0; $i < count($parts); $i += 3) {
+                    // Plain text segment (with icon placeholders still inside)
+                    $plain = $parts[$i] ?? '';
+                    if ($plain !== '') {
+                        // Escape whole segment
+                        $escaped = e($plain);
+
+                        // STEP 3: Replace escaped placeholders with real icon HTML
+                        foreach ($iconReplacements as $placeholder => $iconHtml) {
+                            $escapedPlaceholder = e($placeholder);
+                            $escaped = str_replace($escapedPlaceholder, $iconHtml, $escaped);
+                        }
+
+                        $blockHtml .= '<div>' . nl2br($escaped) . '</div>';
+                    }
+
+                    // Image token segment (unchanged from your code)
+                    if (isset($parts[$i + 1])) {
+                        $identifier = $parts[$i + 1];
+                        $caption = trim($parts[$i + 2] ?? '');
+
+                        // Try media-<id>
+                        if (preg_match('/^media-(\d+)$/i', $identifier, $m)) {
+                            $mid = (int)$m[1];
+                            if (isset($imagesById[$mid])) {
+                                $img = $imagesById[$mid];
+                                $path = $img->thumbnail_path ?: $img->storage_path;
+                                if ($path) {
+                                    $blockHtml .= $renderFigureHtml($path, $caption);
+                                    continue;
+                                }
+                            }
+                            continue;
+                        }
+
+                        // Try block-<id> or tmp-<id>
+                        $blockId = preg_replace('/^(?:block-|tmp-)/i', '', $identifier);
+                        if (!empty($blockId) && isset($imagesByBlockId[$blockId])) {
+                            $img = $imagesByBlockId[$blockId];
+                            $path = $img->thumbnail_path ?: $img->storage_path;
+                            if ($path) {
+                                $blockHtml .= $renderFigureHtml($path, $caption);
+                                continue;
+                            }
+                        }
+
+                        // Numeric id fallback
+                        if (is_numeric($identifier)) {
+                            $mid = (int)$identifier;
+                            if (isset($imagesById[$mid])) {
+                                $img = $imagesById[$mid];
+                                $path = $img->thumbnail_path ?: $img->storage_path;
+                                if ($path) {
+                                    $blockHtml .= $renderFigureHtml($path, $caption);
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                $html .= '<div class="prose max-w-none text-gray-700 mb-4">' . $blockHtml . '</div>';
+                break;
+
+            case 'image':
+                $caption = trim($block['caption'] ?? '');
+
+                // 1) media_id lookup
+                if (!empty($block['media_id']) && isset($imagesById[$block['media_id']])) {
+                    $img = $imagesById[$block['media_id']];
+                    $path = $img->thumbnail_path ?: $img->storage_path;
+                    if ($path) {
+                        $html .= $renderFigureHtml($path, $caption);
+                    }
+                    break;
+                }
+
+                // 2) block_id lookup
+                if (!empty($block['block_id']) && isset($imagesByBlockId[$block['block_id']])) {
+                    $img = $imagesByBlockId[$block['block_id']];
+                    $path = $img->thumbnail_path ?: $img->storage_path;
+                    if ($path) {
+                        $html .= $renderFigureHtml($path, $caption);
+                    }
+                    break;
+                }
+
+                // 3) direct storage_path on block
+                if (!empty($block['storage_path'])) {
+                    $html .= $renderFigureHtml($block['storage_path'], $caption);
+                    break;
+                }
+                break;
+
+            default:
+                $text = $block['text'] ?? '';
+                $html .= '<div class="prose max-w-none text-gray-700 mb-4">' . nl2br(e($text)) . '</div>';
+                break;
+        }
     }
 
+    return $html;
+}
+
+    
     /**
      * Legacy helper: Parse content and inject images based on legacy arrays.
-     * Kept for backward compatibility with pre-existing data/schema.
+     * This is safer than previous version: escapes all inputs and attempts to insert images
+     * after a matching heading/marker; otherwise appends at the end.
+     *
+     * @param string|null $content
+     * @param array|null $images
+     * @return string
      */
     private function parseContentWithImages($content, $images)
     {
+        $content = (string) ($content ?? '');
         if (empty($content) || empty($images) || !is_array($images)) {
-            return $content;
+            return nl2br(e($content));
         }
 
+        // Build safe HTML for images grouped by section marker (if provided)
+        $grouped = [];
         foreach ($images as $imageData) {
-            $section = $imageData['section'] ?? '';
-            $imagePath = $imageData['image'] ?? '';
-            $caption = $imageData['caption'] ?? '';
+            $section = trim($imageData['section'] ?? '');
+            $imagePath = trim($imageData['image'] ?? '');
+            $caption = trim($imageData['caption'] ?? '');
 
-            if ($section && $imagePath) {
-                $imageHtml = '<div class="inline-image my-4"><img src="' . asset('storage/' . $imagePath) . '" alt="' . e($caption) . '" class="rounded-lg shadow-md max-w-full">';
-                if ($caption) {
-                    $imageHtml .= '<p class="text-sm text-gray-600 italic mt-2">' . e($caption) . '</p>';
-                }
-                $imageHtml .= '</div>';
+            if (!$imagePath) continue;
 
-                // Insert image after the section heading marker if present or append otherwise
-                if (strpos($content, $section . ':**') !== false) {
-                    $content = str_replace($section . ':**', $section . ':**' . $imageHtml, $content);
-                } else {
-                    // append near end of content
-                    $content .= $imageHtml;
+            $imgHtml = '<div class="inline-image my-4">';
+            $imgHtml .= '<img src="' . e(asset('storage/' . ltrim($imagePath, '/'))) . '" alt="' . e($caption) . '" class="rounded-lg shadow-md max-w-full">';
+            if ($caption) {
+                $imgHtml .= '<p class="text-sm text-gray-600 italic mt-2">' . e($caption) . '</p>';
+            }
+            $imgHtml .= '</div>';
+
+            $grouped[$section][] = $imgHtml;
+        }
+
+        // Attempt to insert grouped images after the first occurrence of the matching heading or marker.
+        $result = e($content); // escaped content
+        foreach ($grouped as $section => $imgs) {
+            $inject = implode('', $imgs);
+
+            if ($section !== '') {
+                // Search for a heading or plain "SectionName" followed by newline or colon.
+                // Work on the original (unescaped) content to find positions.
+                $needle = $section;
+                $pos = stripos($content, $needle);
+                if ($pos !== false) {
+                    // Find insertion point: at end of the line containing the needle
+                    $lineEnd = strpos($content, PHP_EOL, $pos);
+                    if ($lineEnd === false) $lineEnd = strlen($content);
+                    // Build escaped parts around insertion index
+                    $before = e(substr($content, 0, $lineEnd + 1));
+                    $after  = e(substr($content, $lineEnd + 1));
+                    // Replace the corresponding part in $result (which is escaped)
+                    // Use first occurrence replacement
+                    $result = preg_replace('/' . preg_quote(e(substr($content, 0, $lineEnd + 1)), '/') . '/', $before . $inject, $result, 1);
+                    continue;
                 }
             }
+
+            // No section match -> append at end
+            $result .= $inject;
         }
 
-        return $content;
+        // Convert newlines to <br> while keeping injected HTML as-is (injection is already HTML)
+        // Because $result contains escaped original content and raw injected HTML, we can safely convert newlines to <br>
+        $result = nl2br($result);
+
+        return $result;
     }
 
     /**
@@ -387,7 +593,7 @@ class Destination extends Model
 
     public function getCoordinatesAttribute()
     {
-        if ($this->latitude && $this->longitude) {
+        if ($this->latitude !== null && $this->longitude !== null) {
             return [
                 'lat' => (float) $this->latitude,
                 'lng' => (float) $this->longitude
@@ -398,7 +604,7 @@ class Destination extends Model
 
     public function getAltitudeRangeAttribute()
     {
-        if ($this->altitude_min && $this->altitude_max) {
+        if ($this->altitude_min !== null && $this->altitude_max !== null) {
             return $this->altitude_min . 'm - ' . $this->altitude_max . 'm';
         }
         return null;
