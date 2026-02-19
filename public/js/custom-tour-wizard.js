@@ -122,7 +122,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedCount = document.getElementById('selected-count');
 
     destinationCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateSelectedDestinations);
+        checkbox.addEventListener('change', () => {
+            updateSelectedDestinations();
+            // Also update activities whenever destinations change
+            filterActivities();
+        });
     });
 
     function updateSelectedDestinations() {
@@ -183,52 +187,56 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // ========== DESTINATION SEARCH & FILTER ==========
-    const destinationSearch = document.getElementById('destination-search');
-    const countryFilter = document.getElementById('country-filter');
-    const destinationItems = document.querySelectorAll('.destination-item');
-    const countryGroups = document.querySelectorAll('.country-group');
-    const noDestinationsMessage = document.getElementById('no-destinations-message');
+  // ========== DESTINATION SEARCH & FILTER ==========
+const destinationSearch = document.getElementById('destination-search');
+const countryFilter     = document.getElementById('country-filter');
+const destinationItems  = document.querySelectorAll('.destination-item');
+const countryGroups     = document.querySelectorAll('.country-group');
+const noDestinationsMsg = document.getElementById('no-destinations-message');
 
-    destinationSearch?.addEventListener('input', debounce(filterDestinations, 300));
-    countryFilter?.addEventListener('change', filterDestinations);
+function filterDestinations() {
+    const searchTerm      = (destinationSearch?.value || '').toLowerCase().trim();
+    const selectedCountry = (countryFilter?.value || '').toString();
+    let visibleCount      = 0;
 
-    function filterDestinations() {
-        const searchTerm = destinationSearch.value.toLowerCase().trim();
-        const selectedCountry = countryFilter.value;
-        let visibleCount = 0;
+    // Hide all country groups first
+    countryGroups.forEach(group => {
+        group.style.display = 'none';
+    });
 
-        // Hide all country groups first
-        countryGroups.forEach(group => group.style.display = 'none');
+    destinationItems.forEach(item => {
+        const name        = (item.dataset.name || '').toLowerCase();
+        const itemCountry = (item.dataset.country || '').toString();
+        const parentGroup = item.closest('.country-group');
 
-        destinationItems.forEach(item => {
-            const name = item.dataset.name;
-            const country = item.dataset.country;
-            const parentGroup = item.closest('.country-group');
+        const matchesSearch  = !searchTerm || name.includes(searchTerm);
+        const matchesCountry = !selectedCountry || itemCountry === selectedCountry;
 
-            const matchesSearch = !searchTerm || name.includes(searchTerm);
-            const matchesCountry = !selectedCountry || country === selectedCountry;
-
-            if (matchesSearch && matchesCountry) {
-                item.style.display = 'block';
-                if (parentGroup) {
-                    parentGroup.style.display = 'block';
-                }
-                visibleCount++;
-            } else {
-                item.style.display = 'none';
+        if (matchesSearch && matchesCountry) {
+            item.style.display = 'block';
+            if (parentGroup) {
+                parentGroup.style.display = 'block';
             }
-        });
-
-        // Show/hide no results message
-        if (visibleCount === 0) {
-            noDestinationsMessage?.classList.remove('hidden');
+            visibleCount++;
         } else {
-            noDestinationsMessage?.classList.add('hidden');
+            item.style.display = 'none';
+        }
+    });
+
+    if (noDestinationsMsg) {
+        if (visibleCount === 0) {
+            noDestinationsMsg.classList.remove('hidden');
+        } else {
+            noDestinationsMsg.classList.add('hidden');
         }
     }
+}
 
-    // ========== ACTIVITY SEARCH & FILTER ==========
+// Hook events
+destinationSearch?.addEventListener('input', debounce(filterDestinations, 300));
+countryFilter?.addEventListener('change', filterDestinations);
+
+    // ========== ACTIVITY SEARCH & FILTER (now includes destination-based filter) ==========
     const activitySearch = document.getElementById('activity-search');
     const categoryFilter = document.getElementById('category-filter');
     const activityItems = document.querySelectorAll('.activity-item');
@@ -238,9 +246,33 @@ document.addEventListener('DOMContentLoaded', function() {
     activitySearch?.addEventListener('input', debounce(filterActivities, 300));
     categoryFilter?.addEventListener('change', filterActivities);
 
+    function getSelectedDestinationIds() {
+        const ids = [];
+        destinationCheckboxes.forEach(cb => {
+            if (cb.checked) {
+                ids.push(cb.value.toString());
+            }
+        });
+        return ids;
+    }
+
+    function activityMatchesSelectedDestinations(activityLabel, selectedDestIds) {
+        // If no destination is selected, do NOT show any activities
+        if (selectedDestIds.length === 0) return false;
+
+        const data = activityLabel.dataset.destinations || '';
+        if (!data) return false;
+
+        const activityDestIds = data.split(',').filter(Boolean);
+        if (activityDestIds.length === 0) return false;
+
+        return activityDestIds.some(id => selectedDestIds.includes(id));
+    }
+
     function filterActivities() {
         const searchTerm = activitySearch.value.toLowerCase().trim();
         const selectedCategory = categoryFilter.value;
+        const selectedDestIds = getSelectedDestinationIds();
         let visibleCount = 0;
 
         // Hide all category groups first
@@ -253,8 +285,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const matchesSearch = !searchTerm || name.includes(searchTerm);
             const matchesCategory = !selectedCategory || category === selectedCategory;
+            const matchesDestinations = activityMatchesSelectedDestinations(item, selectedDestIds);
 
-            if (matchesSearch && matchesCategory) {
+            if (matchesSearch && matchesCategory && matchesDestinations) {
                 item.style.display = 'block';
                 if (parentGroup) {
                     parentGroup.style.display = 'block';
@@ -271,6 +304,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             noActivitiesMessage?.classList.add('hidden');
         }
+
+        // After filtering, refresh the selected activities summary
+        updateSelectedActivities();
     }
 
     // Debounce function for search
@@ -315,19 +351,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
 
-    // ========== DATE VALIDATION ==========
+    // ========== DATE VALIDATION & AUTO END DATE ==========
     const dateFrom = document.querySelector('[name="travel_date_from"]');
     const dateTo = document.querySelector('[name="travel_date_to"]');
+    const durationDays = document.getElementById('duration_days');
+
+    // Auto-calc end date when start date or duration changes
+    function recalcEndDate() {
+        if (!dateFrom || !dateTo || !durationDays) return;
+
+        const startVal = dateFrom.value;
+        const daysVal = parseInt(durationDays.value, 10);
+
+        if (!startVal || isNaN(daysVal) || daysVal <= 0) {
+            dateTo.value = '';
+            return;
+        }
+
+        const startDate = new Date(startVal + 'T00:00:00');
+        const offset = daysVal - 1; // inclusive of first day
+        startDate.setDate(startDate.getDate() + offset);
+
+        const year = startDate.getFullYear();
+        const month = String(startDate.getMonth() + 1).padStart(2, '0');
+        const day = String(startDate.getDate()).padStart(2, '0');
+        dateTo.value = `${year}-${month}-${day}`;
+        dateTo.min = startVal;
+        clearError(dateTo);
+    }
 
     dateFrom?.addEventListener('change', function() {
         if (this.value) {
             dateTo.min = this.value;
-            // Clear end date error if dates are now valid
-            if (dateTo.value && dateTo.value >= this.value) {
-                clearError(dateTo);
-            }
         }
+        recalcEndDate();
     });
+
+    durationDays?.addEventListener('input', recalcEndDate);
 
     dateTo?.addEventListener('change', function() {
         if (dateFrom.value && this.value < dateFrom.value) {
@@ -340,6 +400,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========== INITIALIZE ON PAGE LOAD ==========
     // Initialize selected items (for validation errors - old() data)
     updateSelectedDestinations();
+    filterDestinations();     // apply filters on load
+    filterActivities();       // uses selected destinations
     updateSelectedActivities();
 
     // ========== KEYBOARD NAVIGATION ==========
@@ -361,7 +423,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add "Select All" buttons (optional enhancement)
     if (destinationsContainer) {
-        addSelectAllButton('destinations', destinationsContainer, destinationCheckboxes, updateSelectedDestinations);
+        addSelectAllButton('destinations', destinationsContainer, destinationCheckboxes, () => {
+            updateSelectedDestinations();
+            filterActivities();
+        });
     }
 
     if (activitiesContainer) {
@@ -448,4 +513,107 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }, 1000);
     });
+});
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    // ----- DESTINATIONS (Step 3) -----
+    const destinationSearch   = document.getElementById('destination-search');
+    const countryFilter       = document.getElementById('country-filter');
+    const destinationItems    = Array.from(document.querySelectorAll('#destinations-container .destination-item'));
+    const countryGroups       = Array.from(document.querySelectorAll('#destinations-container .country-group'));
+    const noDestinationsMsg   = document.getElementById('no-destinations-message');
+
+    const selectedSummary     = document.getElementById('selected-destinations-summary');
+    const selectedCount       = document.getElementById('selected-count');
+    const selectedList        = document.getElementById('selected-destinations-list');
+
+    function filterDestinations() {
+        const searchTerm      = (destinationSearch?.value || '').toLowerCase().trim();
+        const selectedCountry = (countryFilter?.value || '').toString();
+        let visibleCount      = 0;
+
+        // Hide all groups first
+        countryGroups.forEach(group => {
+            group.style.display = 'none';
+        });
+
+        destinationItems.forEach(item => {
+            const name        = (item.dataset.name || '').toLowerCase();
+            const itemCountry = (item.dataset.country || '').toString();
+            const parentGroup = item.closest('.country-group');
+
+            const matchesSearch  = !searchTerm || name.includes(searchTerm);
+            const matchesCountry = !selectedCountry || itemCountry === selectedCountry;
+
+            if (matchesSearch && matchesCountry) {
+                item.style.display = 'block';
+                if (parentGroup) parentGroup.style.display = 'block';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        if (noDestinationsMsg) {
+            if (visibleCount === 0) {
+                noDestinationsMsg.classList.remove('hidden');
+            } else {
+                noDestinationsMsg.classList.add('hidden');
+            }
+        }
+    }
+
+    function updateSelectedDestinations() {
+        // If summary elements are not present, do nothing
+        if (!selectedSummary || !selectedCount || !selectedList) return;
+
+        const checkboxes = Array.from(document.querySelectorAll('.destination-checkbox'));
+        const selected   = checkboxes.filter(cb => cb.checked);
+
+        selectedCount.textContent = selected.length.toString();
+
+        if (selected.length === 0) {
+            selectedSummary.classList.add('hidden');
+            selectedList.innerHTML = '';
+            return;
+        }
+
+        selectedSummary.classList.remove('hidden');
+        selectedList.innerHTML = '';
+
+        selected.forEach(cb => {
+            const label = cb.closest('.destination-item');
+            const nameEl = label?.querySelector('h4');
+            const name = nameEl ? nameEl.textContent.trim() : 'Destination';
+
+            const tag = document.createElement('span');
+            tag.className = 'bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-sm font-medium inline-flex items-center';
+            tag.innerHTML = `<i class="fas fa-map-marker-alt mr-1.5 text-xs"></i>${name}`;
+            selectedList.appendChild(tag);
+        });
+    }
+
+    function debounce(fn, wait) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(this, args), wait);
+        };
+    }
+
+    destinationSearch?.addEventListener('input', debounce(filterDestinations, 200));
+    countryFilter?.addEventListener('change', filterDestinations);
+
+    // Hook summary updates to checkbox changes
+    document.querySelectorAll('.destination-checkbox').forEach(cb => {
+        cb.addEventListener('change', () => {
+            updateSelectedDestinations();
+            // later we will also call filterActivitiesByDestinations() here
+        });
+    });
+
+    // Initial
+    filterDestinations();
+    updateSelectedDestinations();
 });

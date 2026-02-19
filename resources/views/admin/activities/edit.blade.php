@@ -111,7 +111,7 @@
                         @enderror
                     </div>
 
-                    <!-- Destination -->
+                    <!-- Primary Destination (legacy single) -->
                     <div>
                         <label for="destination_id" class="block text-sm font-medium text-gray-700 mb-2">
                             Primary Destination
@@ -126,6 +126,44 @@
                             @endforeach
                         </select>
                         @error('destination_id')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- NEW: Multi-destination checkboxes -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Destinations where this activity can be carried out
+                        </label>
+                        <p class="text-xs text-gray-500 mb-2">
+                            Select all destinations where this activity is available. This is separate from the single “Primary Destination” above.
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            @php
+                                $selectedDestinations = old('destinations', $selectedDestinations ?? []);
+                            @endphp
+                            @foreach($destinations as $destination)
+                                <label class="flex items-center space-x-2 text-sm cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        name="destinations[]"
+                                        value="{{ $destination->id }}"
+                                        class="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                        {{ in_array($destination->id, $selectedDestinations) ? 'checked' : '' }}
+                                    >
+                                    <span class="text-gray-700">
+                                        {{ $destination->name }}
+                                        <span class="text-gray-400 text-xs">
+                                            ({{ $destination->country->name }})
+                                        </span>
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('destinations')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                        @error('destinations.*')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
                     </div>

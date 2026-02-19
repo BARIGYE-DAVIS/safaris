@@ -268,7 +268,12 @@ class Destination extends Model
     {
         return $this->renderSection('activities');
     }
-
+// ADD THIS
+public function multiActivities()
+{
+    return $this->belongsToMany(Activity::class, 'activity_destination')
+                ->withTimestamps();
+}
     public function getWildlifeWithImagesAttribute()
     {
         return $this->renderSection('wildlife');

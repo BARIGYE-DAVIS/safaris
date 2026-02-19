@@ -94,96 +94,23 @@
                                    placeholder="+1 234 567 8900">
                         </div>
 
-<div class="relative">
-    <label class="block text-sm font-semibold text-gray-700 mb-2">
-        Country of Residence
-    </label>
-    <input type="text" 
-           name="country" 
-           id="countryInput"
-           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-           placeholder="Start typing your country..."
-           value="{{ old('country') }}"
-           autocomplete="off">
-    
-    <!-- Dropdown suggestions -->
-    <div id="countryDropdown" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-        <!-- Results will be populated here -->
-    </div>
-</div>
-
-@push('scripts')
-<script>
-    const countries = @json($countries->pluck('name', 'flag_icon'));
-    const countryInput = document.getElementById('countryInput');
-    const countryDropdown = document.getElementById('countryDropdown');
-    
-    // Convert to array for easier filtering
-    const countriesArray = @json($countries->map(function($country) {
-        return [
-            'name' => $country->name,
-            'flag' => $country->flag_icon
-        ];
-    })->values());
-
-    countryInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase().trim();
-        
-        if (searchTerm.length === 0) {
-            countryDropdown.classList.add('hidden');
-            return;
-        }
-        
-        // Filter countries
-        const filtered = countriesArray.filter(country => 
-            country.name.toLowerCase().includes(searchTerm)
-        );
-        
-        if (filtered.length === 0) {
-            countryDropdown.classList.add('hidden');
-            return;
-        }
-        
-        // Display results
-        countryDropdown.innerHTML = filtered.map(country => `
-            <div class="px-4 py-2 hover:bg-green-50 cursor-pointer country-option" data-country="${country.name}">
-                <span class="mr-2">${country.flag}</span>
-                <span>${country.name}</span>
-            </div>
-        `).join('');
-        
-        countryDropdown.classList.remove('hidden');
-        
-        // Add click handlers
-        document.querySelectorAll('.country-option').forEach(option => {
-            option.addEventListener('click', function() {
-                countryInput.value = this.dataset.country;
-                countryDropdown.classList.add('hidden');
-            });
-        });
-    });
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!countryInput.contains(e.target) && !countryDropdown.contains(e.target)) {
-            countryDropdown.classList.add('hidden');
-        }
-    });
-    
-    // Handle keyboard navigation
-    countryInput.addEventListener('keydown', function(e) {
-        const options = countryDropdown.querySelectorAll('.country-option');
-        if (options.length === 0) return;
-        
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            options[0].focus();
-        } else if (e.key === 'Escape') {
-            countryDropdown.classList.add('hidden');
-        }
-    });
-</script>
-@endpush
+                        <div class="relative">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Country of Residence
+                            </label>
+                            <input type="text" 
+                                   name="country" 
+                                   id="countryInput"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                   placeholder="Start typing your country..."
+                                   value="{{ old('country') }}"
+                                   autocomplete="off">
+                            
+                            <!-- Dropdown suggestions -->
+                            <div id="countryDropdown" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                <!-- Results will be populated here -->
+                            </div>
+                        </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -223,20 +150,31 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-2">
                                 Preferred Start Date
                             </label>
-                            <input type="date" name="travel_date_from"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                   value="{{ old('travel_date_from') }}"
-                                   min="{{ date('Y-m-d') }}">
+                            <input
+                                type="date"
+                                name="travel_date_from"
+                                id="travel_date_from"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                value="{{ old('travel_date_from') }}"
+                                min="{{ date('Y-m-d') }}"
+                            >
                         </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">
                                 Preferred End Date
                             </label>
-                            <input type="date" name="travel_date_to"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                                   value="{{ old('travel_date_to') }}"
-                                   min="{{ date('Y-m-d') }}">
+                            <input
+                                type="date"
+                                name="travel_date_to"
+                                id="travel_date_to"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 bg-gray-100 cursor-not-allowed"
+                                value="{{ old('travel_date_to') }}"
+                                readonly
+                            >
+                            <p class="text-xs text-gray-500 mt-1">
+                                This will be calculated from your start date and number of days.
+                            </p>
                         </div>
 
                         <div class="md:col-span-2">
@@ -250,19 +188,24 @@
                             </label>
                         </div>
 
+                        <!-- NEW: duration as number of days -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                Approximate Duration
+                                Number of Days
                             </label>
-                            <select name="duration"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                                <option value="">Select Duration</option>
-                                <option value="3-5 days" {{ old('duration') == '3-5 days' ? 'selected' : '' }}>3-5 days</option>
-                                <option value="6-9 days" {{ old('duration') == '6-9 days' ? 'selected' : '' }}>6-9 days</option>
-                                <option value="10-14 days" {{ old('duration') == '10-14 days' ? 'selected' : '' }}>10-14 days</option>
-                                <option value="15+ days" {{ old('duration') == '15+ days' ? 'selected' : '' }}>15+ days</option>
-                                <option value="Flexible" {{ old('duration') == 'Flexible' ? 'selected' : '' }}>Flexible</option>
-                            </select>
+                            <input
+                                type="number"
+                                name="duration_days"
+                                id="duration_days"
+                                min="1"
+                                max="60"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                value="{{ old('duration_days') }}"
+                                placeholder="e.g., 7"
+                            >
+                            <p class="text-xs text-gray-500 mt-1">
+                                Enter the total number of days for your safari.
+                            </p>
                         </div>
 
                         <div></div>
@@ -337,16 +280,7 @@
                         </div>
                     </div>
 
-                    <!-- Selected Destinations Summary -->
-                    <div id="selected-destinations-summary" class="mb-6 hidden">
-                        <div class="bg-green-50 border-2 border-green-300 rounded-lg p-4">
-                            <p class="font-semibold text-green-800 mb-3 flex items-center">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                <span id="selected-count">0</span> Destination(s) Selected
-                            </p>
-                            <div id="selected-destinations-list" class="flex flex-wrap gap-2"></div>
-                        </div>
-                    </div>
+                    
 
                     <!-- Destinations List (Checkbox Style) -->
                     <div id="destinations-container" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
@@ -468,9 +402,13 @@
                                 </h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
                                     @foreach($category->activities as $activity)
+                                    @php
+                                        $destinationIds = $activity->destinations->pluck('id')->implode(',');
+                                    @endphp
                                     <label class="activity-item flex items-start p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all duration-200"
                                            data-category="{{ $category->id }}"
-                                           data-name="{{ strtolower($activity->name) }}">
+                                           data-name="{{ strtolower($activity->name) }}"
+                                           data-destinations="{{ $destinationIds }}">
                                         <input type="checkbox" 
                                                name="activities[]" 
                                                value="{{ $activity->id }}"
@@ -501,6 +439,14 @@
                                             <span class="inline-block mt-2 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
                                                 <i class="far fa-clock mr-1"></i>{{ $activity->duration }}
                                             </span>
+                                            @endif
+
+                                            @if($activity->destinations->count())
+                                                <div class="mt-2 text-[11px] text-gray-500">
+                                                    <i class="fas fa-map-marker-alt mr-1 text-orange-500"></i>
+                                                    Available in:
+                                                    {{ $activity->destinations->pluck('name')->join(', ') }}
+                                                </div>
                                             @endif
                                         </div>
                                     </label>
@@ -714,6 +660,80 @@
 
 @push('scripts')
 <script src="{{ asset('js/custom-tour-wizard.js') }}"></script>
+
+<script>
+// Country autocomplete (unchanged core logic)
+const countries = @json($countries->pluck('name', 'flag_icon'));
+const countryInput = document.getElementById('countryInput');
+const countryDropdown = document.getElementById('countryDropdown');
+
+// Convert to array for easier filtering
+const countriesArray = @json($countries->map(function($country) {
+    return [
+        'name' => $country->name,
+        'flag' => $country->flag_icon
+    ];
+})->values());
+
+if (countryInput && countryDropdown) {
+    countryInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        if (searchTerm.length === 0) {
+            countryDropdown.classList.add('hidden');
+            return;
+        }
+        
+        // Filter countries
+        const filtered = countriesArray.filter(country => 
+            country.name.toLowerCase().includes(searchTerm)
+        );
+        
+        if (filtered.length === 0) {
+            countryDropdown.classList.add('hidden');
+            return;
+        }
+        
+        // Display results
+        countryDropdown.innerHTML = filtered.map(country => `
+            <div class="px-4 py-2 hover:bg-green-50 cursor-pointer country-option" data-country="${country.name}">
+                <span class="mr-2">${country.flag}</span>
+                <span>${country.name}</span>
+            </div>
+        `).join('');
+        
+        countryDropdown.classList.remove('hidden');
+        
+        // Add click handlers
+        document.querySelectorAll('.country-option').forEach(option => {
+            option.addEventListener('click', function() {
+                countryInput.value = this.dataset.country;
+                countryDropdown.classList.add('hidden');
+            });
+        });
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!countryInput.contains(e.target) && !countryDropdown.contains(e.target)) {
+            countryDropdown.classList.add('hidden');
+        }
+    });
+    
+    // Handle keyboard navigation
+    countryInput.addEventListener('keydown', function(e) {
+        const options = countryDropdown.querySelectorAll('.country-option');
+        if (options.length === 0) return;
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            options[0].focus();
+        } else if (e.key === 'Escape') {
+            countryDropdown.classList.add('hidden');
+        }
+    });
+}
+</script>
 @endpush
 
 @push('styles')

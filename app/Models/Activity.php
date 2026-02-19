@@ -117,6 +117,13 @@ class Activity extends Model
                     ->withTimestamps();
     }
 
+    // ADD THIS
+public function destinations()
+{
+    return $this->belongsToMany(Destination::class, 'activity_destination')
+                ->withTimestamps();
+}
+
     /**
      * Get all gallery images for this activity (MULTIPLE IMAGES)
      */

@@ -597,6 +597,64 @@ function formatContent($text) {
         </div>
     </div>
 
+    <!-- NEW: Destinations where this activity can be carried out -->
+    @if($activity->destinations && $activity->destinations->count() > 0)
+    <div class="bg-gray-100 py-16">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">
+                Where You Can Do This Activity
+            </h2>
+            <p class="text-center text-gray-600 mb-10 max-w-2xl mx-auto">
+                Explore the parks and destinations where <strong>{{ $activity->name }}</strong> is available.
+                Click a destination to see full details.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($activity->destinations as $destination)
+                <a href="{{ route('destinations.show', $destination->slug) }}" class="group">
+                    <article class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition transform hover:-translate-y-1">
+                        <div class="h-48 bg-gray-200 overflow-hidden">
+                            @php
+                                $destImage = $destination->featured_image ?? $destination->image;
+                            @endphp
+                            @if($destImage)
+                                <img src="{{ asset('storage/' . $destImage) }}"
+                                     alt="{{ $destination->name }}"
+                                     class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
+                            @else
+                                <div class="w-full h-full bg-gradient-to-br from-green-300 to-blue-400 flex items-center justify-center text-white">
+                                    <span class="text-lg font-semibold">{{ \Illuminate\Support\Str::limit($destination->name, 18) }}</span>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-gray-900 group-hover:text-green-600 transition line-clamp-2">
+                                {{ $destination->name }}
+                            </h3>
+                            <p class="text-sm text-gray-500 mt-1">
+                                <i class="fas fa-map-marker-alt text-green-500 mr-1"></i>
+                                {{ $destination->region ?? '' }}{{ $destination->region && $destination->country ? ', ' : '' }}{{ $destination->country->name ?? '' }}
+                            </p>
+                            @if($destination->type || $destination->area_size)
+                            <p class="text-xs text-gray-500 mt-2">
+                                @if($destination->type)
+                                    {{ $destination->type }}
+                                @endif
+                                @if($destination->type && $destination->area_size) • @endif
+                                @if($destination->area_size)
+                                    {{ number_format($destination->area_size) }} {{ $destination->area_unit ?? 'km²' }}
+                                @endif
+                            </p>
+                            @endif
+                        </div>
+                    </article>
+                </a>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Related Activities -->
     @if($relatedActivities->count() > 0)
     <div class="bg-white py-16">
