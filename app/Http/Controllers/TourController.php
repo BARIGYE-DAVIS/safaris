@@ -220,4 +220,44 @@ class TourController extends Controller
 
         return view('tours.duration', compact('tours', 'days', 'durationType'));
     }
+
+public function budget()
+{
+    $tours = \App\Models\Tour::query()
+        ->where('status', 'published')
+        ->where('category', 'budget')
+        ->with(['images', 'prices', 'itineraries'])   // ← only relations that EXIST on Tour model
+        ->orderBy('title')                             // ← 'name' column doesn't exist; use 'title'
+        ->paginate(9);
+
+    return view('tours.budget', compact('tours'));
+}
+
+
+public function midrange()
+{
+    $tours = \App\Models\Tour::query()
+        ->where('status', 'published')          // ← match whatever value you confirmed works
+        ->where('category', 'middle Range')        // ← adjust to match exact DB value e.g. 'midrange', 'Mid-Range'
+        ->with(['images', 'prices', 'itineraries'])
+        ->orderBy('title')
+        ->paginate(9);
+
+    return view('tours.midrange', compact('tours'));
+
+
+}
+
+public function luxury()
+{
+    $tours = \App\Models\Tour::query()
+        ->where('status', 'published')
+        ->where('category', 'luxury')           // ← adjust to match exact DB value e.g. 'Luxury'
+        ->with(['images', 'prices', 'itineraries'])
+        ->orderBy('title')
+        ->paginate(9);
+
+    return view('tours.luxury', compact('tours'));  
+}
+
 }

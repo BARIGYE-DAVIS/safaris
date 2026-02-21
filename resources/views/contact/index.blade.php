@@ -34,7 +34,7 @@
                         </svg>
                         <span class="font-semibold">Email Us</span>
                     </div>
-                    <p class="text-green-200">info@calmafricasafaris.com</p>
+                    <p class="text-green-200">calmafricasafaris@gmail.com</p>
                 </div>
                 
                 <div class="bg-white/10 backdrop-blur rounded-lg p-4">
@@ -44,7 +44,7 @@
                         </svg>
                         <span class="font-semibold">WhatsApp</span>
                     </div>
-                    <p class="text-green-200">+256 777143020</p>
+                    <p class="text-green-200">+256 752088768</p>
                 </div>
             </div>
 
@@ -241,10 +241,10 @@
                                 <div>
                                     <h4 class="font-semibold text-gray-900 mb-1">Call Us</h4>
                                     <p class="text-gray-600 mb-2">Speak directly with our safari experts</p>
-                                    <a href="tel:+256700000000" class="text-green-600 font-medium hover:text-green-700">
-                                        +256 700 000 000
+                                    <a href="tel:+256752088768" class="text-green-600 font-medium hover:text-green-700">
+                                        +256 752088768
                                     </a>
-                                    <p class="text-sm text-gray-500 mt-1">Mon - Fri: 8AM - 6PM (EAT)</p>
+                                    <p class="text-sm text-gray-500 mt-1">24/7</p>
                                 </div>
                             </div>
 
@@ -275,8 +275,8 @@
                                 <div>
                                     <h4 class="font-semibold text-gray-900 mb-1">WhatsApp</h4>
                                     <p class="text-gray-600 mb-2">Quick chat for instant responses</p>
-                                    <a href="https://wa.me/256700000000" class="text-green-600 font-medium hover:text-green-700">
-                                        +256 700 000 000
+                                    <a href="https://wa.me/256752088768" class="text-green-600 font-medium hover:text-green-700">
+                                        +256 752088768
                                     </a>
                                     <p class="text-sm text-gray-500 mt-1">Available 24/7</p>
                                 </div>
@@ -293,7 +293,7 @@
                                 <div>
                                     <h4 class="font-semibold text-gray-900 mb-1">Visit Our Office</h4>
                                     <p class="text-gray-600 mb-2">
-                                        Plot 123, Safari Street<br>
+                                        kansanga<br>
                                         Kampala, Central Uganda<br>
                                         East Africa
                                     </p>
@@ -448,7 +448,7 @@
                     </div>
                     <h3 class="text-xl font-semibold text-gray-900 mb-4">WhatsApp Chat</h3>
                     <p class="text-gray-600 mb-6">Quick responses and instant communication for urgent inquiries.</p>
-                    <a href="https://wa.me/256777143020" 
+                    <a href="https://wa.me/256752088768" 
                        class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
                         Start Chat
                         <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -466,7 +466,7 @@
                     </div>
                     <h3 class="text-xl font-semibold text-gray-900 mb-4">Call Our Experts</h3>
                     <p class="text-gray-600 mb-6">Speak directly with our safari specialists for personalized advice.</p>
-                    <a href="tel:+256700000000" 
+                    <a href="tel:+256752088768" 
                        class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
                         Call Now
                         <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

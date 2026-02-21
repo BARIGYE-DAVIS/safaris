@@ -119,6 +119,13 @@
         </div>
     </section>
 
+    <div class="">
+
+    <div class="budget">
+        <a href="{{ route('tours.budget') }}" class="text-green-600 hover:text-green-800 font-medium">View Budget Options</a>
+    </div>
+    </div>
+
     <!-- Filter Section with Database-driven Options -->
     <section class="py-8 bg-white border-b">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

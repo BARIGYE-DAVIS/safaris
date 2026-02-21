@@ -12,6 +12,11 @@
     <meta name="keywords" content="@yield('meta_keywords', 'safari, tours, wildlife, Africa, adventure, travel, booking')">
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <!-- Open Graph Tags -->
+
+    {{-- in layouts.app head --}}
+@hasSection('meta_keywords')
+    <meta name="keywords" content="@yield('meta_keywords')">
+@endif
     <meta property="og:title" content="@yield('og_title', 'Safari Tours - Adventure Awaits')">
     <meta property="og:description" content="@yield('og_description', 'Discover amazing safari adventures in East Africa.')">
     <meta property="og:image" content="@yield('og_image', asset('images/safari-og.jpg'))">

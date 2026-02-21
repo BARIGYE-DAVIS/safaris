@@ -9,10 +9,7 @@
 <section class="py-16 bg-gray-50 overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Section Header -->
-        <div class="text-center mb-12">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">{{ $heading }}</h2>
-            <p class="text-xl text-gray-600">{{ $subheading }}</p>
-        </div>
+        
 
         @if($tours->count() > 0)
         <!-- Carousel Container -->
@@ -44,14 +41,14 @@
                                 <!-- Category Badge -->
                                 <div class="absolute top-3 left-3">
                                     <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold capitalize shadow-lg">
-                                        {{ $tour->category_label ?? 'Safari' }}
+                                        {{ $tour->category ?? 'Safari' }}
                                     </span>
                                 </div>
                                 
                                 <!-- Duration Badge -->
                                 <div class="absolute top-3 right-3">
                                     <span class="bg-white/95 backdrop-blur text-gray-800 px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
-                                        {{ $tour->duration_text }}
+                                     {{ $tour->itineraries->count() ?: 'Multi' }} {{ $tour->itineraries->count() == 1 ? 'Day' : 'Days' }}
                                     </span>
                                 </div>
 
@@ -59,7 +56,7 @@
                                 @if($tour->type)
                                 <div class="absolute bottom-3 left-3">
                                     <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold capitalize shadow-lg">
-                                        {{ $tour->type_label }}
+                                        {{ $tour->type}}
                                     </span>
                                 </div>
                                 @endif

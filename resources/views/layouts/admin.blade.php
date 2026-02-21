@@ -146,6 +146,11 @@
 
                 </a>
 
+                <a href="{{ route('admin.accommodations.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                    <i class="fas fa-bed"></i>
+                    Accommodations
+                </a>
+
                 <div class="sidebar-divider"></div>
                         
                 <form method="POST" action="{{ route('admin.logout') }}" class="m-0 mt-4">

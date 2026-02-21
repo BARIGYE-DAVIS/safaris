@@ -81,7 +81,11 @@
                                 <!-- Available Tours by Duration -->
                                 @if($tours->count() > 0)
                                 <div class="border-t pt-4">
-                                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Available Tours</h3>
+                                 
+                                <a href="{{ route('tours.index') }}" class="block mb-4">
+                                       <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">All tours</h3>
+                                </a>
+
                                     <div class="space-y-2">
                                         @foreach($tours->take(8) as $tour)
                                         <a href="{{ route('tours.show', $tour->slug) }}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 rounded transition">
@@ -229,7 +233,12 @@
                        class="nav-link {{ request()->routeIs('blogs.*') ? 'text-green-700 border-b-2 border-green-700' : 'text-gray-700 hover:text-green-700' }} px-3 py-2 text-sm font-medium transition-colors duration-200">
                         Blog
                     </a>
-                    
+
+                    <a href="{{ route('accommodations.index') }}" 
+                       class="nav-link {{ request()->routeIs('accommodations.*') ? 'text-green-700 border-b-2 border-green-700' : 'text-gray-700 hover:text-green-700' }} px-3 py-2 text-sm font-medium transition-colors duration-200">
+                       <i class="fas fa-bed mr-2 text-green-700"></i>
+                    </a>
+
                     <a href="{{ route('contact') }}" 
                        class="nav-link {{ request()->routeIs('contact') ? 'text-green-700 border-b-2 border-green-700' : 'text-gray-700 hover:text-green-700' }} px-3 py-2 text-sm font-medium transition-colors duration-200">
                         Contact

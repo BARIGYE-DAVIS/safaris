@@ -3,6 +3,7 @@
 use App\Http\Controllers\TourController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\AccommodationController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CategoryController;
@@ -32,7 +33,10 @@ Route::get('/', function () {
 Route::get('/tours', [TourController::class, 'index'])->name('tours.index');
 Route::get('/tours/category/{category}', [TourController::class, 'category'])->name('tours.category');
 Route::get('/tours/{slug}', [TourController::class, 'show'])->name('tours.show');
-
+// use App\Http\Controllers\TourController;
+Route::get('/tours-budget', [TourController::class, 'budget'])->name('tours.budget');
+Route::get('tours-midrange', [TourController::class, 'midrange'])->name('tours.midrange');
+Route::get('tours-luxury', [TourController::class, 'luxury'])->name('tours.luxury');
 // Gallery
 Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
 Route::get('/gallery/{slug}', [GalleryController::class, 'show'])->name('gallery.show');
@@ -205,6 +209,8 @@ Route::prefix('api')->name('api.')->group(function () {
     Route::get('/custom-tour-request/activities/{countryId}', [CustomTourRequestController::class, 'getActivitiesByCountry'])->name('custom-tour-requests.activities');
 });
 
+Route::get('/accommodations', [AccommodationController::class, 'index'])->name('accommodations.index');
+Route::get('/accommodations/{slug}', [AccommodationController::class, 'show'])->name('accommodations.show');
 // ========================
 // SEARCH (Global)
 // ========================

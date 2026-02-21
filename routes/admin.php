@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminAuthenticate;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\AccommodationController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogCategoryController;
 use App\Http\Controllers\AdminAuthController;
@@ -257,3 +258,11 @@ Route::prefix('admin')
         Route::get('blog-categories/api', [BlogCategoryController::class, 'apiList'])
             ->name('blog-categories.api');
     });
+
+    // Admin (you may protect these with middleware('auth', 'admin'))
+Route::get('/admin/accommodations', [AccommodationController::class, 'adminIndex'])->name('admin.accommodations.index');
+Route::get('/admin/accommodations/create', [AccommodationController::class, 'adminCreate'])->name('admin.accommodations.create');
+Route::post('/admin/accommodations', [AccommodationController::class, 'adminStore'])->name('admin.accommodations.store');
+Route::get('/admin/accommodations/{accommodation}/edit', [AccommodationController::class, 'adminEdit'])->name('admin.accommodations.edit');
+Route::put('/admin/accommodations/{accommodation}', [AccommodationController::class, 'adminUpdate'])->name('admin.accommodations.update');
+Route::delete('/admin/accommodations/{accommodation}', [AccommodationController::class, 'adminDestroy'])->name('admin.accommodations.destroy');

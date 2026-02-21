@@ -5,8 +5,8 @@
             <!-- Company Info -->
             <div class="space-y-4">
                 <div class="flex items-center space-x-2">
-                    <img class="h-8 w-auto" src="{{ asset('images/logo-white.png') }}" alt="Safari Logo">
-                    <span class="text-xl font-bold text-green-400">SafariTours</span>
+                    <img class="h-8 w-auto" src="{{ asset('images/logo.png') }}" alt="Logo">
+                    <span class="text-xl font-bold text-green-400">Calm Africa Safaris</span>
                 </div>
                 <p class="text-gray-300 text-sm leading-relaxed">
                     Experience the adventure of a lifetime with our expertly guided safari tours. 
@@ -23,7 +23,7 @@
                     </a>
                     
                     <!-- Instagram -->
-                    <a href="https://instagram.com/safaritours" target="_blank" rel="noopener noreferrer" 
+                    <a href="https://instagram.com/calm_africa_safaris" target="_blank" rel="noopener noreferrer" 
                        class="text-gray-400 hover:text-green-400 transition-colors duration-300">
                         <span class="sr-only">Instagram</span>
                         <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -32,7 +32,7 @@
                     </a>
                     
                     <!-- Twitter/X -->
-                    <a href="https://twitter.com/safaritours" target="_blank" rel="noopener noreferrer" 
+                    <a href="https://twitter.com/@calm_africa" target="_blank" rel="noopener noreferrer" 
                        class="text-gray-400 hover:text-green-400 transition-colors duration-300">
                         <span class="sr-only">Twitter</span>
                         <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -41,7 +41,7 @@
                     </a>
                     
                     <!-- YouTube -->
-                    <a href="https://youtube.com/safaritours" target="_blank" rel="noopener noreferrer" 
+                    <a href="https://youtube.com/@calmafricasafaris" target="_blank" rel="noopener noreferrer" 
                        class="text-gray-400 hover:text-green-400 transition-colors duration-300">
                         <span class="sr-only">YouTube</span>
                         <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -67,6 +67,13 @@
                              src="{{ asset('images/tato-logo.png') }}" alt="TATO Certified">
                         <img class="h-8 w-auto opacity-60 hover:opacity-100 transition-opacity" 
                              src="{{ asset('images/tanapa-logo.png') }}" alt="TANAPA Partner">
+                             <a href="https://www.getyourguide.com/-s491424"><img src="https://gyg.me/DFO5LFuz" width="160px" height="auto" style="border: 1px solid #c6c8d0" alt="GetYourGuide | Calm Africa Safris" /></a>
+                             <a href="https://www.getyourguide.com/-s491424"><img src="https://gyg.me/kUtga42u" width="160px" height="auto" style="border: 1px solid #c6c8d0" alt="GetYourGuide | Calm Africa Safris" /></a>
+                    </div>
+
+                    <div class="">
+
+                    
                     </div>
                 </div>
             </div>
@@ -229,8 +236,8 @@
                         </svg>
                         <div>
                             <p class="text-gray-300 text-sm font-medium">Head Office</p>
-                            <p class="text-gray-400 text-sm">Safari Street, Plot 123</p>
-                            <p class="text-gray-400 text-sm">Arusha, Tanzania</p>
+                            <p class="text-gray-400 text-sm">Kansanga</p>
+                            <p class="text-gray-400 text-sm">Kampala, Uganda</p>
                         </div>
                     </div>
                     
@@ -240,13 +247,13 @@
                         </svg>
                         <div>
                             <p class="text-gray-300 text-sm font-medium">Phone Numbers</p>
-                            <a href="tel:+255123456789" 
+                            <a href="tel:+256777143020" 
                                class="text-gray-400 hover:text-white transition-colors text-sm block">
-                                +255 123 456 789
+                                +256777143020
                             </a>
-                            <a href="tel:+255987654321" 
+                            <a href="tel:+25675088768" 
                                class="text-gray-400 hover:text-white transition-colors text-sm block">
-                                +255 987 654 321
+                                +256 750 887 68
                             </a>
                         </div>
                     </div>
@@ -276,7 +283,7 @@
                             </svg>
                             <div>
                                 <p class="text-green-400 text-sm font-medium">24/7 WhatsApp Support</p>
-                                <a href="https://wa.me/255123456789" 
+                                <a href="https://wa.me/256752088768" 
                                    class="text-gray-300 hover:text-white transition-colors text-sm">
                                     Chat with us anytime
                                 </a>
@@ -289,9 +296,9 @@
                             </svg>
                             <div>
                                 <p class="text-red-400 text-sm font-medium">Emergency Contact</p>
-                                <a href="tel:+255911000000" 
+                                <a href="tel:+256752088768" 
                                    class="text-gray-300 hover:text-white transition-colors text-sm">
-                                    +255 911 000 000
+                                    +256752088768
                                 </a>
                             </div>
                         </div>
@@ -375,7 +382,7 @@
             <div class="flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
                 <!-- Copyright -->
                 <div class="text-gray-400 text-sm text-center lg:text-left">
-                    <p>&copy; {{ date('Y') }} SafariTours. All rights reserved. | Designed with ❤️ for adventurers</p>
+                    <p>&copy; {{ date('Y') }} Calm Africa Safaris. All rights reserved. | Designed with ❤️ for adventurers</p>
                 </div>
                 
                 <!-- Legal Links -->
