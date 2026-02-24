@@ -329,21 +329,148 @@
                     Subscribe to our newsletter for exclusive deals, travel tips, and the latest safari adventures.
                 </p>
                 
-                <form action="{{ route('newsletter.subscribe') }}" method="POST" 
-                      class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-                    @csrf
-                    <div class="flex-1">
-                        <input type="email" 
-                               name="email"
-                               placeholder="Enter your email address" 
-                               required
-                               class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300">
-                    </div>
-                    <button type="submit" 
-                            class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-300 whitespace-nowrap transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500">
-                        Subscribe
-                    </button>
-                </form>
+ {{-- Subscribe form with AJAX submission --}}
+<div id="subscribe-form-root" class="max-w-md mx-auto">
+    <div id="subscribe-messages" class="mb-4" aria-live="polite"></div>
+
+    <form id="subscribe-form" action="{{ route('subscribers.store') }}" method="POST"
+          class="flex flex-col sm:flex-row gap-3">
+        @csrf
+        <div class="flex-1">
+            <input id="subscribe-email" type="email"
+                   name="email"
+                   value="{{ old('email') }}"
+                   placeholder="Enter your email address"
+                   required
+                   class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300">
+        </div>
+
+        <button id="subscribe-submit" type="submit"
+                class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-300 whitespace-nowrap transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500">
+            <span id="subscribe-submit-text">Subscribe</span>
+            <span id="subscribe-spinner" class="hidden ml-2">⏳</span>
+        </button>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('subscribe-form');
+    const emailInput = document.getElementById('subscribe-email');
+    const submitBtn = document.getElementById('subscribe-submit');
+    const submitText = document.getElementById('subscribe-submit-text');
+    const spinner = document.getElementById('subscribe-spinner');
+    const messagesRoot = document.getElementById('subscribe-messages');
+
+    function clearMessages() {
+        messagesRoot.innerHTML = '';
+    }
+
+    function showMessage(type, html) {
+        // type: 'success' | 'info' | 'error' | 'validation'
+        const colorMap = {
+            success: 'bg-green-50 border-green-200 text-green-800',
+            info: 'bg-blue-50 border-blue-200 text-blue-800',
+            error: 'bg-red-50 border-red-200 text-red-800',
+            validation: 'bg-red-50 border-red-200 text-red-800'
+        };
+        const wrapper = document.createElement('div');
+        wrapper.className = `${colorMap[type] || colorMap.info} border p-3 rounded`;
+        wrapper.innerHTML = html;
+        clearMessages();
+        messagesRoot.appendChild(wrapper);
+    }
+
+    function renderValidationErrors(errors) {
+        // errors: { field: [msg, ...], ... } or array of messages
+        if (!errors) return;
+        let html = '<strong class="block font-semibold mb-1">Please fix the following:</strong><ul class="list-disc list-inside text-sm">';
+        if (Array.isArray(errors)) {
+            errors.forEach(msg => {
+                html += `<li>${msg}</li>`;
+            });
+        } else {
+            Object.values(errors).forEach(arr => {
+                if (Array.isArray(arr)) {
+                    arr.forEach(msg => html += `<li>${msg}</li>`);
+                } else {
+                    html += `<li>${arr}</li>`;
+                }
+            });
+        }
+        html += '</ul>';
+        showMessage('validation', html);
+    }
+
+    function setLoading(loading = true) {
+        if (loading) {
+            submitBtn.setAttribute('disabled', 'disabled');
+            submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
+            spinner.classList.remove('hidden');
+        } else {
+            submitBtn.removeAttribute('disabled');
+            submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+            spinner.classList.add('hidden');
+        }
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearMessages();
+
+        const email = emailInput.value.trim();
+        if (!email) {
+            showMessage('error', 'Please enter a valid email address.');
+            return;
+        }
+
+        // get CSRF token from hidden input
+        const csrfInput = form.querySelector('input[name="_token"]');
+        const token = csrfInput ? csrfInput.value : null;
+
+        setLoading(true);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token
+            },
+            body: JSON.stringify({ email })
+        })
+        .then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+
+            if (res.status === 201) {
+                // Created
+                showMessage('success', `<div>${data.message || 'Thank you for subscribing!'}</div>`);
+                emailInput.value = ''; // clear input on success
+            } else if (res.status === 200) {
+                // Exists or informational
+                if (data.exists) {
+                    showMessage('info', `<div>${data.message || 'This email address is already subscribed.'}</div>`);
+                } else {
+                    showMessage('success', `<div>${data.message || 'Success.'}</div>`);
+                }
+            } else if (res.status === 422) {
+                // Validation error
+                renderValidationErrors(data.errors || data);
+            } else {
+                // Other errors (500 etc.)
+                showMessage('error', `<div>${data.message || 'An unexpected error occurred. Please try again later.'}</div>`);
+            }
+        })
+        .catch((err) => {
+            console.error('Subscribe request failed', err);
+            showMessage('error', 'Unable to submit the form. Please check your connection and try again.');
+        })
+        .finally(() => {
+            setLoading(false);
+        });
+    });
+});
+</script>
                 
                 <p class="text-xs text-gray-400 mt-3">
                     We respect your privacy. Unsubscribe at any time.

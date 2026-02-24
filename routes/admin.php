@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminAuthenticate;
+use App\Http\Controllers\SubscribersController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AccommodationController;
@@ -31,6 +32,9 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/subscribers', [SubscribersController::class, 'index'])->name('admin.subscribers.index');
+});
 
 
 // ========================

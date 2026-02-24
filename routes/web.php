@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\TourController;
+use App\Http\Controllers\SubscribersController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\AccommodationController;
@@ -57,7 +58,7 @@ Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/destinations/{destination}', [DestinationController::class, 'show'])->name('destination');
 
 // Newsletter
-Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
+Route::post('/subscribe', [SubscribersController::class, 'store'])->name('subscribers.store');
 
 // Legal Pages
 Route::get('/privacy-policy', [PageController::class, 'privacyPolicy'])->name('privacy-policy');
