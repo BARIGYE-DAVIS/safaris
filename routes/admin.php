@@ -28,13 +28,15 @@ Route::get('admin/login', [AdminAuthController::class, 'showLoginForm'])->name('
 Route::post('admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 Route::post('admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
+Route::get('admin/verify', [AdminAuthController::class, 'showTwoFactorForm'])->name('admin.2fa.form');
+Route::post('admin/verify', [AdminAuthController::class, 'verifyTwoFactorCode'])->name('admin.2fa.verify');
+Route::post('admin/verify/resend', [AdminAuthController::class, 'resendTwoFactorCode'])->name('admin.2fa.resend');
+
 Route::middleware('auth:admin')->group(function () {
     Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 });
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/subscribers', [SubscribersController::class, 'index'])->name('admin.subscribers.index');
-});
+Route::get('/admin/subscribers', [SubscribersController::class, 'index'])->name('admin.subscribers.index');
 
 
 // ========================
@@ -273,3 +275,13 @@ Route::post('/admin/accommodations', [AccommodationController::class, 'adminStor
 Route::get('/admin/accommodations/{accommodation}/edit', [AccommodationController::class, 'adminEdit'])->name('admin.accommodations.edit');
 Route::put('/admin/accommodations/{accommodation}', [AccommodationController::class, 'adminUpdate'])->name('admin.accommodations.update');
 Route::delete('/admin/accommodations/{accommodation}', [AccommodationController::class, 'adminDestroy'])->name('admin.accommodations.destroy');
+
+// email routes
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('emails/compose', [\App\Http\Controllers\AdminEmailController::class, 'compose'])
+        ->name('emails.compose');
+
+    Route::post('emails/send', [\App\Http\Controllers\AdminEmailController::class, 'send'])
+        ->name('emails.send');
+});

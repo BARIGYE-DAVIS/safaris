@@ -2,6 +2,7 @@
     <!-- Main Footer Content -->
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            
             <!-- Company Info -->
             <div class="space-y-4">
                 <div class="flex items-center space-x-2">
@@ -60,22 +61,7 @@
                 </div>
                 
                 <!-- Awards/Certifications -->
-                <div class="pt-4">
-                    <p class="text-xs text-gray-400 mb-2">Certified by:</p>
-                    <div class="flex space-x-3">
-                        <img class="h-8 w-auto opacity-60 hover:opacity-100 transition-opacity" 
-                             src="{{ asset('images/tato-logo.png') }}" alt="TATO Certified">
-                        <img class="h-8 w-auto opacity-60 hover:opacity-100 transition-opacity" 
-                             src="{{ asset('images/tanapa-logo.png') }}" alt="TANAPA Partner">
-                             <a href="https://www.getyourguide.com/-s491424"><img src="https://gyg.me/DFO5LFuz" width="160px" height="auto" style="border: 1px solid #c6c8d0" alt="GetYourGuide | Calm Africa Safris" /></a>
-                             <a href="https://www.getyourguide.com/-s491424"><img src="https://gyg.me/kUtga42u" width="160px" height="auto" style="border: 1px solid #c6c8d0" alt="GetYourGuide | Calm Africa Safris" /></a>
-                    </div>
 
-                    <div class="">
-
-                    
-                    </div>
-                </div>
             </div>
 
             <!-- Quick Links -->

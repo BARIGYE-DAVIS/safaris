@@ -135,6 +135,13 @@
                     <i class="fas fa-envelope"></i>
                     Contact Messages
                 </a>
+
+                <a href="{{ route('admin.emails.compose') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                    <i class="fas fa-paper-plane"></i>
+                    Compose Email
+
+                </a>
+
                 <a href="{{ route('admin.blogs.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
                     <i class="fas fa-blog"></i>
                     Blogs
