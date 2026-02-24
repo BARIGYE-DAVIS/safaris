@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminAuthenticate;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AccommodationController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogCategoryController;
@@ -27,8 +28,10 @@ Route::post('admin/login', [AdminAuthController::class, 'login'])->name('admin.l
 Route::post('admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
 Route::middleware('auth:admin')->group(function () {
-    Route::get('admin/dashboard', [AdminAuthController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 });
+
+
 
 // ========================
 // ADMIN ROUTES (All grouped under 'admin' prefix)

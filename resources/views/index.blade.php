@@ -112,62 +112,16 @@
             <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
                 Welcome to <span class="text-green-600">Calm Africa Safaris</span>
             </h2>
-            <p class="text-lg md:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed">
-                For over two decades, we've been crafting extraordinary safari experiences that connect travelers 
-                with the raw beauty of East Africa. From the thundering herds of the Great Migration to intimate 
-                encounters with mountain gorillas, we create memories that last a lifetime while supporting 
-                conservation and local communities.
-            </p>
+          @include('partials.about-safari')
         </div>
 
-      
 
-        <!-- Features Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="text-center">
-                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-3">Expert Local Guides</h3>
-                <p class="text-gray-600">
-                    Our certified guides bring decades of experience and intimate knowledge of wildlife behavior, 
-                    ensuring you don't miss a single moment of magic.
-                </p>
-            </div>
-
-            <div class="text-center">
-                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-3">Conservation Focused</h3>
-                <p class="text-gray-600">
-                    Every safari directly supports wildlife conservation and local communities, ensuring your 
-                    adventure contributes to protecting Africa's natural heritage.
-                </p>
-            </div>
-
-            <div class="text-center">
-                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-3">Tailored Experiences</h3>
-                <p class="text-gray-600">
-                    From luxury lodges to intimate camping, family adventures to romantic getaways, 
-                    we customize every detail to match your dreams.
-                </p>
-            </div>
         </div>
     </div>
 </section>
 
 <!-- Tour Packages Section -->
-<section id="tour-packages" class="py-16 lg:py-24 bg-gray-50">
+<section id="tour-packages" class="py-16 lg:py-24 bg-gray-400">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
@@ -195,8 +149,6 @@
     'heading' => 'Featured Safari Packages',
     'subheading' => 'Discover our most popular safari experiences, carefully crafted to showcase the best of East Africa'
 ])
-    
-       
 
         <!-- View All Tours Button -->
         <div class="text-center mt-12">
@@ -210,6 +162,12 @@
         </div>
     </div>
 </section>
+
+@include('partials.destinations-carousel')
+
+@include('partials.activities-carousel')
+
+
 
 <!-- Why Choose Us Section -->
 <section class="py-16 lg:py-24 bg-white">

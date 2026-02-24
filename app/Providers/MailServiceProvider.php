@@ -3,8 +3,9 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Mail\Events\MessageSent;
 
 class MailServiceProvider extends ServiceProvider
 {
@@ -18,11 +19,11 @@ class MailServiceProvider extends ServiceProvider
         // Only run if mail is properly configured
         if (config('mail.default') && config('mail.from.address')) {
             try {
-                // Modern Laravel uses 'sent' instead of 'sending'
-                Mail::sent(function ($message) {
+                // Listen to the MessageSent event
+                Event::listen(MessageSent::class, function (MessageSent $event) {
                     Log::info('Email sent successfully', [
-                        'to' => collect($message->getTo())->keys()->first(),
-                        'subject' => $message->getSubject(),
+                        'to' => collect($event->message->getTo())->keys()->first(),
+                        'subject' => $event->message->getSubject(),
                     ]);
                 });
 

@@ -71,7 +71,7 @@
                             <input type="text" name="name" required
                                    class="form-input @error('name') border-red-500 @enderror"
                                    value="{{ old('name') }}"
-                                   placeholder="John Doe">
+                                   placeholder="Your full name">
                             @error('name')<p class="form-error">{{ $message }}</p>@enderror
                         </div>
 
@@ -80,7 +80,7 @@
                             <input type="email" name="email" required
                                    class="form-input @error('email') border-red-500 @enderror"
                                    value="{{ old('email') }}"
-                                   placeholder="john@example.com">
+                                   placeholder="Your email address">
                             @error('email')<p class="form-error">{{ $message }}</p>@enderror
                         </div>
 
@@ -89,7 +89,7 @@
                             <input type="tel" name="phone"
                                    class="form-input"
                                    value="{{ old('phone') }}"
-                                   placeholder="+1 234 567 8900">
+                                   placeholder="your phone number ">
                         </div>
 
                         <div class="form-group relative">

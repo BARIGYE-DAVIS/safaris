@@ -70,7 +70,7 @@ return [
         ],
     ],
      
-    'admin_email' => env('MAIL_ADMIN_EMAIL', 'admin@safariuganda.com'),
+    'admin_email' => env('MAIL_ADMIN_EMAIL', 'calmafricas@gmail.com'),
     'admin_name' => env('MAIL_ADMIN_NAME', 'Safari Admin'),
     /*
     |--------------------------------------------------------------------------

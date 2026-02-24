@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Mail\CustomTourRequestConfirmation;
+use App\Mail\CustomTourRequestAdminNotification;
 use App\Models\CustomTourRequest;
 use App\Models\Country;
 use App\Models\Destination;
@@ -352,21 +353,22 @@ class CustomTourRequestController extends Controller
         ));
     }
 
-    /**
-     * PUBLIC: Store custom tour request
+ 
+             /**
+     * PUBLIC: Store custom tour request + send emails to client & admin
      */
     public function store(Request $request)
     {
         try {
-            // Validate the request
+            // ── Validate ───────────────────────────────────────────────────
             $validated = $request->validate([
                 // Step 1: Personal Information
-                'name'    => 'required|string|max:255',
-                'email'   => 'required|email|max:255',
-                'phone'   => 'nullable|string|max:50',
-                'country' => 'nullable|string|max:255',
-                'language'=> 'nullable|string|max:50',
-                
+                'name'     => 'required|string|max:255',
+                'email'    => 'required|email|max:255',
+                'phone'    => 'nullable|string|max:50',
+                'country'  => 'nullable|string|max:255',
+                'language' => 'nullable|string|max:50',
+
                 // Step 2: Travel Details
                 'travel_date_from' => 'nullable|date|after_or_equal:today',
                 'travel_date_to'   => 'nullable|date|after_or_equal:travel_date_from',
@@ -375,18 +377,18 @@ class CustomTourRequestController extends Controller
                 'adults_count'     => 'required|integer|min:1|max:50',
                 'children_count'   => 'nullable|integer|min:0|max:50',
                 'infants_count'    => 'nullable|integer|min:0|max:50',
-                
+
                 // Step 3: Destinations & Activities
                 'destinations'   => 'nullable|array',
                 'destinations.*' => 'exists:destinations,id',
                 'activities'     => 'nullable|array',
                 'activities.*'   => 'exists:activities,id',
-                
+
                 // Step 4: Preferences
                 'budget_category'          => 'nullable|string|max:100',
                 'approximate_budget'       => 'nullable|string|max:255',
                 'accommodation_preference' => 'nullable|string|max:255',
-                
+
                 // Step 5: Special Requirements
                 'special_requirements' => 'nullable|array',
                 'dietary_restrictions' => 'nullable|string',
@@ -395,53 +397,90 @@ class CustomTourRequestController extends Controller
                 'heard_from'           => 'nullable|string|max:255',
             ]);
 
-            // Set defaults
-            $validated['flexible_dates'] = $request->has('flexible_dates');
-            $validated['children_count'] = $validated['children_count'] ?? 0;
-            $validated['infants_count']  = $validated['infants_count'] ?? 0;
-            $validated['status']         = CustomTourRequest::STATUS_NEW;
+            // ── Defaults ───────────────────────────────────────────────────
+            $validated['flexible_dates']  = $request->has('flexible_dates');
+            $validated['children_count']  = $validated['children_count'] ?? 0;
+            $validated['infants_count']   = $validated['infants_count'] ?? 0;
+            $validated['status']          = CustomTourRequest::STATUS_NEW;
 
-            // Compute travel_date_to server-side if possible
+            // Compute travel_date_to from start + duration if not set
             if (!empty($validated['travel_date_from']) && !empty($validated['duration_days'])) {
                 $start = \Carbon\Carbon::parse($validated['travel_date_from']);
-                $end   = $start->copy()->addDays($validated['duration_days'] - 1);
-                $validated['travel_date_to'] = $end->toDateString();
+                $validated['travel_date_to'] = $start->copy()
+                    ->addDays($validated['duration_days'] - 1)
+                    ->toDateString();
             }
 
-            // Keep a human-readable duration string for exports / admin (optional)
             if (!empty($validated['duration_days'])) {
                 $validated['duration'] = $validated['duration_days'] . ' days';
             }
 
-            // Create the request
+            // ── Create record ──────────────────────────────────────────────
             $tourRequest = CustomTourRequest::create($validated);
 
-            // Log the creation
             Log::info('Custom tour request created', [
                 'id'        => $tourRequest->id,
                 'reference' => $tourRequest->reference_number,
-                'email'     => $tourRequest->email
+                'email'     => $tourRequest->email,
             ]);
 
-            // (Emails commented out as before)
+            // ── Send emails ────────────────────────────────────────────────
+            try {
+                // 1. Confirmation to the client
+                Mail::to($tourRequest->email)
+                    ->send(new CustomTourRequestConfirmation($tourRequest));
 
-            return redirect()->route('custom-tour-requests.success', $tourRequest->id)
-                           ->with('success', 'Your custom tour request has been submitted successfully!')
-                           ->with('reference_number', $tourRequest->reference_number);
+                Log::info('Custom tour confirmation sent to client', [
+                    'email' => $tourRequest->email,
+                    'ref'   => $tourRequest->reference_number,
+                ]);
+
+            } catch (\Exception $mailException) {
+                // Log but don't block the user — their request is still saved
+                Log::error('Failed to send client confirmation email', [
+                    'error' => $mailException->getMessage(),
+                    'email' => $tourRequest->email,
+                ]);
+            }
+
+            try {
+                // 2. Alert to the admin
+                $adminEmail = config('mail.admin_email', env('ADMIN_EMAIL', 'info@calmafricasafaris.com'));
+
+                Mail::to($adminEmail)
+                    ->send(new CustomTourRequestAdminNotification($tourRequest));
+
+                Log::info('Custom tour admin notification sent', [
+                    'admin' => $adminEmail,
+                    'ref'   => $tourRequest->reference_number,
+                ]);
+
+            } catch (\Exception $mailException) {
+                Log::error('Failed to send admin notification email', [
+                    'error' => $mailException->getMessage(),
+                ]);
+            }
+
+            // ── Redirect to success page ───────────────────────────────────
+            return redirect()
+                ->route('custom-tour-requests.success', $tourRequest->id)
+                ->with('success', 'Your custom tour request has been submitted successfully!')
+                ->with('reference_number', $tourRequest->reference_number);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::warning('Validation failed for custom tour request', ['errors' => $e->errors()]);
             return back()->withErrors($e->errors())->withInput();
+
         } catch (\Exception $e) {
             Log::error('Error creating custom tour request', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            return back()->with('error', 'An error occurred while submitting your request. Please try again.')
-                       ->withInput();
+            return back()
+                ->with('error', 'An error occurred while submitting your request. Please try again.')
+                ->withInput();
         }
     }
-
     /**
      * PUBLIC: Success page after submission
      */

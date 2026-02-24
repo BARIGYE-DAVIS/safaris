@@ -6,7 +6,7 @@
     $subheading = $subheading ?? 'Discover our most popular safari experiences';
 @endphp
 
-<section class="py-16 bg-gray-50 overflow-hidden">
+<section class="py-16 bg-gray-200 overflow-hidden rounded-lg">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Section Header -->
         
