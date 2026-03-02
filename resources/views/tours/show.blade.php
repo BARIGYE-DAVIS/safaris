@@ -97,7 +97,7 @@
                             <!-- Header button - NOW ENTIRE HEADER IS CLICKABLE -->
                             <button
                                 id="{{ $buttonId }}"
-                                class="accordion-toggle w-full bg-gradient-to-r from-green-500 to-blue-600 px-6 py-4 text-left hover:from-green-600 hover:to-blue-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                class="accordion-toggle w-full  bg-gray-500 px-6 py-4 text-left hover:from-green-600 hover:to-blue-700 transition-all duration-5000 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                                 aria-expanded="false"
                                 aria-controls="{{ $panelId }}"
                                 type="button"
@@ -115,7 +115,7 @@
                                                 @endif
                                             </h3>
                                             @if($day->activity)
-                                                <p class="text-sm text-white/90 mt-1 line-clamp-2">{{ Str::limit(strip_tags($day->activity), 120) }}</p>
+                                                <p class="text-gray-200 mt-1 line-clamp-2">{{ Str::limit(strip_tags($day->activity), 80) }}</p>
                                             @endif
                                         </div>
                                     </div>
@@ -131,7 +131,7 @@
                             </button>
 
                             <!-- Panel -->
-                            <div id="{{ $panelId }}" role="region" aria-labelledby="{{ $buttonId }}" class="p-6 hidden" data-day-number="{{ $day->day_number }}">
+                            <div id="{{ $panelId }}" role="region" aria-labelledby="{{ $buttonId }}" class="p-6 hidden bg-gray-100" data-day-number="{{ $day->day_number }}">
                                 <div class="prose max-w-none text-gray-700 mb-4">
                                     {!! nl2br(e($day->activity)) !!}
                                 </div>
@@ -269,7 +269,7 @@
                                     <div class="font-semibold text-gray-900">{{ $price->group_size }}</div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-2xl font-bold text-green-600">${{ number_format($price->price) }}</div>
+                                    <div class="text-2xl font-bold text-gray-600">${{ number_format($price->price) }}</div>
                                     <div class="text-sm text-gray-500">per person</div>
                                 </div>
                             </div>

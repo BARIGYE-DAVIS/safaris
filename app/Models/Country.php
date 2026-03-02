@@ -64,6 +64,7 @@ class Country extends Model
         return $this->destinations()->where('is_active', true)->count();
     }
 
+    
     /**
      * Get active activities count
      */

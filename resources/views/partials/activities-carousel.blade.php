@@ -8,28 +8,23 @@ use App\Models\Activity;
  * - Loads all active activities if $activities is not provided to the view.
  * - Expects Activity model with fields like: name, slug, featured_image, image, image_path, is_active.
  * - Resolves images robustly and falls back to asset('images/default-activity.jpg').
- * - Seamless auto-looping carousel with prev/next and indicators.
- *
- * Note: Loading "all" activities can be heavy if you have many rows. If you expect large numbers,
- * consider limiting or lazy-loading server-side (or using AJAX).
+ * - Seamless infinite auto-looping carousel with prev/next and indicators.
  */
 
 // Normalize incoming $activities or fetch all active activities ordered by name
 if (isset($activities)) {
-    // Accept paginator or collection/array
     if ($activities instanceof \Illuminate\Pagination\LengthAwarePaginator) {
         $activities = collect($activities->items());
     } else {
         $activities = collect($activities);
     }
 } else {
-    // Load all active activities ordered by name (per your request)
     $activities = Activity::where('is_active', 1)
         ->orderBy('name', 'asc')
         ->get();
 }
 
-$activities = $activities->unique('id')->values(); // dedupe and reindex
+$activities = $activities->unique('id')->values();
 $count = $activities->count();
 @endphp
 
@@ -71,13 +66,11 @@ $count = $activities->count();
                                     $imgSrc = $raw;
                                 } else {
                                     try {
-                                        // public disk expected to point to storage/app/public
                                         if (Storage::disk('public')->exists($raw)) {
-                                            $imgSrc = Storage::url($raw); // /storage/...
+                                            $imgSrc = Storage::url($raw);
                                         } elseif (file_exists(public_path($raw))) {
                                             $imgSrc = asset($raw);
                                         } else {
-                                            // best-effort: try Storage::url
                                             $imgSrc = Storage::url($raw);
                                         }
                                     } catch (\Throwable $e) {
@@ -88,7 +81,7 @@ $count = $activities->count();
                                 $imgSrc = asset('images/default-activity.jpg');
                             }
 
-                            // Card link - prefer named route if available
+                            // Card link
                             $link = null;
                             if (Route::has('activities.show') && !empty($activity->slug)) {
                                 $link = route('activities.show', $activity->slug);
@@ -136,11 +129,16 @@ $count = $activities->count();
     </div>
 
     <style>
-        #activities-container { scroll-behavior: smooth; }
+        #activities-container {
+            overflow: hidden;
+            scroll-behavior: auto; /* must be auto for seamless JS reset to work */
+        }
         .activity-card img { display: block; }
-        .act-indicator[aria-selected="true"] { background-color: #4f46e5; width: 10px; height: 10px; }
-        /* ensure track does not wrap when cloned */
-        #activities-track { white-space: nowrap; }
+        .act-indicator[aria-selected="true"] {
+            background-color: #4f46e5;
+            width: 10px;
+            height: 10px;
+        }
     </style>
 
     <script>
@@ -154,58 +152,75 @@ $count = $activities->count();
 
             if (!container || !track) return;
 
-            // original DOM children
+            // Capture original items before cloning
             const originalItems = Array.from(track.children);
-            let n = originalItems.length;
+            const n = originalItems.length;
             if (n === 0) return;
 
-            // Single-item guard: center it and skip cloning/auto-scroll
+            // Single-item guard: no cloning or animation needed
             if (n === 1) {
-                track.classList.remove('flex');
-                track.classList.add('flex', 'justify-center');
-            } else {
-                // Duplicate original items so the track is seamless
-                originalItems.forEach(node => track.appendChild(node.cloneNode(true)));
+                track.classList.add('justify-center');
+                // Update single indicator as active
+                if (indicators[0]) {
+                    indicators[0].setAttribute('aria-selected', 'true');
+                    indicators[0].classList.replace('bg-gray-300', 'bg-indigo-600');
+                }
+                return;
             }
+
+            // Clone all original items → seamless double-length track
+            originalItems.forEach(node => track.appendChild(node.cloneNode(true)));
 
             let originalWidth = 0;
             let cardAdvance = 0;
-            let speed = 0.6; // pixels per frame (tweakable)
+            const speed = 0.6; // pixels per frame — increase for faster scroll
             let paused = false;
-            let rafId;
-            let manualPauseTimer;
+            let rafId = null;
+            let manualPauseTimer = null;
+            let initialized = false;
 
+            // ─── Size calculation ─────────────────────────────────────────────────────
             function recalcSizes() {
-                // allow layout to stabilize first
-                requestAnimationFrame(() => {
-                    originalWidth = track.scrollWidth / (n === 1 ? 1 : 2);
+                // setTimeout ensures browser has painted cloned nodes
+                setTimeout(() => {
+                    originalWidth = track.scrollWidth / 2;
                     const firstCard = track.querySelector('.activity-card');
                     if (firstCard) {
-                        const style = getComputedStyle(firstCard);
-                        const marginRight = parseFloat(style.marginRight) || 0;
-                        cardAdvance = Math.ceil(firstCard.offsetWidth + marginRight);
+                        const trackStyle = getComputedStyle(track);
+                        const gap = parseFloat(trackStyle.gap) || parseFloat(trackStyle.columnGap) || 24;
+                        cardAdvance = Math.ceil(firstCard.offsetWidth + gap);
                     } else {
                         cardAdvance = 300;
                     }
-                });
+                    initialized = true;
+                }, 150);
             }
 
+            // ─── Animation loop ───────────────────────────────────────────────────────
             function step() {
-                if (n === 1) return; // no animation for single item
-                if (!paused) {
+                if (!paused && initialized) {
                     container.scrollLeft += speed;
+
+                    // Seamless forward loop
                     if (container.scrollLeft >= originalWidth) {
-                        container.scrollLeft -= originalWidth;
+                        container.scrollLeft = container.scrollLeft - originalWidth;
                     }
+
+                    // Seamless backward loop (when user scrolls prev past 0)
+                    if (container.scrollLeft < 0) {
+                        container.scrollLeft = originalWidth + container.scrollLeft;
+                    }
+
                     updateIndicators();
                 }
                 rafId = requestAnimationFrame(step);
             }
 
+            // ─── Indicator sync ───────────────────────────────────────────────────────
             function updateIndicators() {
-                if (!indicators.length || !cardAdvance) return;
+                if (!indicators.length || !cardAdvance || !originalWidth) return;
                 const pos = ((container.scrollLeft % originalWidth) + originalWidth) % originalWidth;
-                const index = Math.floor(pos / cardAdvance) % n;
+                const index = Math.round(pos / cardAdvance) % n;
                 indicators.forEach((dot, i) => {
                     const selected = i === index;
                     dot.setAttribute('aria-selected', selected ? 'true' : 'false');
@@ -214,55 +229,69 @@ $count = $activities->count();
                 });
             }
 
-            function pauseBriefly(duration = 2000) {
+            // ─── Manual pause helper ──────────────────────────────────────────────────
+            function pauseBriefly(duration = 2200) {
                 paused = true;
                 clearTimeout(manualPauseTimer);
                 manualPauseTimer = setTimeout(() => { paused = false; }, duration);
             }
 
+            // ─── Next button ──────────────────────────────────────────────────────────
             nextBtn.addEventListener('click', () => {
-                const advance = cardAdvance * 2;
-                container.scrollBy({ left: advance, behavior: 'smooth' });
-                pauseBriefly(2200);
+                container.style.scrollBehavior = 'smooth';
+                container.scrollBy({ left: cardAdvance * 2 });
+                setTimeout(() => { container.style.scrollBehavior = 'auto'; }, 400);
+                pauseBriefly();
             });
 
+            // ─── Prev button ──────────────────────────────────────────────────────────
             prevBtn.addEventListener('click', () => {
-                const advance = cardAdvance * 2;
-                container.scrollBy({ left: -advance, behavior: 'smooth' });
-                pauseBriefly(2200);
+                container.style.scrollBehavior = 'smooth';
+                let newLeft = container.scrollLeft - (cardAdvance * 2);
+                // Wrap seamlessly when going before position 0
+                if (newLeft < 0) {
+                    container.scrollLeft = originalWidth + newLeft + (cardAdvance * 2);
+                    newLeft = container.scrollLeft - (cardAdvance * 2);
+                }
+                container.scrollBy({ left: -(cardAdvance * 2) });
+                setTimeout(() => { container.style.scrollBehavior = 'auto'; }, 400);
+                pauseBriefly();
             });
 
+            // ─── Indicator click ──────────────────────────────────────────────────────
             indicators.forEach((dot) => {
                 dot.addEventListener('click', () => {
                     const idx = parseInt(dot.getAttribute('data-index'), 10);
                     const baseLoops = Math.floor(container.scrollLeft / originalWidth);
                     const target = (baseLoops * originalWidth) + (idx * cardAdvance);
-                    container.scrollTo({ left: target, behavior: 'smooth' });
-                    pauseBriefly(2200);
+                    container.style.scrollBehavior = 'smooth';
+                    container.scrollTo({ left: target });
+                    setTimeout(() => { container.style.scrollBehavior = 'auto'; }, 400);
+                    pauseBriefly();
                 });
                 dot.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        dot.click();
-                    }
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dot.click(); }
                 });
             });
 
-            // Pause on hover/focus
+            // ─── Hover / focus pause ──────────────────────────────────────────────────
             container.addEventListener('mouseenter', () => paused = true);
             container.addEventListener('mouseleave', () => paused = false);
-            container.addEventListener('focusin', () => paused = true);
-            container.addEventListener('focusout', () => paused = false);
+            container.addEventListener('focusin',    () => paused = true);
+            container.addEventListener('focusout',   () => paused = false);
 
-            // Recalculate on resize and when images load
+            // ─── Recalc on resize + image load ────────────────────────────────────────
             window.addEventListener('resize', recalcSizes);
-            track.querySelectorAll('img').forEach(img => img.addEventListener('load', recalcSizes));
+            track.querySelectorAll('img').forEach(img => {
+                if (img.complete) return; // already loaded, skip
+                img.addEventListener('load', recalcSizes);
+            });
 
-            // initial calc and start animation
+            // ─── Boot ─────────────────────────────────────────────────────────────────
             recalcSizes();
             rafId = requestAnimationFrame(step);
 
-            // cleanup
+            // Cleanup on page unload
             window.addEventListener('beforeunload', () => cancelAnimationFrame(rafId));
         });
     </script>

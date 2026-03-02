@@ -22,7 +22,7 @@ class ActivityController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Activity::with(['category', 'destination.country', 'images'])->where('is_active', true);
+        $query = Activity::with(['category', 'destination.country', 'images', 'countries'])->where('is_active', true);
 
         // Search
         if ($request->filled('search')) {
@@ -43,6 +43,20 @@ class ActivityController extends Controller
             $query->where('destination_id', $request->destination);
         }
 
+        // Filter by country (via destination's country_id OR countries pivot table)
+        if ($request->filled('country')) {
+            $query->where(function($q) use ($request) {
+                // Match via primary destination's country
+                $q->whereHas('destination', function($dq) use ($request) {
+                    $dq->where('country_id', $request->country);
+                })
+                // OR match via many-to-many countries pivot
+                ->orWhereHas('countries', function($cq) use ($request) {
+                    $cq->where('countries.id', $request->country);
+                });
+            });
+        }
+
         // Filter by difficulty
         if ($request->filled('difficulty')) {
             $query->where('difficulty_level', $request->difficulty);
@@ -54,10 +68,11 @@ class ActivityController extends Controller
         }
 
         $activities = $query->orderBy('sort_order')->orderBy('name')->paginate(12);
-        
-        // Get all active categories and destinations for filters
-        $categories = ActivityCategory::where('is_active', true)->orderBy('name')->get();
+
+        // Get all active categories, destinations, and countries for filters
+        $categories   = ActivityCategory::where('is_active', true)->orderBy('name')->get();
         $destinations = Destination::where('is_active', true)->with('country')->orderBy('name')->get();
+        $countries    = Country::where('is_active', true)->orderBy('name')->get();
 
         // Get ALL active activities for hero carousel (no conditions, no limits)
         $featuredActivities = Activity::where('is_active', true)
@@ -66,7 +81,7 @@ class ActivityController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('activities.index', compact('activities', 'categories', 'destinations', 'featuredActivities'));
+        return view('activities.index', compact('activities', 'categories', 'destinations', 'countries', 'featuredActivities'));
     }
 
     /**
@@ -75,13 +90,12 @@ class ActivityController extends Controller
     public function show($slug)
     {
         $activity = Activity::with([
-                'category', 
-                'destination.country', 
-                'countries', 
+                'category',
+                'destination.country',
+                'countries',
                 'images' => function($query) {
                     $query->orderBy('sort_order');
                 },
-                // >>> ADDED: eager load many-to-many destinations for display if needed
                 'destinations',
             ])
             ->where('slug', $slug)
@@ -149,7 +163,7 @@ class ActivityController extends Controller
         $categories   = ActivityCategory::where('is_active', true)->orderBy('name')->get();
         $destinations = Destination::where('is_active', true)->with('country')->orderBy('name')->get();
         $countries    = Country::where('is_active', true)->orderBy('name')->get();
-        
+
         return view('admin.activities.create', compact('categories', 'destinations', 'countries'));
     }
 
@@ -159,54 +173,51 @@ class ActivityController extends Controller
     public function adminStore(Request $request)
     {
         $validated = $request->validate([
-            'category_id'     => 'nullable|exists:activity_categories,id',
-            'destination_id'  => 'nullable|exists:destinations,id',
-            'name'            => 'required|string|max:255',
-            'slug'            => 'nullable|string|max:255|unique:activities,slug',
-            'description'     => 'nullable|string',
-            'overview'        => 'nullable|string',
-            'what_to_expect'  => 'nullable|string',
-            'highlights'      => 'nullable|string',
-            'regulations'     => 'nullable|string',
-            'safety_info'     => 'nullable|string',
+            'category_id'           => 'nullable|exists:activity_categories,id',
+            'destination_id'        => 'nullable|exists:destinations,id',
+            'name'                  => 'required|string|max:255',
+            'slug'                  => 'nullable|string|max:255|unique:activities,slug',
+            'description'           => 'nullable|string',
+            'overview'              => 'nullable|string',
+            'what_to_expect'        => 'nullable|string',
+            'highlights'            => 'nullable|string',
+            'regulations'           => 'nullable|string',
+            'safety_info'           => 'nullable|string',
             'health_requirements'   => 'nullable|string',
             'cultural_experience'   => 'nullable|string',
             'conservation_info'     => 'nullable|string',
             'special_notes'         => 'nullable|string',
             'duration'              => 'nullable|string|max:100',
             'difficulty_level'      => 'nullable|in:easy,moderate,challenging,extreme',
-            'min_age'              => 'nullable|integer|min:0|max:100',
-            'max_group_size'       => 'nullable|integer|min:1',
-            'price_from'           => 'nullable|numeric|min:0',
-            'price_to'             => 'nullable|numeric|min:0',
-            'currency'             => 'nullable|string|size:3',
-            'meta_title'           => 'nullable|string|max:255',
-            'meta_description'     => 'nullable|string',
-            'meta_keywords'        => 'nullable|string',
-            'icon'                 => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:1024',
-            'image'                => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'featured_image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'gallery_images.*'     => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'is_popular'           => 'boolean',
-            'is_active'            => 'boolean',
-            'sort_order'           => 'nullable|integer|min:0',
-            'countries'            => 'nullable|array',
-            'countries.*'          => 'exists:countries,id',
-
-            // >>> ADDED: multi-destination checkboxes
-            'destinations'   => 'nullable|array',
-            'destinations.*' => 'integer|exists:destinations,id',
-            
+            'min_age'               => 'nullable|integer|min:0|max:100',
+            'max_group_size'        => 'nullable|integer|min:1',
+            'price_from'            => 'nullable|numeric|min:0',
+            'price_to'              => 'nullable|numeric|min:0',
+            'currency'              => 'nullable|string|size:3',
+            'meta_title'            => 'nullable|string|max:255',
+            'meta_description'      => 'nullable|string',
+            'meta_keywords'         => 'nullable|string',
+            'icon'                  => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:1024',
+            'image'                 => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'featured_image'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'gallery_images.*'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'is_popular'            => 'boolean',
+            'is_active'             => 'boolean',
+            'sort_order'            => 'nullable|integer|min:0',
+            'countries'             => 'nullable|array',
+            'countries.*'           => 'exists:countries,id',
+            'destinations'          => 'nullable|array',
+            'destinations.*'        => 'integer|exists:destinations,id',
             // JSON fields
-            'inclusions'         => 'nullable|array',
-            'exclusions'         => 'nullable|array',
-            'equipment_provided' => 'nullable|array',
-            'skill_levels'       => 'nullable|array',
-            'best_times'         => 'nullable|array',
-            'what_to_bring'      => 'nullable|array',
-            'pricing_packages'   => 'nullable|array',
-            'faqs'               => 'nullable|array',
-            'booking_info'       => 'nullable|array',
+            'inclusions'            => 'nullable|array',
+            'exclusions'            => 'nullable|array',
+            'equipment_provided'    => 'nullable|array',
+            'skill_levels'          => 'nullable|array',
+            'best_times'            => 'nullable|array',
+            'what_to_bring'         => 'nullable|array',
+            'pricing_packages'      => 'nullable|array',
+            'faqs'                  => 'nullable|array',
+            'booking_info'          => 'nullable|array',
         ]);
 
         // Auto-generate slug if not provided
@@ -238,7 +249,7 @@ class ActivityController extends Controller
         // Create activity
         $activity = Activity::create($validated);
 
-        // >>> ADDED: sync many-to-many destinations from checkboxes
+        // Sync many-to-many destinations
         $destinationIds = $request->input('destinations', []);
         $activity->destinations()->sync($destinationIds);
 
@@ -251,11 +262,11 @@ class ActivityController extends Controller
         if ($request->hasFile('gallery_images')) {
             foreach ($request->file('gallery_images') as $index => $image) {
                 $path = $image->store('activities/gallery', 'public');
-                
+
                 $activity->images()->create([
                     'image_path'  => $path,
                     'sort_order'  => $index + 1,
-                    'is_featured' => $index === 0 // First image is featured by default
+                    'is_featured' => $index === 0
                 ]);
             }
         }
@@ -272,13 +283,10 @@ class ActivityController extends Controller
         $categories   = ActivityCategory::where('is_active', true)->orderBy('name')->get();
         $destinations = Destination::where('is_active', true)->with('country')->orderBy('name')->get();
         $countries    = Country::where('is_active', true)->orderBy('name')->get();
-        
-        // Get currently selected countries for this activity
-        $selectedCountries = $activity->countries()->pluck('countries.id')->toArray();
 
-        // >>> ADDED: currently selected destinations for this activity (from pivot)
+        $selectedCountries    = $activity->countries()->pluck('countries.id')->toArray();
         $selectedDestinations = $activity->destinations()->pluck('destinations.id')->toArray();
-        
+
         return view(
             'admin.activities.edit',
             compact('activity', 'categories', 'destinations', 'countries', 'selectedCountries', 'selectedDestinations')
@@ -291,54 +299,51 @@ class ActivityController extends Controller
     public function adminUpdate(Request $request, Activity $activity)
     {
         $validated = $request->validate([
-            'category_id'     => 'nullable|exists:activity_categories,id',
-            'destination_id'  => 'nullable|exists:destinations,id',
-            'name'            => 'required|string|max:255',
-            'slug'            => 'nullable|string|max:255|unique:activities,slug,' . $activity->id,
-            'description'     => 'nullable|string',
-            'overview'        => 'nullable|string',
-            'what_to_expect'  => 'nullable|string',
-            'highlights'      => 'nullable|string',
-            'regulations'     => 'nullable|string',
-            'safety_info'     => 'nullable|string',
+            'category_id'           => 'nullable|exists:activity_categories,id',
+            'destination_id'        => 'nullable|exists:destinations,id',
+            'name'                  => 'required|string|max:255',
+            'slug'                  => 'nullable|string|max:255|unique:activities,slug,' . $activity->id,
+            'description'           => 'nullable|string',
+            'overview'              => 'nullable|string',
+            'what_to_expect'        => 'nullable|string',
+            'highlights'            => 'nullable|string',
+            'regulations'           => 'nullable|string',
+            'safety_info'           => 'nullable|string',
             'health_requirements'   => 'nullable|string',
             'cultural_experience'   => 'nullable|string',
             'conservation_info'     => 'nullable|string',
             'special_notes'         => 'nullable|string',
             'duration'              => 'nullable|string|max:100',
             'difficulty_level'      => 'nullable|in:easy,moderate,challenging,extreme',
-            'min_age'              => 'nullable|integer|min:0|max:100',
-            'max_group_size'       => 'nullable|integer|min:1',
-            'price_from'           => 'nullable|numeric|min:0',
-            'price_to'             => 'nullable|numeric|min:0',
-            'currency'             => 'nullable|string|size:3',
-            'meta_title'           => 'nullable|string|max:255',
-            'meta_description'     => 'nullable|string',
-            'meta_keywords'        => 'nullable|string',
-            'icon'                 => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:1024',
-            'image'                => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'featured_image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'gallery_images.*'     => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'is_popular'           => 'boolean',
-            'is_active'            => 'boolean',
-            'sort_order'           => 'nullable|integer|min:0',
-            'countries'            => 'nullable|array',
-            'countries.*'          => 'exists:countries,id',
-
-            // >>> ADDED: multi-destination checkboxes
-            'destinations'   => 'nullable|array',
-            'destinations.*' => 'integer|exists:destinations,id',
-            
+            'min_age'               => 'nullable|integer|min:0|max:100',
+            'max_group_size'        => 'nullable|integer|min:1',
+            'price_from'            => 'nullable|numeric|min:0',
+            'price_to'              => 'nullable|numeric|min:0',
+            'currency'              => 'nullable|string|size:3',
+            'meta_title'            => 'nullable|string|max:255',
+            'meta_description'      => 'nullable|string',
+            'meta_keywords'         => 'nullable|string',
+            'icon'                  => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:1024',
+            'image'                 => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'featured_image'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'gallery_images.*'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'is_popular'            => 'boolean',
+            'is_active'             => 'boolean',
+            'sort_order'            => 'nullable|integer|min:0',
+            'countries'             => 'nullable|array',
+            'countries.*'           => 'exists:countries,id',
+            'destinations'          => 'nullable|array',
+            'destinations.*'        => 'integer|exists:destinations,id',
             // JSON fields
-            'inclusions'         => 'nullable|array',
-            'exclusions'         => 'nullable|array',
-            'equipment_provided' => 'nullable|array',
-            'skill_levels'       => 'nullable|array',
-            'best_times'         => 'nullable|array',
-            'what_to_bring'      => 'nullable|array',
-            'pricing_packages'   => 'nullable|array',
-            'faqs'               => 'nullable|array',
-            'booking_info'       => 'nullable|array',
+            'inclusions'            => 'nullable|array',
+            'exclusions'            => 'nullable|array',
+            'equipment_provided'    => 'nullable|array',
+            'skill_levels'          => 'nullable|array',
+            'best_times'            => 'nullable|array',
+            'what_to_bring'         => 'nullable|array',
+            'pricing_packages'      => 'nullable|array',
+            'faqs'                  => 'nullable|array',
+            'booking_info'          => 'nullable|array',
         ]);
 
         // Auto-generate slug if not provided
@@ -348,25 +353,19 @@ class ActivityController extends Controller
 
         // Handle icon upload
         if ($request->hasFile('icon')) {
-            if ($activity->icon) {
-                Storage::disk('public')->delete($activity->icon);
-            }
+            if ($activity->icon) Storage::disk('public')->delete($activity->icon);
             $validated['icon'] = $request->file('icon')->store('activities/icons', 'public');
         }
 
         // Handle main image upload
         if ($request->hasFile('image')) {
-            if ($activity->image) {
-                Storage::disk('public')->delete($activity->image);
-            }
+            if ($activity->image) Storage::disk('public')->delete($activity->image);
             $validated['image'] = $request->file('image')->store('activities', 'public');
         }
 
         // Handle featured image upload
         if ($request->hasFile('featured_image')) {
-            if ($activity->featured_image) {
-                Storage::disk('public')->delete($activity->featured_image);
-            }
+            if ($activity->featured_image) Storage::disk('public')->delete($activity->featured_image);
             $validated['featured_image'] = $request->file('featured_image')->store('activities/featured', 'public');
         }
 
@@ -377,8 +376,8 @@ class ActivityController extends Controller
 
         // Update activity
         $activity->update($validated);
-        
-        // >>> ADDED: sync many-to-many destinations from checkboxes
+
+        // Sync many-to-many destinations
         $destinationIds = $request->input('destinations', []);
         $activity->destinations()->sync($destinationIds);
 
@@ -392,10 +391,10 @@ class ActivityController extends Controller
         // Handle gallery images
         if ($request->hasFile('gallery_images')) {
             $currentMaxSort = $activity->images()->max('sort_order') ?? 0;
-            
+
             foreach ($request->file('gallery_images') as $index => $image) {
                 $path = $image->store('activities/gallery', 'public');
-                
+
                 $activity->images()->create([
                     'image_path'  => $path,
                     'sort_order'  => $currentMaxSort + $index + 1,
@@ -411,24 +410,23 @@ class ActivityController extends Controller
     public function bulkDelete(Request $request)
     {
         $ids = json_decode($request->ids);
-        
+
         if (empty($ids)) {
             return back()->with('error', 'No activities selected');
         }
 
         $activities = Activity::whereIn('id', $ids)->get();
-        
+
         foreach ($activities as $activity) {
-            // Delete images
             if ($activity->icon) Storage::disk('public')->delete($activity->icon);
             if ($activity->image) Storage::disk('public')->delete($activity->image);
             if ($activity->featured_image) Storage::disk('public')->delete($activity->featured_image);
-            
+
             foreach ($activity->images as $image) {
                 Storage::disk('public')->delete($image->image_path);
                 $image->delete();
             }
-            
+
             $activity->delete();
         }
 
@@ -441,24 +439,15 @@ class ActivityController extends Controller
      */
     public function adminDestroy(Activity $activity)
     {
-        // Delete associated images from storage
-        if ($activity->icon) {
-            Storage::disk('public')->delete($activity->icon);
-        }
-        if ($activity->image) {
-            Storage::disk('public')->delete($activity->image);
-        }
-        if ($activity->featured_image) {
-            Storage::disk('public')->delete($activity->featured_image);
-        }
+        if ($activity->icon) Storage::disk('public')->delete($activity->icon);
+        if ($activity->image) Storage::disk('public')->delete($activity->image);
+        if ($activity->featured_image) Storage::disk('public')->delete($activity->featured_image);
 
-        // Delete gallery images
         foreach ($activity->images as $image) {
             Storage::disk('public')->delete($image->image_path);
             $image->delete();
         }
 
-        // Delete activity
         $activity->delete();
 
         return redirect()->route('admin.activities.index')
@@ -471,7 +460,7 @@ class ActivityController extends Controller
     public function adminToggleActive(Activity $activity)
     {
         $activity->update(['is_active' => !$activity->is_active]);
-        
+
         $status = $activity->is_active ? 'activated' : 'deactivated';
         return back()->with('success', "Activity {$status} successfully!");
     }
@@ -482,8 +471,8 @@ class ActivityController extends Controller
     public function adminTogglePopular(Activity $activity)
     {
         $activity->update(['is_popular' => !$activity->is_popular]);
-        
+
         $status = $activity->is_popular ? 'marked as popular' : 'unmarked as popular';
         return back()->with('success', "Activity {$status} successfully!");
-    } 
+    }
 }

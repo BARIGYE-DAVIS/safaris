@@ -39,7 +39,6 @@
                                     <p class="text-xs text-gray-500 mt-1">{{ $destination->country->name }}</p>
                                 @endif
 
-                                {{-- Description / excerpt --}}
                                 @php
                                     $desc = $destination->short_description
                                             ?? $destination->excerpt
@@ -70,10 +69,16 @@
     </div>
 
     <style>
-        /* small visual tweaks */
-        #destinations-container { scroll-behavior: smooth; }
+        #destinations-container {
+            overflow: hidden;
+            scroll-behavior: auto; /* must be auto, not smooth, for JS seamless reset */
+        }
         .destination-card img { display: block; }
-        .dest-indicator[aria-selected="true"] { background-color: #4f46e5; width: 10px; height: 10px; }
+        .dest-indicator[aria-selected="true"] {
+            background-color: #4f46e5;
+            width: 10px;
+            height: 10px;
+        }
     </style>
 
     <script>
@@ -87,54 +92,65 @@
 
             if (!container || !track) return;
 
-            // original items (before cloning)
+            // Capture original items before cloning
             const originalItems = Array.from(track.children);
             const n = originalItems.length;
             if (n === 0) return;
 
-            // Clone original items so we can scroll infinitely
+            // Clone all original items and append — creates a seamless double-length track
             originalItems.forEach(node => track.appendChild(node.cloneNode(true)));
 
-            // variables that depend on layout - recalculated on load & resize
             let originalWidth = 0;
             let cardAdvance = 0;
-            let speed = 0.6; // pixels per frame; tweak as needed
+            const speed = 0.6; // pixels per frame — increase for faster scroll
             let paused = false;
-            let rafId;
-            let manualPauseTimer;
+            let rafId = null;
+            let manualPauseTimer = null;
+            let initialized = false;
 
+            // ─── Size calculation ─────────────────────────────────────────────────────
             function recalcSizes() {
-                // Wait one frame for layout to stabilize
-                requestAnimationFrame(() => {
-                    originalWidth = track.scrollWidth / 2; // because we duplicated
+                // Use setTimeout so the browser has fully painted the cloned nodes
+                setTimeout(() => {
+                    originalWidth = track.scrollWidth / 2;
                     const firstCard = track.querySelector('.destination-card');
                     if (firstCard) {
-                        const style = getComputedStyle(firstCard);
-                        const marginRight = parseFloat(style.marginRight) || 0;
-                        cardAdvance = Math.ceil(firstCard.offsetWidth + marginRight);
+                        // Tailwind space-x-6 = 24px gap; read it from computed style to be safe
+                        const trackStyle = getComputedStyle(track);
+                        const gap = parseFloat(trackStyle.gap) || parseFloat(trackStyle.columnGap) || 24;
+                        cardAdvance = Math.ceil(firstCard.offsetWidth + gap);
                     } else {
                         cardAdvance = 300;
                     }
-                });
+                    initialized = true;
+                }, 150);
             }
 
-            // continuous scroll using requestAnimationFrame
+            // ─── Animation loop ───────────────────────────────────────────────────────
             function step() {
-                if (!paused) {
+                if (!paused && initialized) {
                     container.scrollLeft += speed;
+
+                    // Seamless forward loop: jump back by exactly one copy's width
                     if (container.scrollLeft >= originalWidth) {
-                        // reset to start seamlessly
-                        container.scrollLeft -= originalWidth;
+                        container.scrollLeft = container.scrollLeft - originalWidth;
                     }
+
+                    // Seamless backward loop: jump forward when scrollLeft goes negative
+                    if (container.scrollLeft < 0) {
+                        container.scrollLeft = originalWidth + container.scrollLeft;
+                    }
+
                     updateIndicators();
                 }
                 rafId = requestAnimationFrame(step);
             }
 
+            // ─── Indicator sync ───────────────────────────────────────────────────────
             function updateIndicators() {
-                if (!indicators.length || !cardAdvance) return;
+                if (!indicators.length || !cardAdvance || !originalWidth) return;
                 const pos = ((container.scrollLeft % originalWidth) + originalWidth) % originalWidth;
-                const index = Math.floor(pos / cardAdvance) % n;
+                const index = Math.round(pos / cardAdvance) % n;
                 indicators.forEach((dot, i) => {
                     const selected = i === index;
                     dot.setAttribute('aria-selected', selected ? 'true' : 'false');
@@ -143,62 +159,70 @@
                 });
             }
 
-            function pauseBriefly(duration = 2000) {
+            // ─── Manual pause helper ──────────────────────────────────────────────────
+            function pauseBriefly(duration = 2200) {
                 paused = true;
                 clearTimeout(manualPauseTimer);
                 manualPauseTimer = setTimeout(() => { paused = false; }, duration);
             }
 
-            // Next / Prev actions
+            // ─── Next button ──────────────────────────────────────────────────────────
             nextBtn.addEventListener('click', () => {
-                const advance = cardAdvance * 2;
-                container.scrollBy({ left: advance, behavior: 'smooth' });
-                pauseBriefly(2200);
+                // Temporarily allow smooth scroll for the button click feel
+                container.style.scrollBehavior = 'smooth';
+                container.scrollBy({ left: cardAdvance * 2 });
+                setTimeout(() => { container.style.scrollBehavior = 'auto'; }, 400);
+                pauseBriefly();
             });
 
+            // ─── Prev button ──────────────────────────────────────────────────────────
             prevBtn.addEventListener('click', () => {
-                const advance = cardAdvance * 2;
-                container.scrollBy({ left: -advance, behavior: 'smooth' });
-                pauseBriefly(2200);
+                container.style.scrollBehavior = 'smooth';
+                let newLeft = container.scrollLeft - (cardAdvance * 2);
+                // If going before 0, wrap to the cloned region seamlessly
+                if (newLeft < 0) {
+                    container.scrollLeft = originalWidth + newLeft + (cardAdvance * 2);
+                    newLeft = container.scrollLeft - (cardAdvance * 2);
+                }
+                container.scrollBy({ left: -(cardAdvance * 2) });
+                setTimeout(() => { container.style.scrollBehavior = 'auto'; }, 400);
+                pauseBriefly();
             });
 
-            // Indicator click: jump to that destination (within current loop)
+            // ─── Indicator click ──────────────────────────────────────────────────────
             indicators.forEach((dot) => {
-                dot.addEventListener('click', (e) => {
+                dot.addEventListener('click', () => {
                     const idx = parseInt(dot.getAttribute('data-index'), 10);
-                    // compute nearest loop base to avoid big jump
                     const baseLoops = Math.floor(container.scrollLeft / originalWidth);
                     const target = (baseLoops * originalWidth) + (idx * cardAdvance);
-                    container.scrollTo({ left: target, behavior: 'smooth' });
-                    pauseBriefly(2200);
+                    container.style.scrollBehavior = 'smooth';
+                    container.scrollTo({ left: target });
+                    setTimeout(() => { container.style.scrollBehavior = 'auto'; }, 400);
+                    pauseBriefly();
                 });
-                // keyboard support
                 dot.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        dot.click();
-                    }
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dot.click(); }
                 });
             });
 
-            // Pause on hover/focus
+            // ─── Hover / focus pause ──────────────────────────────────────────────────
             container.addEventListener('mouseenter', () => paused = true);
             container.addEventListener('mouseleave', () => paused = false);
-            container.addEventListener('focusin', () => paused = true);
-            container.addEventListener('focusout', () => paused = false);
+            container.addEventListener('focusin',    () => paused = true);
+            container.addEventListener('focusout',   () => paused = false);
 
-            // Recalculate sizes on resize and when images load
+            // ─── Recalc on resize + image load ────────────────────────────────────────
             window.addEventListener('resize', recalcSizes);
-            // when images inside track load, recalc
             track.querySelectorAll('img').forEach(img => {
+                if (img.complete) return; // already loaded
                 img.addEventListener('load', recalcSizes);
             });
 
-            // initial calc and start
+            // ─── Boot ─────────────────────────────────────────────────────────────────
             recalcSizes();
             rafId = requestAnimationFrame(step);
 
-            // Cleanup on page unload
+            // Cleanup
             window.addEventListener('beforeunload', () => cancelAnimationFrame(rafId));
         });
     </script>

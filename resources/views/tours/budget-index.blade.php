@@ -339,103 +339,38 @@
     {{-- ── WHAT IS A BUDGET SAFARI ── --}}
     <section class="what-section">
         <div class="what-section__inner">
-            <p class="section-label">What to expect</p>
-            <h2 class="section-heading">Everything that matters. Nothing you don't need.</h2>
+            <p class="section-label">Budget Safaris with Calm Africa Safaris</p>
+            <h2 class="section-heading">Affordable African Adventures Without Compromise</h2>
             <p style="color:#555;line-height:1.7;max-width:700px;">
-                A budget safari isn't a compromised safari — it's a smart one. You sleep in clean,
-                comfortable guesthouses and budget tented camps instead of five-star lodges.
-                You share a vehicle with fellow adventurers rather than booking a private 4×4.
-                The elephants, gorillas, flamingos and sunsets? Identical.
+                At Calm Africa Safaris, we believe that everyone deserves to experience the magic of Africa.
+                 A safari should not be a luxury reserved for a few — it should be accessible, authentic, 
+                 and unforgettable.
             </p>
-            <div class="what-grid">
-                <div class="what-card">
-                    <div class="what-card__icon">🏡</div>
-                    <div class="what-card__title">Simple, comfortable stays</div>
-                    <p class="what-card__text">
-                        We pick lodges and camps that are clean, safe and welcoming —
-                        places where locals and experienced travellers actually stay.
-                    </p>
-                </div>
-                <div class="what-card">
-                    <div class="what-card__icon">🔭</div>
-                    <div class="what-card__title">Same wildlife, same access</div>
-                    <p class="what-card__text">
-                        Budget does not mean distant. You enter the same parks and reserves,
-                        led by the same calibre of experienced naturalist guide.
-                    </p>
-                </div>
-                <div class="what-card">
-                    <div class="what-card__icon">🤝</div>
-                    <div class="what-card__title">Group departures save money</div>
-                    <p class="what-card__text">
-                        Joining a small scheduled group means shared costs across the board —
-                        vehicle, fuel, guide — so everyone pays less.
-                    </p>
-                </div>
-                <div class="what-card">
-                    <div class="what-card__icon">🗺️</div>
-                    <div class="what-card__title">Flexible & customisable</div>
-                    <p class="what-card__text">
-                        Every itinerary can be adjusted. Add a night, swap a park, or go
-                        solo — we'll price it honestly and transparently.
-                    </p>
-                </div>
-            </div>
+
+            <p>
+
+
+            Our carefully crafted budget safaris in Uganda and East Africa are designed for travelers who want real
+             wildlife encounters, breathtaking landscapes, and cultural experiences at an affordable price — without
+              sacrificing safety, comfort, or professionalism.
+            </p>
+
+            <p>
+                We focus on value for money, smart itinerary planning, and authentic experiences 
+                that give you more adventure for every dollar spent.
+            </p>
+
+        
         </div>
     </section>
 
-    {{-- ── COMPARISON ── --}}
-    <section class="compare-section">
-        <div class="compare-section__inner">
-            <p class="section-label">How do we compare?</p>
-            <h2 class="section-heading">Budget vs Mid-Range vs Luxury</h2>
-            <div class="compare-grid">
+    <section>
 
-                <div class="compare-card compare-card--active">
-                    <div class="compare-card__icon">🌿</div>
-                    <div class="compare-card__title">Budget</div>
-                    <div class="compare-card__price">Best-value entry point</div>
-                    <ul class="compare-card__list">
-                        <li>Clean guesthouses &amp; budget camps</li>
-                        <li>Shared game-drive vehicles</li>
-                        <li>All major park fees included</li>
-                        <li>Professional certified guide</li>
-                        <li>Airport transfers included</li>
-                        <li>Ideal for students, backpackers &amp; families</li>
-                    </ul>
-                </div>
-
-                <div class="compare-card">
-                    <div class="compare-card__icon">🏞️</div>
-                    <div class="compare-card__title">Mid-Range</div>
-                    <div class="compare-card__price">Comfort &amp; value balanced</div>
-                    <ul class="compare-card__list">
-                        <li>Comfortable lodges with en-suite rooms</li>
-                        <li>Semi-private or private vehicles</li>
-                        <li>Better locations &amp; amenities</li>
-                        <li>More included meals</li>
-                        <li>Pool access at most properties</li>
-                        <li>Ideal for couples &amp; solo travellers</li>
-                    </ul>
-                </div>
-
-                <div class="compare-card">
-                    <div class="compare-card__icon">✨</div>
-                    <div class="compare-card__title">Luxury</div>
-                    <div class="compare-card__price">Exclusive &amp; personalised</div>
-                    <ul class="compare-card__list">
-                        <li>Exclusive tented camps &amp; lodges</li>
-                        <li>Fully private vehicles &amp; guides</li>
-                        <li>Gourmet dining &amp; all-inclusive</li>
-                        <li>High staff-to-guest ratio</li>
-                        <li>Bespoke tailored experiences</li>
-                        <li>Ideal for honeymoons &amp; special events</li>
-                    </ul>
-                </div>
-
-            </div>
-        </div>
+    <h2 class="text-" >
+      Why Choose Calm Africa Safaris for Budget Travel?
+    </h2>
     </section>
+
 
     {{-- ── TOUR CARDS ── --}}
     <section class="tours-section" id="tours">

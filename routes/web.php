@@ -6,6 +6,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\AccommodationController;
 use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\BudgetTourController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\NewsletterController;
@@ -38,6 +39,8 @@ Route::get('/tours/{slug}', [TourController::class, 'show'])->name('tours.show')
 Route::get('/tours-budget', [TourController::class, 'budget'])->name('tours.budget');
 Route::get('tours-midrange', [TourController::class, 'midrange'])->name('tours.midrange');
 Route::get('tours-luxury', [TourController::class, 'luxury'])->name('tours.luxury');
+
+Route::get('/budget-safaris', [BudgetTourController::class, 'index'])->name('budget-tours.index');
 // Gallery
 Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
 Route::get('/gallery/{slug}', [GalleryController::class, 'show'])->name('gallery.show');
