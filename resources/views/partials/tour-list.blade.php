@@ -9,12 +9,6 @@
 <section class="py-12 bg-gray-200 overflow-hidden rounded-lg">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <!-- Section Header -->
-        <div class="text-center mb-10">
-            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">{{ $heading }}</h2>
-            <p class="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto">{{ $subheading }}</p>
-        </div>
-
         @if($totalTours > 0)
 
         <!-- Carousel Wrapper -->
@@ -41,8 +35,13 @@
                 <div id="tourCarouselTrack" class="flex gap-5 will-change-transform">
 
                     @foreach($tours as $tour)
+                    {{--
+                        KEY FIX: mobile gets w-full (100% of container = 1 card, no peeking).
+                        sm (≥640px) → 2 cards. lg (≥1024px) → 3 cards.
+                        JS recalcSizes() reads the actual rendered width so the math always matches.
+                    --}}
                     <div class="tour-slide flex-shrink-0
-                                w-[85vw]
+                                w-full
                                 sm:w-[calc(50%-10px)]
                                 lg:w-[calc(33.333%-14px)]">
 
@@ -93,7 +92,7 @@
                             </div>
 
                             <!-- Card Content -->
-                            <div class="p-4 sm:p-5 flex flex-col h-[calc(100%-13rem)] sm:h-[calc(100%-15rem)]">
+                            <div class="p-4 sm:p-5 flex flex-col" style="min-height:200px;">
 
                                 <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
                                     {{ $tour->title }}
@@ -189,10 +188,8 @@
             @endfor
         </div>
 
-        <!-- Controls Row: Play/Pause + Speed -->
+        <!-- Controls Row -->
         <div class="mt-5 flex flex-col sm:flex-row items-center justify-center gap-4">
-
-            <!-- Play / Pause -->
             <button id="tourPlayPauseBtn"
                 class="bg-green-600 hover:bg-green-700 text-white rounded-full p-3 shadow-lg transition-all duration-300 transform hover:scale-110 active:scale-95"
                 aria-label="Pause carousel">
@@ -203,19 +200,15 @@
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
                 </svg>
             </button>
-
-            <!-- Speed -->
             <div class="inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-md">
                 <span class="text-xs font-medium text-gray-500">Speed:</span>
                 <button class="tour-speed-btn px-3 py-1 rounded-full text-xs font-medium transition-all" data-speed="slow">Slow</button>
                 <button class="tour-speed-btn px-3 py-1 rounded-full text-xs font-medium transition-all active" data-speed="normal">Normal</button>
                 <button class="tour-speed-btn px-3 py-1 rounded-full text-xs font-medium transition-all" data-speed="fast">Fast</button>
             </div>
-
         </div>
 
         @else
-        <!-- Empty State -->
         <div class="text-center py-16">
             <svg class="w-20 h-20 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -225,7 +218,6 @@
         </div>
         @endif
 
-        <!-- Explore All Button -->
         @if($showExploreButton && $totalTours >= $limit)
         <div class="text-center mt-10">
             <a href="{{ route('tours.index') }}"
@@ -241,7 +233,7 @@
         </div>
         @endif
 
-    </div><!-- /.max-w-7xl -->
+    </div>
 </section>
 
 @push('styles')
@@ -250,22 +242,17 @@
     .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
     .line-clamp-3 { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
 
-    #tourCarouselContainer {
-        overflow: hidden;
-        scroll-behavior: auto; /* keep auto — seamless JS reset won't work with smooth */
-        touch-action: pan-y pinch-zoom;
-    }
+    #tourCarouselContainer { overflow:hidden; touch-action:pan-y pinch-zoom; }
+    #tourCarouselTrack     { will-change:transform; }
 
-    #tourCarouselTrack { will-change: transform; }
-
-    .tour-speed-btn { color:#6b7280; background:transparent; }
+    .tour-speed-btn       { color:#6b7280; background:transparent; }
     .tour-speed-btn.active { background:#16a34a; color:#fff; }
-    .tour-speed-btn:hover { background:#dcfce7; color:#16a34a; }
+    .tour-speed-btn:hover  { background:#dcfce7; color:#16a34a; }
     .tour-speed-btn.active:hover { background:#15803d; color:#fff; }
 
     .tour-indicator[aria-selected="true"] {
         background-color: #16a34a;
-        width: 10px;
+        width:  10px;
         height: 10px;
     }
 </style>
@@ -288,11 +275,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!track || !container || n === 0) return;
 
-    // ── Clone slides for seamless infinite loop ───────────────────────────────
+    // Clone slides x2 for seamless infinite loop
     const originalSlides = Array.from(track.children);
-    originalSlides.forEach(slide => track.appendChild(slide.cloneNode(true)));
-    // Clone a second time so very fast scrolling never shows a gap
-    originalSlides.forEach(slide => track.appendChild(slide.cloneNode(true)));
+    originalSlides.forEach(s => track.appendChild(s.cloneNode(true)));
+    originalSlides.forEach(s => track.appendChild(s.cloneNode(true)));
 
     const speeds = { slow: 0.25, normal: 0.5, fast: 1.0 };
     let speed            = speeds.normal;
@@ -300,21 +286,28 @@ document.addEventListener('DOMContentLoaded', function () {
     let isPlaying        = true;
     let rafId            = null;
     let initialized      = false;
-    let originalWidth    = 0; // pixel width of ONE full set of slides
-    let cardAdvance      = 0; // width of one card + gap
+    let originalWidth    = 0;
+    let cardAdvance      = 0;
     let manualPauseTimer = null;
 
-    // ── Sizes ─────────────────────────────────────────────────────────────────
+    // ── recalcSizes ───────────────────────────────────────────────────────────
+    // Reads the ACTUAL rendered card width from the DOM so the JS math always
+    // matches whatever CSS width the card has (w-full on mobile, 50% on sm,
+    // 33% on lg). No hardcoded vw values needed.
     function recalcSizes() {
-        setTimeout(() => {
+        setTimeout(function () {
             const firstSlide = track.querySelector('.tour-slide');
             if (!firstSlide) return;
-            const gap = 20; // gap-5 = 20px
-            cardAdvance   = Math.ceil(firstSlide.offsetWidth + gap);
+
+            const gap     = 20; // gap-5 = 20px
+            const cardW   = firstSlide.getBoundingClientRect().width;
+
+            cardAdvance   = cardW + gap;
             originalWidth = cardAdvance * n;
-            // Clamp current position so it stays in the valid range after resize
-            currentPos = currentPos % originalWidth;
-            initialized = true;
+
+            // Clamp so we don't jump after resize
+            currentPos    = currentPos % originalWidth;
+            initialized   = true;
         }, 150);
     }
 
@@ -322,28 +315,20 @@ document.addEventListener('DOMContentLoaded', function () {
     function step() {
         if (isPlaying && initialized) {
             currentPos += speed;
-
-            // Seamless forward reset
-            if (currentPos >= originalWidth) {
-                currentPos = currentPos - originalWidth;
-            }
-            // Seamless backward reset
-            if (currentPos < 0) {
-                currentPos = originalWidth + currentPos;
-            }
-
-            track.style.transform = `translateX(-${currentPos}px)`;
+            if (currentPos >= originalWidth) currentPos -= originalWidth;
+            if (currentPos < 0)             currentPos  = originalWidth + currentPos;
+            track.style.transform = 'translateX(-' + currentPos + 'px)';
             updateIndicators();
         }
         rafId = requestAnimationFrame(step);
     }
 
-    // ── Indicator sync ────────────────────────────────────────────────────────
+    // ── Indicators ────────────────────────────────────────────────────────────
     function updateIndicators() {
         if (!indicators.length || !cardAdvance) return;
         const pos   = ((currentPos % originalWidth) + originalWidth) % originalWidth;
         const index = Math.round(pos / cardAdvance) % n;
-        indicators.forEach((dot, i) => {
+        indicators.forEach(function (dot, i) {
             const sel = i === index;
             dot.setAttribute('aria-selected', sel ? 'true' : 'false');
             dot.classList.toggle('bg-gray-400',  !sel);
@@ -354,117 +339,111 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Play / Pause ──────────────────────────────────────────────────────────
     function setPlaying(playing) {
         isPlaying = playing;
-        playIcon.classList.toggle('hidden',  isPlaying);
+        playIcon.classList.toggle('hidden',   isPlaying);
         pauseIcon.classList.toggle('hidden', !isPlaying);
         playPauseBtn.setAttribute('aria-label', isPlaying ? 'Pause carousel' : 'Play carousel');
     }
 
-    function pauseBriefly(ms = 2200) {
-        const wasPlaying = isPlaying;
+    function pauseBriefly(ms) {
+        ms = ms || 2200;
+        var was = isPlaying;
         setPlaying(false);
         clearTimeout(manualPauseTimer);
-        if (wasPlaying) {
-            manualPauseTimer = setTimeout(() => setPlaying(true), ms);
-        }
+        if (was) manualPauseTimer = setTimeout(function () { setPlaying(true); }, ms);
     }
 
-    playPauseBtn.addEventListener('click', () => setPlaying(!isPlaying));
+    playPauseBtn.addEventListener('click', function () { setPlaying(!isPlaying); });
 
     // ── Next / Prev ───────────────────────────────────────────────────────────
-    nextBtn.addEventListener('click', () => {
+    nextBtn.addEventListener('click', function () {
         currentPos += cardAdvance;
         if (currentPos >= originalWidth) currentPos -= originalWidth;
         track.style.transition = 'transform 0.45s ease-out';
-        track.style.transform  = `translateX(-${currentPos}px)`;
-        setTimeout(() => { track.style.transition = 'none'; }, 450);
+        track.style.transform  = 'translateX(-' + currentPos + 'px)';
+        setTimeout(function () { track.style.transition = 'none'; }, 450);
         pauseBriefly();
     });
 
-    prevBtn.addEventListener('click', () => {
+    prevBtn.addEventListener('click', function () {
         currentPos -= cardAdvance;
         if (currentPos < 0) currentPos = originalWidth + currentPos;
         track.style.transition = 'transform 0.45s ease-out';
-        track.style.transform  = `translateX(-${currentPos}px)`;
-        setTimeout(() => { track.style.transition = 'none'; }, 450);
+        track.style.transform  = 'translateX(-' + currentPos + 'px)';
+        setTimeout(function () { track.style.transition = 'none'; }, 450);
         pauseBriefly();
     });
 
     // ── Indicator click ───────────────────────────────────────────────────────
-    indicators.forEach(dot => {
-        dot.addEventListener('click', () => {
-            const idx    = parseInt(dot.getAttribute('data-index'), 10);
-            currentPos   = idx * cardAdvance;
+    indicators.forEach(function (dot) {
+        dot.addEventListener('click', function () {
+            var idx  = parseInt(dot.getAttribute('data-index'), 10);
+            currentPos = idx * cardAdvance;
             track.style.transition = 'transform 0.45s ease-out';
-            track.style.transform  = `translateX(-${currentPos}px)`;
-            setTimeout(() => { track.style.transition = 'none'; }, 450);
+            track.style.transform  = 'translateX(-' + currentPos + 'px)';
+            setTimeout(function () { track.style.transition = 'none'; }, 450);
             pauseBriefly();
         });
-        dot.addEventListener('keydown', e => {
+        dot.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dot.click(); }
         });
     });
 
-    // ── Speed buttons ─────────────────────────────────────────────────────────
-    speedBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            speed = speeds[btn.dataset.speed] ?? speeds.normal;
-            speedBtns.forEach(b => b.classList.toggle('active', b === btn));
+    // ── Speed ─────────────────────────────────────────────────────────────────
+    speedBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            speed = speeds[btn.dataset.speed] || speeds.normal;
+            speedBtns.forEach(function (b) { b.classList.toggle('active', b === btn); });
         });
     });
 
     // ── Hover pause ───────────────────────────────────────────────────────────
-    container.addEventListener('mouseenter', () => { if (isPlaying) setPlaying(false); });
-    container.addEventListener('mouseleave', () => { setPlaying(true); });
-    container.addEventListener('focusin',    () => { if (isPlaying) setPlaying(false); });
-    container.addEventListener('focusout',   () => { setPlaying(true); });
+    container.addEventListener('mouseenter', function () { if (isPlaying) setPlaying(false); });
+    container.addEventListener('mouseleave', function () { setPlaying(true); });
+    container.addEventListener('focusin',    function () { if (isPlaying) setPlaying(false); });
+    container.addEventListener('focusout',   function () { setPlaying(true); });
 
-    // ── Touch / swipe support ─────────────────────────────────────────────────
-    let touchStartX = 0, touchEndX = 0, touchStartTime = 0;
+    // ── Touch / swipe ─────────────────────────────────────────────────────────
+    var touchStartX = 0, touchEndX = 0, touchStartTime = 0;
 
-    container.addEventListener('touchstart', e => {
+    container.addEventListener('touchstart', function (e) {
         touchStartX    = e.touches[0].clientX;
         touchStartTime = Date.now();
         setPlaying(false);
     }, { passive: true });
 
-    container.addEventListener('touchmove', e => {
+    container.addEventListener('touchmove', function (e) {
         touchEndX = e.touches[0].clientX;
     }, { passive: true });
 
-    container.addEventListener('touchend', () => {
-        const diff      = touchStartX - touchEndX;
-        const swipeTime = Date.now() - touchStartTime;
-        if (swipeTime < 300) {
+    container.addEventListener('touchend', function () {
+        var diff = touchStartX - touchEndX;
+        if (Date.now() - touchStartTime < 300) {
             if (diff > 50)       nextBtn.click();
             else if (diff < -50) prevBtn.click();
         }
         setPlaying(true);
     });
 
-    // ── Visibility change (pause when tab hidden) ─────────────────────────────
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) setPlaying(false);
-        else setPlaying(true);
+    // ── Visibility ────────────────────────────────────────────────────────────
+    document.addEventListener('visibilitychange', function () {
+        setPlaying(!document.hidden);
     });
 
     // ── Resize ────────────────────────────────────────────────────────────────
-    let resizeTimer;
-    window.addEventListener('resize', () => {
+    var resizeTimer;
+    window.addEventListener('resize', function () {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(recalcSizes, 250);
     });
 
-    // ── Image load recalc ─────────────────────────────────────────────────────
-    track.querySelectorAll('img').forEach(img => {
-        if (img.complete) return;
-        img.addEventListener('load', recalcSizes);
+    track.querySelectorAll('img').forEach(function (img) {
+        if (!img.complete) img.addEventListener('load', recalcSizes);
     });
 
     // ── Boot ──────────────────────────────────────────────────────────────────
     recalcSizes();
     rafId = requestAnimationFrame(step);
-
-    window.addEventListener('beforeunload', () => cancelAnimationFrame(rafId));
+    window.addEventListener('beforeunload', function () { cancelAnimationFrame(rafId); });
 });
 </script>
 @endpush

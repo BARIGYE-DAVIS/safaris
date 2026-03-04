@@ -216,14 +216,14 @@
                 <a href="{{ route('index') }}"
                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mx-2 transition-colors
                           {{ request()->routeIs('index') ? 'bg-green-50 text-green-700 border-l-4 border-green-600' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }}">
-                    🏠 Home
+                    <i class="fas fa-home mr-2"></i> Home
                 </a>
 
                 {{-- Mobile: Tours accordion --}}
                 <div class="mx-2">
                     <button class="mobile-accordion w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors
                                    {{ request()->routeIs('tours.*') ? 'bg-green-50 text-green-700 border-l-4 border-green-600' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }}">
-                        <span>🦁 Tours</span>
+                        <span><i class="fas fa-binoculars mr-2"></i> Tours</span>
                         <svg class="accordion-icon h-4 w-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
@@ -243,7 +243,7 @@
                 <div class="mx-2">
                     <button class="mobile-accordion w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors
                                    {{ request()->routeIs('destinations.*') ? 'bg-green-50 text-green-700 border-l-4 border-green-600' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }}">
-                        <span>🗺️ Destinations</span>
+                        <span><i class="fas fa-map-marked-alt mr-2"></i>Destinations</span>
                         <svg class="accordion-icon h-4 w-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
@@ -262,7 +262,7 @@
                 <div class="mx-2">
                     <button class="mobile-accordion w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors
                                    {{ request()->routeIs('activities.*') ? 'bg-green-50 text-green-700 border-l-4 border-green-600' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }}">
-                        <span>🏃 Activities</span>
+                        <span><i class="fas fa-running mr-2"></i>Activities</span>
                         <svg class="accordion-icon h-4 w-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
@@ -281,25 +281,25 @@
                 <a href="{{ route('gallery.index') }}"
                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mx-2 transition-colors
                           {{ request()->routeIs('gallery.index') ? 'bg-green-50 text-green-700 border-l-4 border-green-600' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }}">
-                    📸 Gallery
+                    <i class="fas fa-images"></i> Gallery
                 </a>
 
                 <a href="{{ route('blogs.index') }}"
                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mx-2 transition-colors
                           {{ request()->routeIs('blogs.*') ? 'bg-green-50 text-green-700 border-l-4 border-green-600' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }}">
-                    📝 Blog
+                    <i class="fas fa-blog"></i> Blog
                 </a>
 
                 <a href="{{ route('accommodations.index') }}"
                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mx-2 transition-colors
                           {{ request()->routeIs('accommodations.*') ? 'bg-green-50 text-green-700 border-l-4 border-green-600' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }}">
-                    🛏️ Stays
+                    <i class="fas fa-bed"></i> Stays
                 </a>
 
                 <a href="{{ route('contact') }}"
                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mx-2 transition-colors
                           {{ request()->routeIs('contact') ? 'bg-green-50 text-green-700 border-l-4 border-green-600' : 'text-gray-700 hover:bg-gray-50 hover:text-green-700' }}">
-                    📞 Contact
+                    <i class="fas fa-phone"></i> Contact
                 </a>
 
                 <div class="px-2 pt-2 pb-1">

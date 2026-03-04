@@ -38,7 +38,7 @@ $count = $accommodations->count();
 
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-2xl font-bold text-white">Where To Stay while on East Africa Safaris</h2>
-            <a href="{{ url('/accommodations') }}" class="text-indigo-400 hover:text-indigo-300 text-sm font-medium">View all &rarr;</a>
+            <a href="{{ url('/accommodations') }}" class="text-white hover:text-white text-sm font-medium">View all &rarr;</a>
         </div>
 
         <div class="relative">

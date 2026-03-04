@@ -370,4 +370,109 @@ class AccommodationController extends Controller
             ->route('admin.accommodations.index')
             ->with('success', 'Accommodation deleted successfully.');
     }
+
+/**
+ * API endpoint for searching accommodations
+ * Used in tour create/edit forms for searchable dropdown
+ */
+public function apiSearch(Request $request)
+{
+    $query = Accommodation::query()->where('is_active', true);
+
+    // Search by name
+    if ($request->filled('q')) {
+        $searchTerm = $request->input('q');
+        $query->where('name', 'like', "%{$searchTerm}%");
+    }
+
+    // Filter by type
+    if ($request->filled('type')) {
+        $query->where('type', $request->input('type'));
+    }
+
+    // Filter by category
+    if ($request->filled('category')) {
+        $query->where('category', $request->input('category'));
+    }
+
+    // Filter by destination
+    if ($request->filled('destination_id')) {
+        $query->where('destination_id', $request->input('destination_id'));
+    }
+
+    // Filter by country
+    if ($request->filled('country_id')) {
+        $query->where('country_id', $request->input('country_id'));
+    }
+
+    // Load images relationship
+    $accommodations = $query->with('images')
+                           ->orderBy('name')
+                           ->limit(50) // Limit results for performance
+                           ->get();
+
+    // Return JSON response with accommodation data and images
+    return response()->json([
+        'success' => true,
+        'data' => $accommodations->map(function ($accommodation) {
+            return [
+                'id' => $accommodation->id,
+                'name' => $accommodation->name,
+                'type' => $accommodation->type,
+                'category' => $accommodation->category,
+                'location' => $accommodation->location,
+                'featured_image' => $accommodation->featured_image_url,
+                'images' => $accommodation->images->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'path' => $image->path,
+                        'url' => $image->url ?? asset('storage/' . $image->path),
+                        'caption' => $image->caption,
+                        'alt_text' => $image->alt_text,
+                        'sort_order' => $image->sort_order,
+                    ];
+                }),
+            ];
+        }),
+    ]);
+}
+
+/**
+ * API endpoint to get a single accommodation with its images
+ * Used when loading edit form with existing accommodation selected
+ */
+public function apiGetById($id)
+{
+    $accommodation = Accommodation::with('images')->find($id);
+
+    if (!$accommodation) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Accommodation not found',
+        ], 404);
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'id' => $accommodation->id,
+            'name' => $accommodation->name,
+            'type' => $accommodation->type,
+            'category' => $accommodation->category,
+            'location' => $accommodation->location,
+            'featured_image' => $accommodation->featured_image_url,
+            'images' => $accommodation->images->map(function ($image) {
+                return [
+                    'id' => $image->id,
+                    'path' => $image->path,
+                    'url' => $image->url ?? asset('storage/' . $image->path),
+                    'caption' => $image->caption,
+                    'alt_text' => $image->alt_text,
+                    'sort_order' => $image->sort_order,
+                ];
+            }),
+        ],
+    ]);
+}
+        
 }

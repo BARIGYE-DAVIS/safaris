@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Tour;
 use App\Models\TourPrice;
+use App\Models\Accommodation;
 use Illuminate\Support\Str;
 
 class TourController extends Controller
@@ -184,19 +185,34 @@ class TourController extends Controller
         ));
     }
 
-    public function show($slug)
-    {
-        $tour = Tour::where('slug', $slug)
-            ->with(['itineraries', 'prices', 'images', 'itineraries.images'])
-            ->firstOrFail();
 
-        $relatedTours = Tour::where('category', $tour->category)
-            ->where('id', '!=', $tour->id)
-            ->limit(4)
-            ->get();
+        
+public function show($slug)
+{
+    $tour = Tour::with([
+        'itineraries' => function ($q) {
+            $q->orderBy('day_number');
+        },
+        'itineraries.images',                            // activity / day photos
+        'itineraries.accommodationRecord.images',        // ← FIXED: was 'accommodationModel'
+        'prices',
+        'images',
+    ])->where('slug', $slug)->firstOrFail();
 
-        return view('tours.show', compact('tour', 'relatedTours'));
-    }
+    $relatedTours = Tour::with(['itineraries', 'prices'])
+        ->where('id', '!=', $tour->id)
+        ->where(function ($q) use ($tour) {
+            $q->where('category', $tour->category)
+              ->orWhere('type', $tour->type);
+        })
+        ->latest()
+        ->take(4)
+        ->get();
+
+    return view('tours.show', compact('tour', 'relatedTours'));
+}             
+
+
 
     public function category($category)
     {
@@ -221,43 +237,39 @@ class TourController extends Controller
         return view('tours.duration', compact('tours', 'days', 'durationType'));
     }
 
-public function budget()
-{
-    $tours = \App\Models\Tour::query()
-        ->where('status', 'published')
-        ->where('category', 'budget')
-        ->with(['images', 'prices', 'itineraries'])   // ← only relations that EXIST on Tour model
-        ->orderBy('title')                             // ← 'name' column doesn't exist; use 'title'
-        ->paginate(9);
+    public function budget()
+    {
+        $tours = \App\Models\Tour::query()
+            ->where('status', 'published')
+            ->where('category', 'budget')
+            ->with(['images', 'prices', 'itineraries'])
+            ->orderBy('title')
+            ->paginate(9);
 
-    return view('tours.budget', compact('tours'));
-}
+        return view('tours.budget', compact('tours'));
+    }
 
+    public function midrange()
+    {
+        $tours = \App\Models\Tour::query()
+            ->where('status', 'published')
+            ->where('category', 'middle Range')
+            ->with(['images', 'prices', 'itineraries'])
+            ->orderBy('title')
+            ->paginate(9);
 
-public function midrange()
-{
-    $tours = \App\Models\Tour::query()
-        ->where('status', 'published')          // ← match whatever value you confirmed works
-        ->where('category', 'middle Range')        // ← adjust to match exact DB value e.g. 'midrange', 'Mid-Range'
-        ->with(['images', 'prices', 'itineraries'])
-        ->orderBy('title')
-        ->paginate(9);
+        return view('tours.midrange', compact('tours'));
+    }
 
-    return view('tours.midrange', compact('tours'));
+    public function luxury()
+    {
+        $tours = \App\Models\Tour::query()
+            ->where('status', 'published')
+            ->where('category', 'luxury')
+            ->with(['images', 'prices', 'itineraries'])
+            ->orderBy('title')
+            ->paginate(9);
 
-
-}
-
-public function luxury()
-{
-    $tours = \App\Models\Tour::query()
-        ->where('status', 'published')
-        ->where('category', 'luxury')           // ← adjust to match exact DB value e.g. 'Luxury'
-        ->with(['images', 'prices', 'itineraries'])
-        ->orderBy('title')
-        ->paginate(9);
-
-    return view('tours.luxury', compact('tours'));  
-}
-
+        return view('tours.luxury', compact('tours'));  
+    }
 }

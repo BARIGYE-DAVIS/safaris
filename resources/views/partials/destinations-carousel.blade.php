@@ -5,11 +5,11 @@
 @endphp
 
 @if($count > 0)
-<div class="destinations-section py-8 bg-gray-800">
+<div class="destinations-section py-8 bg-gray-600">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-2xl font-bold text-white text-center"> East African Popular Destinations</h2>
-            <a href="{{ url('/destinations') }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">View all &rarr;</a>
+            <a href="{{ url('/destinations') }}" class="text-white hover:text-indigo-800 text-sm font-medium">View all &rarr;</a>
         </div>
 
         <div class="relative">

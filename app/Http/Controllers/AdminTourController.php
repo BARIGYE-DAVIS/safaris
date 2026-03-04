@@ -7,7 +7,7 @@ use App\Models\Tour;
 use App\Models\TourItinerary;
 use App\Models\TourPrice;
 use App\Models\TourImage;
-
+use App\Models\Accommodation;
 use App\Models\TourItineraryImage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -24,7 +24,12 @@ class AdminTourController extends Controller
 
     public function create()
     {
-        return view('admin.tours.create');
+        // Get active accommodations for the dropdown/search
+        $accommodations = Accommodation::where('is_active', true)
+                                       ->orderBy('name')
+                                       ->get(['id', 'name', 'type', 'category', 'location']);
+        
+        return view('admin.tours.create', compact('accommodations'));
     }
 
     /**
@@ -51,6 +56,7 @@ class AdminTourController extends Controller
             'itinerary.*.day_title'         => 'nullable|string',
             'itinerary.*.activity'          => 'nullable|string',
             'itinerary.*.accommodation'     => 'nullable|string',
+            'itinerary.*.accommodation_id'  => 'nullable|integer|exists:accommodations,id',
             'itinerary.*.meals'             => 'nullable|string',
             'itinerary.*.content_blocks'    => 'nullable|string', // JSON string built by frontend
             // uploads are validated per-file below (non-standard keys), validate loose overall:
@@ -82,11 +88,13 @@ class AdminTourController extends Controller
                     // Create itinerary row
                     // Use relationship name the app expects (some projects use itinerary / itineraries)
                     $it = $tour->itinerary()->create([
-                        'day_number'    => $day['day_number'] ?? null,
-                        'activity'      => $day['activity'] ?? '',
-                        'day_title'     => $day['day_title'] ?? '',
-                        'accommodation' => $day['accommodation'] ?? '',
-                        'meals'         => $day['meals'] ?? '',
+                        'day_number'        => $day['day_number'] ?? null,
+                        'activity'          => $day['activity'] ?? '',
+                        'day_title'         => $day['day_title'] ?? '',
+                        'accommodation'     => $day['accommodation'] ?? '',
+                        // FIX: cast to int — empty string '' from form must become null, not ''
+                        'accommodation_id'  => !empty($day['accommodation_id']) ? (int) $day['accommodation_id'] : null,
+                        'meals'             => $day['meals'] ?? '',
                         // content_blocks will be set below after processing uploads
                     ]);
 
@@ -215,8 +223,22 @@ class AdminTourController extends Controller
 
     public function edit($id)
     {
-        $tour = Tour::with(['itinerary', 'prices', 'images'])->findOrFail($id);
-        return view('admin.tours.edit', compact('tour'));
+        // FIX: relationship is named 'accommodationRecord' on TourItinerary model.
+        // We cannot use 'accommodation' because that is also a plain text column —
+        // Eloquent would return the relation proxy instead of the string value everywhere.
+        $tour = Tour::with([
+            'itinerary.accommodationRecord.images',
+            'itinerary.images',
+            'prices',
+            'images',
+        ])->findOrFail($id);
+        
+        // Get active accommodations for the dropdown/search
+        $accommodations = Accommodation::where('is_active', true)
+                                       ->orderBy('name')
+                                       ->get(['id', 'name', 'type', 'category', 'location']);
+        
+        return view('admin.tours.edit', compact('tour', 'accommodations'));
     }
 
     /**
@@ -244,6 +266,7 @@ class AdminTourController extends Controller
             'itinerary.*.day_title'         => 'nullable|string',
             'itinerary.*.activity'          => 'nullable|string',
             'itinerary.*.accommodation'     => 'nullable|string',
+            'itinerary.*.accommodation_id'  => 'nullable|integer|exists:accommodations,id',
             'itinerary.*.meals'             => 'nullable|string',
             'itinerary.*.content_blocks'    => 'nullable|string',
             'itinerary.*.uploads'           => 'nullable|array',
@@ -277,6 +300,11 @@ class AdminTourController extends Controller
                 $submittedItineraryIds = [];
 
                 foreach ($request->input('itinerary') as $dayKey => $dayData) {
+                    // FIX: cast to int — empty string '' from the hidden input must become null
+                    $accommodationId = !empty($dayData['accommodation_id'])
+                        ? (int) $dayData['accommodation_id']
+                        : null;
+
                     // if id present -> update; else create new
                     if (isset($dayData['id']) && $dayData['id']) {
                         $itinerary = TourItinerary::where('tour_id', $tour->id)
@@ -285,32 +313,35 @@ class AdminTourController extends Controller
 
                         if ($itinerary) {
                             $itinerary->update([
-                                'day_number'    => $dayData['day_number'] ?? null,
-                                'activity'      => $dayData['activity'] ?? '',
-                                'day_title'     => $dayData['day_title'] ?? '',
-                                'accommodation' => $dayData['accommodation'] ?? '',
-                                'meals'         => $dayData['meals'] ?? '',
+                                'day_number'        => $dayData['day_number'] ?? null,
+                                'activity'          => $dayData['activity'] ?? '',
+                                'day_title'         => $dayData['day_title'] ?? '',
+                                'accommodation'     => $dayData['accommodation'] ?? '',
+                                'accommodation_id'  => $accommodationId,
+                                'meals'             => $dayData['meals'] ?? '',
                             ]);
                             $submittedItineraryIds[] = $itinerary->id;
                         } else {
                             // fallback: create new if not found
                             $itinerary = $tour->itinerary()->create([
-                                'day_number'    => $dayData['day_number'] ?? null,
-                                'activity'      => $dayData['activity'] ?? '',
-                                'day_title'     => $dayData['day_title'] ?? '',
-                                'accommodation' => $dayData['accommodation'] ?? '',
-                                'meals'         => $dayData['meals'] ?? '',
+                                'day_number'        => $dayData['day_number'] ?? null,
+                                'activity'          => $dayData['activity'] ?? '',
+                                'day_title'         => $dayData['day_title'] ?? '',
+                                'accommodation'     => $dayData['accommodation'] ?? '',
+                                'accommodation_id'  => $accommodationId,
+                                'meals'             => $dayData['meals'] ?? '',
                             ]);
                             $submittedItineraryIds[] = $itinerary->id;
                         }
                     } else {
                         // Create new itinerary
                         $itinerary = $tour->itinerary()->create([
-                            'day_number'    => $dayData['day_number'] ?? null,
-                            'activity'      => $dayData['activity'] ?? '',
-                            'day_title'     => $dayData['day_title'] ?? '',
-                            'accommodation' => $dayData['accommodation'] ?? '',
-                            'meals'         => $dayData['meals'] ?? '',
+                            'day_number'        => $dayData['day_number'] ?? null,
+                            'activity'          => $dayData['activity'] ?? '',
+                            'day_title'         => $dayData['day_title'] ?? '',
+                            'accommodation'     => $dayData['accommodation'] ?? '',
+                            'accommodation_id'  => $accommodationId,
+                            'meals'             => $dayData['meals'] ?? '',
                         ]);
                         $submittedItineraryIds[] = $itinerary->id;
                     }

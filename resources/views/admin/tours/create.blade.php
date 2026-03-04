@@ -29,6 +29,165 @@
         </div>
     @endif
 
+    <style>
+        /* Searchable Accommodation Dropdown Styles */
+        .acc-dropdown-wrapper {
+            position: relative;
+        }
+        .acc-search-input {
+            width: 100%;
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            background: white;
+            cursor: pointer;
+        }
+        .acc-search-input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+        .acc-search-input.has-value {
+            border-color: #6366f1;
+            background-color: #eef2ff;
+            color: #3730a3;
+            font-weight: 500;
+        }
+        .acc-chevron {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #9ca3af;
+            transition: transform 0.2s;
+        }
+        .acc-chevron.open {
+            transform: translateY(-50%) rotate(180deg);
+            color: #6366f1;
+        }
+        .acc-dropdown-menu {
+            position: absolute;
+            z-index: 50;
+            width: 100%;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            margin-top: 4px;
+            overflow: hidden;
+            display: none;
+        }
+        .acc-dropdown-menu.open {
+            display: block;
+        }
+        .acc-search-box {
+            padding: 0.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+        .acc-search-box input {
+            width: 100%;
+            padding: 0.4rem 0.75rem 0.4rem 2rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            font-size: 0.8rem;
+            outline: none;
+            background: #f9fafb;
+        }
+        .acc-search-box input:focus {
+            border-color: #6366f1;
+            background: white;
+        }
+        .acc-search-icon {
+            position: absolute;
+            left: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            pointer-events: none;
+        }
+        .acc-options-list {
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 0.25rem 0;
+        }
+        .acc-option {
+            padding: 0.5rem 0.875rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #374151;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.1s;
+        }
+        .acc-option:hover, .acc-option.highlighted {
+            background: #eef2ff;
+            color: #3730a3;
+        }
+        .acc-option.selected {
+            background: #e0e7ff;
+            color: #3730a3;
+            font-weight: 600;
+        }
+        .acc-option .acc-option-name {
+            font-weight: 500;
+        }
+        .acc-option .acc-option-meta {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 1px;
+        }
+        .acc-option.highlighted .acc-option-meta,
+        .acc-option:hover .acc-option-meta,
+        .acc-option.selected .acc-option-meta {
+            color: #6366f1;
+        }
+        .acc-option-none {
+            padding: 0.5rem 0.875rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-style: italic;
+        }
+        .acc-no-results {
+            padding: 1rem 0.875rem;
+            font-size: 0.875rem;
+            color: #9ca3af;
+            text-align: center;
+        }
+        .acc-clear-btn {
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            cursor: pointer;
+            display: none;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+        .acc-clear-btn:hover {
+            color: #ef4444;
+        }
+        .acc-clear-btn.visible {
+            display: block;
+        }
+        mark.acc-highlight {
+            background: #fef08a;
+            color: inherit;
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+    </style>
+
     <form id="create-tour-form" action="{{ route('admin.tours.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
         @csrf
         
@@ -318,9 +477,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     const STORAGE_KEY = 'tour_create_form_data';
 
+    // Accommodations data from backend
+    const accommodationsData = @json($accommodations);
+
     // Helpers for IDs
     function uuid() {
-        // simple uuid v4-ish helper for client side (sufficiently unique)
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
@@ -331,6 +492,281 @@ document.addEventListener('DOMContentLoaded', function() {
         return 'tmp-' + Math.random().toString(36).substr(2, 9);
     }
 
+    // =====================================================================
+    // SEARCHABLE ACCOMMODATION DROPDOWN
+    // =====================================================================
+
+    /**
+     * Creates a fully searchable accommodation dropdown and appends it to `container`.
+     * Returns an object with:
+     *   - getValue()         → current selected accommodation id (or null)
+     *   - setValue(id)       → programmatically set a value
+     *   - onChange(callback) → register change handler: callback(id, accObject|null)
+     *
+     * The hidden <input> for form submission is created automatically with the
+     * provided `inputName`.
+     */
+    function createAccommodationDropdown(container, inputName, initialValue, dayIndex) {
+        let selectedId   = null;
+        let changeCallbacks = [];
+        let highlightedIndex = -1;
+        let filteredOptions  = [];
+
+        // Build option list: [ { id: null, label: '...', name, type, location }, ... ]
+        const options = [
+            { id: null, name: 'No Accommodation', type: '', location: '', label: 'No Accommodation' },
+            ...accommodationsData.map(acc => ({
+                id:       acc.id,
+                name:     acc.name,
+                type:     acc.type     || '',
+                location: acc.location || '',
+                label:    acc.name + (acc.type ? ' – ' + acc.type : '') + (acc.location ? ' (' + acc.location + ')' : '')
+            }))
+        ];
+
+        // ---- DOM ----
+        const wrapper = document.createElement('div');
+        wrapper.className = 'acc-dropdown-wrapper';
+
+        // Trigger button (shows current selection)
+        const trigger = document.createElement('input');
+        trigger.type = 'text';
+        trigger.readOnly = true;
+        trigger.className = 'acc-search-input';
+        trigger.placeholder = 'Select Accommodation (Optional)';
+        trigger.setAttribute('autocomplete', 'off');
+
+        // Chevron icon
+        const chevron = document.createElement('span');
+        chevron.className = 'acc-chevron';
+        chevron.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>`;
+
+        // Clear button
+        const clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'acc-clear-btn';
+        clearBtn.title = 'Clear selection';
+        clearBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>`;
+
+        // Dropdown menu
+        const menu = document.createElement('div');
+        menu.className = 'acc-dropdown-menu';
+
+        // Search box inside dropdown
+        const searchBox = document.createElement('div');
+        searchBox.className = 'acc-search-box';
+        searchBox.style.position = 'relative';
+        const searchIcon = document.createElement('span');
+        searchIcon.className = 'acc-search-icon';
+        searchIcon.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>`;
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.placeholder = 'Search accommodations…';
+        searchInput.setAttribute('autocomplete', 'off');
+        searchBox.appendChild(searchIcon);
+        searchBox.appendChild(searchInput);
+
+        // Options list
+        const optionsList = document.createElement('div');
+        optionsList.className = 'acc-options-list';
+
+        menu.appendChild(searchBox);
+        menu.appendChild(optionsList);
+
+        // Hidden input for form submission
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type  = 'hidden';
+        hiddenInput.name  = inputName;
+        hiddenInput.value = '';
+
+        wrapper.appendChild(trigger);
+        wrapper.appendChild(clearBtn);
+        wrapper.appendChild(chevron);
+        wrapper.appendChild(menu);
+        wrapper.appendChild(hiddenInput);
+        container.appendChild(wrapper);
+
+        // ---- Rendering helpers ----
+
+        function highlightText(text, query) {
+            if (!query) return escapeHtml(text);
+            const idx = text.toLowerCase().indexOf(query.toLowerCase());
+            if (idx === -1) return escapeHtml(text);
+            return escapeHtml(text.slice(0, idx))
+                 + '<mark class="acc-highlight">' + escapeHtml(text.slice(idx, idx + query.length)) + '</mark>'
+                 + escapeHtml(text.slice(idx + query.length));
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function renderOptions(query) {
+            query = (query || '').trim();
+            optionsList.innerHTML = '';
+            highlightedIndex = -1;
+
+            filteredOptions = options.filter(opt => {
+                if (!query) return true;
+                const q = query.toLowerCase();
+                return opt.name.toLowerCase().includes(q)
+                    || opt.type.toLowerCase().includes(q)
+                    || opt.location.toLowerCase().includes(q);
+            });
+
+            if (filteredOptions.length === 0) {
+                const noRes = document.createElement('div');
+                noRes.className = 'acc-no-results';
+                noRes.textContent = 'No accommodations found';
+                optionsList.appendChild(noRes);
+                return;
+            }
+
+            filteredOptions.forEach((opt, idx) => {
+                const el = document.createElement('div');
+                el.className = 'acc-option' + (opt.id == selectedId ? ' selected' : '') + (opt.id === null ? ' acc-option-none' : '');
+                el.dataset.index = idx;
+
+                if (opt.id === null) {
+                    el.innerHTML = `<span class="acc-option-name" style="font-style:italic;color:#6b7280">No Accommodation</span>`;
+                } else {
+                    el.innerHTML = `
+                        <span class="acc-option-name">${highlightText(opt.name, query)}</span>
+                        ${(opt.type || opt.location) ? `<span class="acc-option-meta">${escapeHtml([opt.type, opt.location].filter(Boolean).join(' · '))}</span>` : ''}
+                    `;
+                }
+
+                el.addEventListener('mousedown', function(e) {
+                    e.preventDefault(); // prevent blur before click
+                    selectOption(opt);
+                });
+
+                optionsList.appendChild(el);
+            });
+        }
+
+        function selectOption(opt) {
+            selectedId       = opt.id;
+            hiddenInput.value = opt.id !== null ? opt.id : '';
+
+            if (opt.id === null) {
+                trigger.value = '';
+                trigger.classList.remove('has-value');
+                clearBtn.classList.remove('visible');
+            } else {
+                trigger.value = opt.label;
+                trigger.classList.add('has-value');
+                clearBtn.classList.add('visible');
+            }
+
+            closeMenu();
+            changeCallbacks.forEach(cb => cb(opt.id, opt.id !== null ? accommodationsData.find(a => a.id == opt.id) : null));
+        }
+
+        function openMenu() {
+            menu.classList.add('open');
+            chevron.classList.add('open');
+            searchInput.value = '';
+            renderOptions('');
+            setTimeout(() => searchInput.focus(), 50);
+        }
+
+        function closeMenu() {
+            menu.classList.remove('open');
+            chevron.classList.remove('open');
+            highlightedIndex = -1;
+        }
+
+        // ---- Event listeners ----
+
+        trigger.addEventListener('click', function() {
+            if (menu.classList.contains('open')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        clearBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            selectOption(options[0]); // "No Accommodation"
+        });
+
+        searchInput.addEventListener('input', function() {
+            renderOptions(this.value);
+        });
+
+        // Keyboard navigation
+        searchInput.addEventListener('keydown', function(e) {
+            const items = optionsList.querySelectorAll('.acc-option');
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                highlightedIndex = Math.min(highlightedIndex + 1, items.length - 1);
+                updateHighlight(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                highlightedIndex = Math.max(highlightedIndex - 1, 0);
+                updateHighlight(items);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (highlightedIndex >= 0 && filteredOptions[highlightedIndex]) {
+                    selectOption(filteredOptions[highlightedIndex]);
+                }
+            } else if (e.key === 'Escape') {
+                closeMenu();
+                trigger.focus();
+            }
+        });
+
+        function updateHighlight(items) {
+            items.forEach((el, i) => {
+                el.classList.toggle('highlighted', i === highlightedIndex);
+                if (i === highlightedIndex) {
+                    el.scrollIntoView({ block: 'nearest' });
+                }
+            });
+        }
+
+        // Close when clicking outside
+        document.addEventListener('mousedown', function(e) {
+            if (!wrapper.contains(e.target)) {
+                closeMenu();
+            }
+        });
+
+        // ---- Public API ----
+
+        function getValue() { return selectedId; }
+
+        function setValue(id) {
+            const opt = options.find(o => o.id == id) || options[0];
+            selectedId        = opt.id;
+            hiddenInput.value = opt.id !== null ? opt.id : '';
+            if (opt.id !== null) {
+                trigger.value = opt.label;
+                trigger.classList.add('has-value');
+                clearBtn.classList.add('visible');
+            } else {
+                trigger.value = '';
+                trigger.classList.remove('has-value');
+                clearBtn.classList.remove('visible');
+            }
+        }
+
+        function onChange(cb) {
+            changeCallbacks.push(cb);
+        }
+
+        // Set initial value if provided
+        if (initialValue) {
+            setValue(initialValue);
+        }
+
+        return { getValue, setValue, onChange };
+    }
+
+    // =====================================================================
+
     // --- LOAD SAVED DATA FROM LOCALSTORAGE ---
     function loadSavedData() {
         const savedData = localStorage.getItem(STORAGE_KEY);
@@ -338,17 +774,15 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const data = JSON.parse(savedData);
                 
-                // Restore basic form fields
                 if (data.formFields) {
                     Object.keys(data.formFields).forEach(key => {
                         const field = document.querySelector(`[name="${key}"]`);
-                        if (field && !field.value) { // Only fill if field is empty (no old() data)
+                        if (field && !field.value) {
                             field.value = data.formFields[key];
                         }
                     });
                 }
                 
-                // Restore dynamic data
                 if (data.itineraryDays) itineraryDays = data.itineraryDays;
                 if (data.prices) prices = data.prices;
                 if (data.metaKeywords) metaKeywords = data.metaKeywords;
@@ -379,7 +813,7 @@ document.addEventListener('DOMContentLoaded', function() {
             itineraryDays,
             prices,
             metaKeywords,
-            imagesList: imagesList.map(img => ({preview: img.preview})) // Save only preview URLs
+            imagesList: imagesList.map(img => ({preview: img.preview}))
         };
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -393,9 +827,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- CLEAR STORAGE ON SUCCESSFUL SUBMIT ---
     document.getElementById('create-tour-form').addEventListener('submit', function(e) {
-        // Before submit, build content_blocks hidden inputs for each day
         buildAndAttachContentBlocks();
-        // allow submit to continue (do not remove localStorage here so we can inspect if needed; server redirect can clear)
         localStorage.removeItem(STORAGE_KEY);
     });
 
@@ -428,16 +860,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // --- LOAD ACCOMMODATION IMAGES ---
+    async function loadAccommodationImages(accommodationId) {
+        try {
+            const response = await fetch(`/admin/api/accommodations/${accommodationId}`);
+            const data = await response.json();
+            if (data.success) {
+                return data.data.images || [];
+            }
+        } catch (error) {
+            console.error('Error loading accommodation images:', error);
+        }
+        return [];
+    }
+
     // --- DYNAMIC ITINERARIES ---
-    // itineraryDays structure:
-    // {
-    //   activity: string,
-    //   day_title: string,
-    //   accommodation: string,
-    //   meals: string,
-    //   images: [ { tempId: 'tmp-abc', preview: 'data:', caption: '' , blockId: 'blk-uuid' , existingMediaId: null } ],
-    //   blocks: [ ... optional explicit blocks ... ]
-    // }
     let itineraryDays = [];
 
     function renderItinerary() {
@@ -455,10 +892,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         itineraryDays.forEach((day, i) => {
             const dayNum = i + 1;
-            // Ensure day.images exists (for older saved data)
             if (!Array.isArray(day.images)) day.images = [];
 
-            // Ensure each image has a tempId (for new client-side images)
             day.images.forEach(img => {
                 if (!img.tempId) img.tempId = tempId();
                 if (!img.blockId) img.blockId = 'blk-' + uuid();
@@ -466,6 +901,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const el = document.createElement('div');
             el.className = "relative bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6 border-2 border-indigo-200 hover:border-indigo-300 transition duration-150";
+
             el.innerHTML = `
                 <div class="absolute top-4 left-4 bg-indigo-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg shadow-md">
                     ${dayNum}
@@ -483,7 +919,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 resize-none overflow-hidden auto-resize" 
                             required 
                             placeholder="Describe the day's activities..."
-                            rows="1">${day.activity}</textarea>
+                            rows="1">${day.activity || ''}</textarea>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -493,18 +929,18 @@ document.addEventListener('DOMContentLoaded', function() {
                                 type="text" 
                                 name="itinerary[${dayNum}][day_title]" 
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
-                                value="${day.day_title}"
+                                value="${day.day_title || ''}"
                                 placeholder="e.g., Arrival Day">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Accommodation</label>
-                            <input 
-                                type="text" 
-                                name="itinerary[${dayNum}][accommodation]" 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
-                                value="${day.accommodation}"
-                                placeholder="e.g., Safari Lodge">
+                            <div id="acc-dropdown-mount-${i}" class="acc-mount"></div>
+                            <input type="hidden" name="itinerary[${dayNum}][accommodation]" value="${day.accommodation || ''}">
+                            <div id="accommodation-images-${i}" class="mt-3 hidden">
+                                <p class="text-sm text-gray-600 mb-2">Accommodation Images:</p>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2" id="accommodation-images-grid-${i}"></div>
+                            </div>
                         </div>
                         
                         <div>
@@ -513,7 +949,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 type="text" 
                                 name="itinerary[${dayNum}][meals]" 
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
-                                value="${day.meals}"
+                                value="${day.meals || ''}"
                                 placeholder="e.g., B, L, D">
                         </div>
                     </div>
@@ -526,7 +962,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <button type="button" class="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 add-day-image" data-index="${i}">
                                 Add Image
                             </button>
-                            <p class="text-sm text-gray-500">Add images to appear inline with this day's description. Each image can have a caption.</p>
+                            <p class="text-sm text-gray-500">Add images to appear inline with this day's description.</p>
                         </div>
                     </div>
                 </div>
@@ -543,7 +979,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </button>
             `;
             
-            // Add event listener for remove button
+            // Remove day handler
             el.querySelector('.remove-day').onclick = function() {
                 itineraryDays.splice(i, 1);
                 renderItinerary();
@@ -551,13 +987,76 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             
             container.appendChild(el);
+
+            // ---- Mount searchable accommodation dropdown ----
+            const mountPoint = el.querySelector(`#acc-dropdown-mount-${i}`);
+            const accDropdown = createAccommodationDropdown(
+                mountPoint,
+                `itinerary[${dayNum}][accommodation_id]`,
+                day.accommodation_id,
+                i
+            );
+
+            accDropdown.onChange(async function(accommodationId, accObj) {
+                day.accommodation_id = accommodationId || null;
+
+                const imagesContainer = document.getElementById(`accommodation-images-${i}`);
+                const imagesGrid      = document.getElementById(`accommodation-images-grid-${i}`);
+
+                if (accommodationId) {
+                    const images = await loadAccommodationImages(accommodationId);
+                    if (images.length > 0) {
+                        imagesGrid.innerHTML = '';
+                        images.forEach(img => {
+                            const imgDiv = document.createElement('div');
+                            imgDiv.className = 'relative group';
+                            imgDiv.innerHTML = `
+                                <img src="${img.url}" alt="${img.alt_text || ''}" class="w-full h-20 object-cover rounded border border-gray-200">
+                                <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b opacity-0 group-hover:opacity-100 transition">${img.caption || 'No caption'}</div>
+                            `;
+                            imagesGrid.appendChild(imgDiv);
+                        });
+                        imagesContainer.classList.remove('hidden');
+                    } else {
+                        imagesContainer.classList.add('hidden');
+                    }
+                } else {
+                    imagesContainer.classList.add('hidden');
+                }
+                saveFormData();
+            });
+
+            // If accommodation already selected on re-render, trigger images load
+            if (day.accommodation_id) {
+                accDropdown.onChange(async function(id) {
+                    // already handled above; just trigger image load on init
+                });
+                // Trigger manually
+                (async () => {
+                    const imagesContainer = document.getElementById(`accommodation-images-${i}`);
+                    const imagesGrid      = document.getElementById(`accommodation-images-grid-${i}`);
+                    const images = await loadAccommodationImages(day.accommodation_id);
+                    if (images.length > 0) {
+                        imagesGrid.innerHTML = '';
+                        images.forEach(img => {
+                            const imgDiv = document.createElement('div');
+                            imgDiv.className = 'relative group';
+                            imgDiv.innerHTML = `
+                                <img src="${img.url}" alt="${img.alt_text || ''}" class="w-full h-20 object-cover rounded border border-gray-200">
+                                <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b opacity-0 group-hover:opacity-100 transition">${img.caption || 'No caption'}</div>
+                            `;
+                            imagesGrid.appendChild(imgDiv);
+                        });
+                        imagesContainer.classList.remove('hidden');
+                    }
+                })();
+            }
             
             // Render images for this day
             const dayImagesContainer = document.getElementById(`day-images-${dayNum}`);
             function renderDayImages() {
                 dayImagesContainer.innerHTML = '';
                 day.images.forEach((imgObj, imgIndex) => {
-                    // ensure tempId and blockId exist
                     if (!imgObj.tempId) imgObj.tempId = tempId();
                     if (!imgObj.blockId) imgObj.blockId = 'blk-' + uuid();
 
@@ -571,10 +1070,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             </svg>
                         </div>
                         <div class="flex-1">
-                            <!-- file input name keyed by tempId so server can map upload => temp id -->
                             <input type="file" accept="image/*" name="itinerary[${dayNum}][uploads][${imgObj.tempId}]" class="w-full image-input" data-day="${i}" data-img="${imgIndex}">
                             <input type="text" name="itinerary[${dayNum}][image_captions][]" value="${imgObj.caption || ''}" placeholder="Caption (optional)" class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg caption-input" data-day="${i}" data-img="${imgIndex}">
-                            <!-- If this image corresponds to an existing media id (editing case) include hidden input -->
                             ${imgObj.existingMediaId ? `<input type="hidden" name="itinerary[${dayNum}][existing_media_ids][]" value="${imgObj.existingMediaId}">` : ''}
                         </div>
                         <div class="flex-shrink-0">
@@ -585,7 +1082,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     dayImagesContainer.appendChild(wrapper);
 
-                    // File input change listener
                     const fileInput = wrapper.querySelector('.image-input');
                     fileInput.addEventListener('change', function() {
                         const file = this.files[0];
@@ -603,13 +1099,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
 
-                    // Caption input listener
                     wrapper.querySelector('.caption-input').addEventListener('input', function() {
                         imgObj.caption = this.value;
                         saveFormData();
                     });
 
-                    // Remove image listener
                     wrapper.querySelector('.remove-day-image').addEventListener('click', function() {
                         day.images.splice(imgIndex, 1);
                         renderDayImages();
@@ -618,15 +1112,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
 
-            // Hook up add-day-image button
             el.querySelector('.add-day-image').addEventListener('click', function() {
-                // push image object with tempId and blockId; preview/caption empty by default
                 day.images.push({preview: '', caption: '', tempId: tempId(), blockId: 'blk-' + uuid(), existingMediaId: null});
                 renderDayImages();
                 saveFormData();
             });
 
-            // Add auto-resize functionality to activity textarea
             const activityTextarea = el.querySelector('.auto-resize');
             activityTextarea.addEventListener('input', function() {
                 autoResize(this);
@@ -634,12 +1125,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveFormData();
             });
             
-            // Add event listeners to other inputs to update the model and save
-            const inputs = el.querySelectorAll('input[name^="itinerary"], textarea[name^="itinerary"]');
+            const inputs = el.querySelectorAll('input[name^="itinerary"], textarea[name^="itinerary"], select[name^="itinerary"]');
             inputs.forEach(input => {
                 input.addEventListener('input', function() {
-                    // map field back to day object
-                    const name = this.getAttribute('name'); // e.g., itinerary[1][day_title]
+                    const name = this.getAttribute('name');
                     const match = name.match(/itinerary\[\d+\]\[([^\]]+)\]/);
                     if (match) {
                         const key = match[1];
@@ -652,43 +1141,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
 
-            // initial render of images for this day
             renderDayImages();
-
-            // Initial resize
             autoResize(activityTextarea);
         });
     }
     
     document.getElementById('add-itinerary-day').onclick = function() {
-        // include images array to support per-day images
-        itineraryDays.push({activity:"", day_title:"", accommodation:"", meals:"", images:[], blocks:[]});
+        itineraryDays.push({activity:"", day_title:"", accommodation:"", accommodation_id:null, meals:"", images:[], blocks:[]});
         renderItinerary();
         saveFormData();
     };
 
-    // Build content_blocks from the current day data and attach as hidden inputs
     function buildAndAttachContentBlocks() {
         const container = document.getElementById('itinerary-days');
         const dayEls = container.querySelectorAll('[data-contentblock-input]');
 
-        // For each day, build content_blocks: start with a text block using activity, then append image blocks for day.images
         dayEls.forEach((hiddenInput, idx) => {
-            const dayIndex = idx; // 0-based
+            const dayIndex = idx;
             const dayNum = idx + 1;
             const dayData = itineraryDays[dayIndex];
             if (!dayData) return;
 
             const blocks = [];
 
-            // If the user provided explicit blocks (advanced editor) keep them; otherwise create a simple structure.
             if (Array.isArray(dayData.blocks) && dayData.blocks.length > 0) {
-                // ensure every image block has blockId and tempId where needed
                 dayData.blocks.forEach(b => {
                     if (b.type === 'image') {
                         if (!b.id) b.id = 'blk-' + uuid();
                         if (!b.temp_media_id && !b.media_id) {
-                            // attempt to link to first matching image in dayData.images by caption or preview
                             const match = dayData.images.find(im => im.caption === b.caption || im.preview === b.preview);
                             if (match) b.temp_media_id = match.tempId;
                         }
@@ -696,7 +1176,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     blocks.push(b);
                 });
             } else {
-                // Create a simple text block for the activity if present
                 if (dayData.activity && dayData.activity.trim() !== '') {
                     blocks.push({
                         id: 'blk-' + uuid(),
@@ -705,19 +1184,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
 
-                // Append image blocks for each image
                 dayData.images.forEach(img => {
                     blocks.push({
                         id: img.blockId || ('blk-' + uuid()),
                         type: 'image',
-                        // important: reference temp id so server can find the file input
                         temp_media_id: img.tempId,
                         caption: img.caption || ''
                     });
                 });
             }
 
-            // Attach JSON to the hidden input for this day
             hiddenInput.value = JSON.stringify(blocks);
         });
     }
@@ -760,7 +1236,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 group-size-input" 
                                 required 
                                 value="${price.group_size || ''}"
-                                placeholder="e.g., 2 People, Solo Traveler, 5-8 People"
+                                placeholder="e.g., 2 People, Solo Traveler"
                                 data-index="${i}">
                         </div>
                     </div>
@@ -805,7 +1281,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveFormData();
             };
             
-            // Add real-time input event listeners using data-index
             const groupSizeInput = el.querySelector('.group-size-input');
             const priceInput = el.querySelector('.price-input');
             
@@ -826,12 +1301,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     document.getElementById('add-price').onclick = function() {
-        // Add new empty price
         prices.push({group_size:"", price:""});
         renderPrices();
         saveFormData();
         
-        // Focus on the new group size input
         setTimeout(() => {
             const newInputs = document.querySelectorAll('#prices .group-size-input');
             if (newInputs.length > 0) {
@@ -840,7 +1313,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 100);
     };
 
-    // --- META KEYWORDS (tags input) ---
+    // --- META KEYWORDS ---
     let metaKeywords = [];
     let $input = document.getElementById('meta_keyword_input');
     let $addBtn = document.getElementById('add-meta-keyword');
@@ -892,7 +1365,7 @@ document.addEventListener('DOMContentLoaded', function() {
         renderKeywords();
     @endif
 
-    // --- MULTI-IMAGES PREVIEW (tour-level) ---
+    // --- MULTI-IMAGES PREVIEW ---
     let imagesList = [];
     function renderImagesList() {
         const imagesListDiv = document.getElementById('images-list');

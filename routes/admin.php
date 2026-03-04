@@ -247,7 +247,8 @@ Route::post('/admin/blogs/{blog}/toggle-featured', [BlogController::class, 'togg
 // Upload inline images for editor
 Route::post('/admin/blogs/upload-image', [BlogController::class, 'uploadImage'])->name('admin.blogs.uploadImage');
 
-
+Route::get('admin/api/accommodations/search', [AccommodationController::class, 'apiSearch'])->name('admin.api.accommodations.search');
+Route::get('admin/api/accommodations/{id}', [AccommodationController::class, 'apiGetById'])->name('admin.api.accommodations.getById');
 Route::prefix('admin')
     ->name('admin.')
     ->group(function () {

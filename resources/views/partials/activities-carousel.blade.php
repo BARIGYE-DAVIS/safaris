@@ -33,7 +33,7 @@ $count = $activities->count();
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-2xl font-bold text-gray-900">Activities You May Enjoy</h2>
-            <a href="{{ url('/activities') }}" class="text-green-800 hover:text-green-800 text-sm font-medium">View all &rarr;</a>
+            <a href="{{ url('/activities') }}" class="text-white hover:text-white text-sm font-medium">View all &rarr;</a>
         </div>
 
         <div class="relative">

@@ -59,6 +59,15 @@ class Accommodation extends Model
         return $this->hasMany(AccommodationImage::class)->orderBy('sort_order');
     }
 
+    /**
+     * NEW: Relationship to tour itineraries
+     * An accommodation can be used in many tour itinerary days
+     */
+    public function itineraries()
+    {
+        return $this->hasMany(TourItinerary::class, 'accommodation_id');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Accessors / Helpers
