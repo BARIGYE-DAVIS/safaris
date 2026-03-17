@@ -10,7 +10,7 @@ use App\Models\Accommodation;
  *   price_from, price_to, currency, short_description, full_description, is_active,
  *   is_featured, location, sort_order + relations: country, destination, images.
  * - Resolves featured image robustly and falls back to asset('images/default-accommodation.jpg').
- * - Seamless infinite auto-looping carousel with prev/next and indicators.
+ * - Seamless infinite auto-looping carousel with prev/next, indicators, touch swipe & mouse drag.
  */
 
 // Normalize incoming $accommodations or fetch all active ones
@@ -213,8 +213,22 @@ $count = $accommodations->count();
         #accommodations-container {
             overflow: hidden;
             scroll-behavior: auto; /* must be auto — seamless JS reset won't work with smooth */
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        .accom-card img { display: block; }
+        #accommodations-container:active {
+            cursor: grabbing;
+        }
+        /* Prevent images/links from interfering with drag */
+        #accommodations-track a {
+            -webkit-user-drag: none;
+            user-drag: none;
+        }
+        #accommodations-track img {
+            display: block;
+            pointer-events: none; /* stops browser native image-drag ghost on desktop */
+        }
         .accom-indicator[aria-selected="true"] {
             background-color: #4f46e5;
             width: 10px;
@@ -259,9 +273,14 @@ $count = $accommodations->count();
             let manualPauseTimer = null;
             let initialized      = false;
 
+            // ─── Drag state ───────────────────────────────────────────────────────────
+            let isDragging          = false;
+            let dragStartX          = 0;
+            let dragStartScrollLeft = 0;
+            let dragMoved           = false; // tracks if pointer actually moved (blocks accidental link clicks)
+
             // ── Size calculation ──────────────────────────────────────────────────────
             function recalcSizes() {
-                // setTimeout lets the browser fully paint cloned nodes before we measure
                 setTimeout(() => {
                     originalWidth = track.scrollWidth / 2;
                     const firstCard = track.querySelector('.accom-card');
@@ -276,21 +295,21 @@ $count = $accommodations->count();
                 }, 150);
             }
 
+            // ─── Wrap scroll position to [0, originalWidth) ──────────────────────────
+            function wrapScroll() {
+                if (!originalWidth) return;
+                if (container.scrollLeft >= originalWidth) {
+                    container.scrollLeft -= originalWidth;
+                } else if (container.scrollLeft < 0) {
+                    container.scrollLeft += originalWidth;
+                }
+            }
+
             // ── Animation loop ────────────────────────────────────────────────────────
             function step() {
                 if (!paused && initialized) {
                     container.scrollLeft += speed;
-
-                    // Seamless forward loop — jump back by one full copy
-                    if (container.scrollLeft >= originalWidth) {
-                        container.scrollLeft = container.scrollLeft - originalWidth;
-                    }
-
-                    // Seamless backward loop — jump forward when scrollLeft goes negative
-                    if (container.scrollLeft < 0) {
-                        container.scrollLeft = originalWidth + container.scrollLeft;
-                    }
-
+                    wrapScroll();
                     updateIndicators();
                 }
                 rafId = requestAnimationFrame(step);
@@ -328,7 +347,6 @@ $count = $accommodations->count();
             prevBtn.addEventListener('click', () => {
                 container.style.scrollBehavior = 'smooth';
                 let newLeft = container.scrollLeft - (cardAdvance * 2);
-                // Wrap seamlessly if we'd scroll past position 0
                 if (newLeft < 0) {
                     container.scrollLeft = originalWidth + newLeft + (cardAdvance * 2);
                     newLeft = container.scrollLeft - (cardAdvance * 2);
@@ -354,16 +372,84 @@ $count = $accommodations->count();
                 });
             });
 
-            // ── Hover / focus pause ───────────────────────────────────────────────────
-            container.addEventListener('mouseenter', () => paused = true);
-            container.addEventListener('mouseleave', () => paused = false);
+            // ─── MOUSE DRAG (desktop) ─────────────────────────────────────────────────
+            container.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return; // left button only
+                isDragging = true;
+                dragMoved = false;
+                dragStartX = e.pageX;
+                dragStartScrollLeft = container.scrollLeft;
+                container.style.cursor = 'grabbing';
+                paused = true;
+                e.preventDefault(); // prevent text selection during drag
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const delta = dragStartX - e.pageX;
+                if (Math.abs(delta) > 3) dragMoved = true; // threshold to distinguish click vs drag
+                container.scrollLeft = dragStartScrollLeft + delta;
+                wrapScroll();
+                updateIndicators();
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                container.style.cursor = 'grab';
+                pauseBriefly(1500);
+            });
+
+            // Block card link navigation if user actually dragged (not just clicked)
+            track.addEventListener('click', (e) => {
+                if (dragMoved) {
+                    e.preventDefault();
+                    dragMoved = false;
+                }
+            }, true); // capture phase fires before the <a> click
+
+            // ─── TOUCH DRAG (mobile / tablet) ────────────────────────────────────────
+            let touchStartX          = 0;
+            let touchStartScrollLeft = 0;
+            let touchMoved           = false;
+
+            container.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].pageX;
+                touchStartScrollLeft = container.scrollLeft;
+                touchMoved = false;
+                paused = true;
+            }, { passive: true });
+
+            container.addEventListener('touchmove', (e) => {
+                const delta = touchStartX - e.touches[0].pageX;
+                if (Math.abs(delta) > 5) touchMoved = true;
+                container.scrollLeft = touchStartScrollLeft + delta;
+                wrapScroll();
+                updateIndicators();
+            }, { passive: true });
+
+            container.addEventListener('touchend', () => {
+                pauseBriefly(1500);
+            });
+
+            // Block link tap if user swiped instead of tapping
+            track.addEventListener('click', (e) => {
+                if (touchMoved) {
+                    e.preventDefault();
+                    touchMoved = false;
+                }
+            }, true);
+
+            // ── Hover pause (desktop only — don't interfere with touch) ───────────────
+            container.addEventListener('mouseenter', () => { if (!isDragging) paused = true; });
+            container.addEventListener('mouseleave', () => { if (!isDragging) paused = false; });
             container.addEventListener('focusin',    () => paused = true);
             container.addEventListener('focusout',   () => paused = false);
 
             // ── Recalc on resize + image load ─────────────────────────────────────────
             window.addEventListener('resize', recalcSizes);
             track.querySelectorAll('img').forEach(img => {
-                if (img.complete) return; // already cached, skip
+                if (img.complete) return;
                 img.addEventListener('load', recalcSizes);
             });
 

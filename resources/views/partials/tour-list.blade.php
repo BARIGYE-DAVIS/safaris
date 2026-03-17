@@ -11,21 +11,25 @@
 
         @if($totalTours > 0)
 
-        <!-- Carousel Wrapper -->
-        <div class="relative px-8 sm:px-12">
+        <!-- Carousel Wrapper
+             On mobile: no side padding so the card fills full width.
+             Buttons are overlaid on top of the card edges (not beside them).
+             On sm+: restore px-12 so buttons sit outside the track.
+        -->
+        <div class="relative sm:px-12">
 
             <!-- Prev Button -->
             <button id="tourPrevBtn" aria-label="Previous tour"
-                class="absolute left-0 top-1/2 -translate-y-8 z-20 bg-white/90 hover:bg-green-600 hover:text-white text-gray-800 rounded-full p-3 sm:p-4 shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95 backdrop-blur-sm">
-                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="absolute left-1 sm:left-0 top-1/2 -translate-y-8 z-20 bg-white/80 hover:bg-green-600 hover:text-white text-gray-800 rounded-full p-2 sm:p-4 shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95 backdrop-blur-sm">
+                <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
                 </svg>
             </button>
 
             <!-- Next Button -->
             <button id="tourNextBtn" aria-label="Next tour"
-                class="absolute right-0 top-1/2 -translate-y-8 z-20 bg-white/90 hover:bg-green-600 hover:text-white text-gray-800 rounded-full p-3 sm:p-4 shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95 backdrop-blur-sm">
-                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="absolute right-1 sm:right-0 top-1/2 -translate-y-8 z-20 bg-white/80 hover:bg-green-600 hover:text-white text-gray-800 rounded-full p-2 sm:p-4 shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95 backdrop-blur-sm">
+                <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
                 </svg>
             </button>

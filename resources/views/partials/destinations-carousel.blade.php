@@ -49,7 +49,7 @@
                                 @endphp
 
                                 @if(!empty($desc))
-                                    <p class="text-xs text-gray-600 mt-2">{{ \Illuminate\Support\Str::limit(strip_tags($desc), 100) }}</p>
+                                    <p class="text-xs text-gray-700 mt-2">{{ \Illuminate\Support\Str::limit(strip_tags($desc), 100) }}</p>
                                 @else
                                     <p class="text-xs text-gray-500 mt-2">Explore this destination's highlights, wildlife, and recommended tours.</p>
                                 @endif
@@ -72,8 +72,22 @@
         #destinations-container {
             overflow: hidden;
             scroll-behavior: auto; /* must be auto, not smooth, for JS seamless reset */
+            cursor: grab;
+            user-select: none;       /* prevent text selection while dragging */
+            -webkit-user-select: none;
         }
-        .destination-card img { display: block; }
+        #destinations-container:active {
+            cursor: grabbing;
+        }
+        /* Prevent images/links from interfering with drag */
+        #destinations-track a {
+            -webkit-user-drag: none;
+            user-drag: none;
+        }
+        #destinations-track img {
+            display: block;
+            pointer-events: none; /* stops image ghost-drag on desktop */
+        }
         .dest-indicator[aria-selected="true"] {
             background-color: #4f46e5;
             width: 10px;
@@ -102,20 +116,24 @@
 
             let originalWidth = 0;
             let cardAdvance = 0;
-            const speed = 0.6; // pixels per frame — increase for faster scroll
+            const speed = 0.6; // pixels per frame — increase for faster auto-scroll
             let paused = false;
             let rafId = null;
             let manualPauseTimer = null;
             let initialized = false;
 
+            // ─── Drag state ───────────────────────────────────────────────────────────
+            let isDragging = false;
+            let dragStartX = 0;
+            let dragStartScrollLeft = 0;
+            let dragMoved = false; // tracks if the pointer actually moved (to block link clicks)
+
             // ─── Size calculation ─────────────────────────────────────────────────────
             function recalcSizes() {
-                // Use setTimeout so the browser has fully painted the cloned nodes
                 setTimeout(() => {
                     originalWidth = track.scrollWidth / 2;
                     const firstCard = track.querySelector('.destination-card');
                     if (firstCard) {
-                        // Tailwind space-x-6 = 24px gap; read it from computed style to be safe
                         const trackStyle = getComputedStyle(track);
                         const gap = parseFloat(trackStyle.gap) || parseFloat(trackStyle.columnGap) || 24;
                         cardAdvance = Math.ceil(firstCard.offsetWidth + gap);
@@ -126,21 +144,21 @@
                 }, 150);
             }
 
+            // ─── Wrap scroll position to [0, originalWidth) ──────────────────────────
+            function wrapScroll() {
+                if (!originalWidth) return;
+                if (container.scrollLeft >= originalWidth) {
+                    container.scrollLeft -= originalWidth;
+                } else if (container.scrollLeft < 0) {
+                    container.scrollLeft += originalWidth;
+                }
+            }
+
             // ─── Animation loop ───────────────────────────────────────────────────────
             function step() {
                 if (!paused && initialized) {
                     container.scrollLeft += speed;
-
-                    // Seamless forward loop: jump back by exactly one copy's width
-                    if (container.scrollLeft >= originalWidth) {
-                        container.scrollLeft = container.scrollLeft - originalWidth;
-                    }
-
-                    // Seamless backward loop: jump forward when scrollLeft goes negative
-                    if (container.scrollLeft < 0) {
-                        container.scrollLeft = originalWidth + container.scrollLeft;
-                    }
-
+                    wrapScroll();
                     updateIndicators();
                 }
                 rafId = requestAnimationFrame(step);
@@ -168,7 +186,6 @@
 
             // ─── Next button ──────────────────────────────────────────────────────────
             nextBtn.addEventListener('click', () => {
-                // Temporarily allow smooth scroll for the button click feel
                 container.style.scrollBehavior = 'smooth';
                 container.scrollBy({ left: cardAdvance * 2 });
                 setTimeout(() => { container.style.scrollBehavior = 'auto'; }, 400);
@@ -179,7 +196,6 @@
             prevBtn.addEventListener('click', () => {
                 container.style.scrollBehavior = 'smooth';
                 let newLeft = container.scrollLeft - (cardAdvance * 2);
-                // If going before 0, wrap to the cloned region seamlessly
                 if (newLeft < 0) {
                     container.scrollLeft = originalWidth + newLeft + (cardAdvance * 2);
                     newLeft = container.scrollLeft - (cardAdvance * 2);
@@ -205,16 +221,89 @@
                 });
             });
 
-            // ─── Hover / focus pause ──────────────────────────────────────────────────
-            container.addEventListener('mouseenter', () => paused = true);
-            container.addEventListener('mouseleave', () => paused = false);
+            // ─── MOUSE DRAG (desktop) ─────────────────────────────────────────────────
+            container.addEventListener('mousedown', (e) => {
+                // Only handle left mouse button
+                if (e.button !== 0) return;
+                isDragging = true;
+                dragMoved = false;
+                dragStartX = e.pageX;
+                dragStartScrollLeft = container.scrollLeft;
+                container.style.cursor = 'grabbing';
+                paused = true;
+                e.preventDefault(); // prevents text selection
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const delta = dragStartX - e.pageX;
+                if (Math.abs(delta) > 3) dragMoved = true; // threshold so small jitter isn't a drag
+                container.scrollLeft = dragStartScrollLeft + delta;
+                wrapScroll();
+                updateIndicators();
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                container.style.cursor = 'grab';
+                pauseBriefly(1500);
+            });
+
+            // Block card link navigation if user actually dragged
+            track.addEventListener('click', (e) => {
+                if (dragMoved) {
+                    e.preventDefault();
+                    dragMoved = false;
+                }
+            }, true); // capture phase so it fires before the <a> click
+
+            // ─── TOUCH DRAG (mobile / tablet) ────────────────────────────────────────
+            let touchStartX = 0;
+            let touchStartScrollLeft = 0;
+            let touchMoved = false;
+
+            container.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].pageX;
+                touchStartScrollLeft = container.scrollLeft;
+                touchMoved = false;
+                paused = true;
+            }, { passive: true });
+
+            container.addEventListener('touchmove', (e) => {
+                const delta = touchStartX - e.touches[0].pageX;
+                if (Math.abs(delta) > 5) touchMoved = true;
+                container.scrollLeft = touchStartScrollLeft + delta;
+                wrapScroll();
+                updateIndicators();
+            }, { passive: true });
+
+            container.addEventListener('touchend', () => {
+                pauseBriefly(1500);
+                // Block link tap if user swiped
+                if (touchMoved) {
+                    touchMoved = false;
+                }
+            });
+
+            // Block link click after a touch-swipe
+            track.addEventListener('click', (e) => {
+                if (touchMoved) {
+                    e.preventDefault();
+                    touchMoved = false;
+                }
+            }, true);
+
+            // ─── Hover pause (desktop only — don't pause on touch hover) ─────────────
+            container.addEventListener('mouseenter', () => { if (!isDragging) paused = true; });
+            container.addEventListener('mouseleave', () => { if (!isDragging) paused = false; });
             container.addEventListener('focusin',    () => paused = true);
             container.addEventListener('focusout',   () => paused = false);
 
             // ─── Recalc on resize + image load ────────────────────────────────────────
             window.addEventListener('resize', recalcSizes);
             track.querySelectorAll('img').forEach(img => {
-                if (img.complete) return; // already loaded
+                if (img.complete) return;
                 img.addEventListener('load', recalcSizes);
             });
 

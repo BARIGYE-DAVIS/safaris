@@ -64,6 +64,8 @@ Route::get('/destinations/{destination}', [DestinationController::class, 'show']
 Route::post('/subscribe', [SubscribersController::class, 'store'])->name('subscribers.store');
 
 // Legal Pages
+Route::get('/tourist-information', [PageController::class, 'touristInformation'])->name('tourist-information');
+Route::get('/tourist-information/download-pdf', [PageController::class, 'downloadTouristInfoPdf'])->name('tourist-info.download-pdf');
 Route::get('/privacy-policy', [PageController::class, 'privacyPolicy'])->name('privacy-policy');
 Route::get('/terms-of-service', [PageController::class, 'termsOfService'])->name('terms-of-service');
 Route::get('/cookie-policy', [PageController::class, 'cookiePolicy'])->name('cookie-policy');

@@ -231,8 +231,8 @@
 </div>
 @endif
 
-<!-- All Destinations Grid -->
-<div class="container mx-auto px-4 py-10 sm:py-16">
+<!-- All Destinations Grid — anchor target for pagination scroll -->
+<div id="all-destinations" class="container mx-auto px-4 py-10 sm:py-16">
     @if(!request()->hasAny(['search', 'country', 'popular']))
         <div class="text-center mb-8 sm:mb-12">
             <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-3">All Destinations</h2>
@@ -317,7 +317,7 @@
         </div>
 
         <!-- Pagination -->
-        <div class="mt-8 sm:mt-12">
+        <div class="mt-8 sm:mt-12" id="pagination-links">
             {{ $destinations->appends(request()->query())->links() }}
         </div>
     @else
@@ -358,31 +358,25 @@
 
 @push('scripts')
 <script>
+// ── Slideshow ────────────────────────────────────────────────────────────────
 (function () {
     const slides     = Array.from(document.querySelectorAll('.slide'));
     const indicators = Array.from(document.querySelectorAll('.slide-indicator'));
     const total      = slides.length;
     if (total === 0) return;
 
-    let current  = 0;
-    let timer    = null;
+    let current = 0;
+    let timer   = null;
 
-    // ── Core: switch to slide at `idx` ──────────────────────────────────────
     function goTo(idx) {
-        // Wrap around for infinite loop
         idx = ((idx % total) + total) % total;
-
-        // Remove active from current
         slides[current].classList.remove('slide-active');
         if (indicators[current]) indicators[current].classList.remove('active');
-
-        // Set new active
         current = idx;
         slides[current].classList.add('slide-active');
         if (indicators[current]) indicators[current].classList.add('active');
     }
 
-    // ── Autoplay ─────────────────────────────────────────────────────────────
     function startAutoplay() {
         stopAutoplay();
         timer = setInterval(() => goTo(current + 1), 5000);
@@ -391,27 +385,50 @@
         if (timer) { clearInterval(timer); timer = null; }
     }
 
-    // ── Controls ─────────────────────────────────────────────────────────────
-    document.querySelector('.slide-control.next')?.addEventListener('click', () => {
-        goTo(current + 1);
-        startAutoplay(); // reset timer after manual nav
-    });
-    document.querySelector('.slide-control.prev')?.addEventListener('click', () => {
-        goTo(current - 1);
-        startAutoplay();
-    });
+    document.querySelector('.slide-control.next')?.addEventListener('click', () => { goTo(current + 1); startAutoplay(); });
+    document.querySelector('.slide-control.prev')?.addEventListener('click', () => { goTo(current - 1); startAutoplay(); });
+    indicators.forEach((dot, i) => dot.addEventListener('click', () => { goTo(i); startAutoplay(); }));
 
-    indicators.forEach((dot, i) => {
-        dot.addEventListener('click', () => { goTo(i); startAutoplay(); });
-    });
-
-    // Pause on hover
     document.querySelector('.slideshow-container')?.addEventListener('mouseenter', stopAutoplay);
     document.querySelector('.slideshow-container')?.addEventListener('mouseleave', startAutoplay);
 
-    // ── Kick off ──────────────────────────────────────────────────────────────
     goTo(0);
     startAutoplay();
+})();
+
+// ── Pagination: scroll back to #all-destinations on page change ──────────────
+(function () {
+    const section = document.getElementById('all-destinations');
+    if (!section) return;
+
+    // If the URL already contains a page parameter on load, scroll to the section
+    // (handles the case where the user arrived via a paginated URL)
+    if (new URLSearchParams(window.location.search).has('page')) {
+        // Small delay so the browser finishes painting before we scroll
+        setTimeout(() => {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 120);
+    }
+
+    // Intercept all pagination link clicks inside #pagination-links
+    const paginationWrap = document.getElementById('pagination-links');
+    if (!paginationWrap) return;
+
+    paginationWrap.addEventListener('click', function (e) {
+        // Find the closest <a> that was clicked
+        const link = e.target.closest('a[href]');
+        if (!link) return;
+
+        e.preventDefault();
+
+        const url = new URL(link.href);
+
+        // Push the new page URL to history so the browser back button works correctly
+        history.pushState(null, '', url.toString());
+
+        // Navigate — the page will reload at the top, then our onload scroll kicks in
+        window.location.href = url.toString();
+    });
 })();
 </script>
 
@@ -437,7 +454,7 @@
     }
 }
 
-/* Slideshow — all slides hidden by default, transition on opacity */
+/* Slideshow */
 .slide {
     opacity: 0;
     transition: opacity 1s ease-in-out;

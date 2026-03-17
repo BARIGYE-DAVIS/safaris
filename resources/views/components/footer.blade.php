@@ -59,9 +59,6 @@
                         </svg>
                     </a>
                 </div>
-                
-                <!-- Awards/Certifications -->
-
             </div>
 
             <!-- Quick Links -->
@@ -69,8 +66,7 @@
                 <h3 class="text-lg font-semibold text-green-400">Quick Links</h3>
                 <ul class="space-y-3">
                     <li>
-                        <a href="{{ route('index') }}" 
-                           class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
+                        <a href="{{ route('index') }}" class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
                             <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
@@ -78,8 +74,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('tours.index') }}" 
-                           class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
+                        <a href="{{ route('tours.index') }}" class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
                             <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
@@ -87,8 +82,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('gallery.index') }}" 
-                           class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
+                        <a href="{{ route('gallery.index') }}" class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
                             <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
@@ -96,8 +90,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('blogs.index') }}" 
-                           class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
+                        <a href="{{ route('blogs.index') }}" class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
                             <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
@@ -105,8 +98,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('contact') }}" 
-                           class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
+                        <a href="{{ route('contact') }}" class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
                             <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
@@ -114,106 +106,81 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('about') }}" 
-                           class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
+                        <a href="{{ route('about') }}" class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
                             <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
                             About Us
                         </a>
                     </li>
+
+                    <li>
+                        <a href="{{ route('tourist-information') }}" class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
+                            <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                            Tourist Information
+                        </a>
+                    </li>
                 </ul>
             </div>
 
-            <!-- Safari Categories -->
+            <!-- Safari Categories & Popular Destinations — pulled from DB inline -->
+            @php
+                $footerCategories = \App\Models\Tour::whereNotNull('category')
+                    ->where('category', '!=', '')
+                    ->select('category')
+                    ->distinct()
+                    ->orderBy('category')
+                    ->pluck('category');
+
+                $footerDestinations = \App\Models\Destination::where('is_active', true)
+                    ->where('is_popular', true)
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->limit(8)
+                    ->get(['name', 'slug']);
+            @endphp
+
             <div class="space-y-4">
                 <h3 class="text-lg font-semibold text-green-400">Safari Categories</h3>
-                <ul class="space-y-3">
-                    <li>
-                        <a href="{{ route('tours.category', 'wildlife') }}" 
-                           class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
-                            <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                            Wildlife Safaris
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('tours.category', 'adventure') }}" 
-                           class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
-                            <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                            Adventure Tours
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('tours.category', 'cultural') }}" 
-                           class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
-                            <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                            Cultural Tours
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('tours.category', 'honeymoon') }}" 
-                           class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
-                            <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                            Honeymoon Packages
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('tours.category', 'family') }}" 
-                           class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
-                            <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                            Family Safaris
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('tours.category', 'luxury') }}" 
-                           class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
-                            <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                            Luxury Safaris
-                        </a>
-                    </li>
-                </ul>
+
+                @if($footerCategories->isNotEmpty())
+                    <ul class="space-y-3">
+                        @foreach($footerCategories as $category)
+                            <li>
+                                <a href="{{ route('tours.category', $category) }}"
+                                   class="text-gray-300 hover:text-white transition-colors duration-300 text-sm flex items-center group">
+                                    <svg class="h-4 w-4 mr-2 text-green-400 group-hover:text-green-300 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                    {{ \Illuminate\Support\Str::title($category) }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
 
                 <!-- Popular Destinations -->
-                <div class="pt-6">
-                    <h4 class="text-md font-semibold text-green-400 mb-3">Popular Destinations</h4>
-                    <div class="flex flex-wrap gap-2">
-                        <a href="{{ route('destination', 'serengeti') }}" 
-                           class="inline-block bg-gray-800 hover:bg-green-600 text-gray-300 hover:text-white px-3 py-1 rounded-full text-xs transition-all duration-300">
-                            Serengeti
-                        </a>
-                        <a href="{{ route('destination', 'ngorongoro') }}" 
-                           class="inline-block bg-gray-800 hover:bg-green-600 text-gray-300 hover:text-white px-3 py-1 rounded-full text-xs transition-all duration-300">
-                            Ngorongoro
-                        </a>
-                        <a href="{{ route('destination', 'kilimanjaro') }}" 
-                           class="inline-block bg-gray-800 hover:bg-green-600 text-gray-300 hover:text-white px-3 py-1 rounded-full text-xs transition-all duration-300">
-                            Kilimanjaro
-                        </a>
-                        <a href="{{ route('destination', 'zanzibar') }}" 
-                           class="inline-block bg-gray-800 hover:bg-green-600 text-gray-300 hover:text-white px-3 py-1 rounded-full text-xs transition-all duration-300">
-                            Zanzibar
-                        </a>
+                @if($footerDestinations->isNotEmpty())
+                    <div class="pt-6">
+                        <h4 class="text-md font-semibold text-green-400 mb-3">Popular Destinations</h4>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($footerDestinations as $dest)
+                                <a href="{{ route('destinations.show', $dest->slug) }}"
+                                   class="inline-block bg-gray-800 hover:bg-green-600 text-gray-300 hover:text-white px-3 py-1 rounded-full text-xs transition-all duration-300">
+                                    {{ $dest->name }}
+                                </a>
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
 
             <!-- Contact Information & Support -->
             <div class="space-y-4">
                 <h3 class="text-lg font-semibold text-green-400">Get in Touch</h3>
                 
-                <!-- Contact Details -->
                 <div class="space-y-4">
                     <div class="flex items-start space-x-3">
                         <svg class="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,14 +200,8 @@
                         </svg>
                         <div>
                             <p class="text-gray-300 text-sm font-medium">Phone Numbers</p>
-                            <a href="tel:+256777143020" 
-                               class="text-gray-400 hover:text-white transition-colors text-sm block">
-                                +256777143020
-                            </a>
-                            <a href="tel:+25675088768" 
-                               class="text-gray-400 hover:text-white transition-colors text-sm block">
-                                +256 750 887 68
-                            </a>
+                            <a href="tel:+256777143020" class="text-gray-400 hover:text-white transition-colors text-sm block">+256777143020</a>
+                            <a href="tel:+25675088768"  class="text-gray-400 hover:text-white transition-colors text-sm block">+256 750 887 68</a>
                         </div>
                     </div>
                     
@@ -250,18 +211,11 @@
                         </svg>
                         <div>
                             <p class="text-gray-300 text-sm font-medium">Email Addresses</p>
-                            <a href="mailto:info@safaritours.com" 
-                               class="text-gray-400 hover:text-white transition-colors text-sm block">
-                                info@safaritours.com
-                            </a>
-                            <a href="mailto:bookings@safaritours.com" 
-                               class="text-gray-400 hover:text-white transition-colors text-sm block">
-                                bookings@safaritours.com
-                            </a>
+                            <a href="mailto:info@safaritours.com"     class="text-gray-400 hover:text-white transition-colors text-sm block">info@safaritours.com</a>
+                            <a href="mailto:bookings@safaritours.com" class="text-gray-400 hover:text-white transition-colors text-sm block">bookings@safaritours.com</a>
                         </div>
                     </div>
                     
-                    <!-- WhatsApp & Emergency Contact -->
                     <div class="bg-gray-800 rounded-lg p-4 space-y-3">
                         <div class="flex items-center space-x-3">
                             <svg class="h-5 w-5 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
@@ -269,10 +223,7 @@
                             </svg>
                             <div>
                                 <p class="text-green-400 text-sm font-medium">24/7 WhatsApp Support</p>
-                                <a href="https://wa.me/256752088768" 
-                                   class="text-gray-300 hover:text-white transition-colors text-sm">
-                                    Chat with us anytime
-                                </a>
+                                <a href="https://wa.me/256752088768" class="text-gray-300 hover:text-white transition-colors text-sm">Chat with us anytime</a>
                             </div>
                         </div>
                         
@@ -282,16 +233,12 @@
                             </svg>
                             <div>
                                 <p class="text-red-400 text-sm font-medium">Emergency Contact</p>
-                                <a href="tel:+256752088768" 
-                                   class="text-gray-300 hover:text-white transition-colors text-sm">
-                                    +256752088768
-                                </a>
+                                <a href="tel:+256752088768" class="text-gray-300 hover:text-white transition-colors text-sm">+256752088768</a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
                 <div class="space-y-2">
                     <a href="{{ route('booking.create') }}" 
                        class="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-2 px-4 rounded-lg font-medium transition-colors duration-300">
@@ -315,158 +262,106 @@
                     Subscribe to our newsletter for exclusive deals, travel tips, and the latest safari adventures.
                 </p>
                 
- {{-- Subscribe form with AJAX submission --}}
-<div id="subscribe-form-root" class="max-w-md mx-auto">
-    <div id="subscribe-messages" class="mb-4" aria-live="polite"></div>
+                {{-- Subscribe form with AJAX submission --}}
+                <div id="subscribe-form-root" class="max-w-md mx-auto">
+                    <div id="subscribe-messages" class="mb-4" aria-live="polite"></div>
 
-    <form id="subscribe-form" action="{{ route('subscribers.store') }}" method="POST"
-          class="flex flex-col sm:flex-row gap-3">
-        @csrf
-        <div class="flex-1">
-            <input id="subscribe-email" type="email"
-                   name="email"
-                   value="{{ old('email') }}"
-                   placeholder="Enter your email address"
-                   required
-                   class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300">
-        </div>
+                    <form id="subscribe-form" action="{{ route('subscribers.store') }}" method="POST"
+                          class="flex flex-col sm:flex-row gap-3">
+                        @csrf
+                        <div class="flex-1">
+                            <input id="subscribe-email" type="email"
+                                   name="email"
+                                   value="{{ old('email') }}"
+                                   placeholder="Enter your email address"
+                                   required
+                                   class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300">
+                        </div>
 
-        <button id="subscribe-submit" type="submit"
-                class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-300 whitespace-nowrap transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500">
-            <span id="subscribe-submit-text">Subscribe</span>
-            <span id="subscribe-spinner" class="hidden ml-2">⏳</span>
-        </button>
-    </form>
-</div>
+                        <button id="subscribe-submit" type="submit"
+                                class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-300 whitespace-nowrap transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <span id="subscribe-submit-text">Subscribe</span>
+                            <span id="subscribe-spinner" class="hidden ml-2">⏳</span>
+                        </button>
+                    </form>
+                </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('subscribe-form');
-    const emailInput = document.getElementById('subscribe-email');
-    const submitBtn = document.getElementById('subscribe-submit');
-    const submitText = document.getElementById('subscribe-submit-text');
-    const spinner = document.getElementById('subscribe-spinner');
-    const messagesRoot = document.getElementById('subscribe-messages');
+                <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const form        = document.getElementById('subscribe-form');
+                    const emailInput  = document.getElementById('subscribe-email');
+                    const submitBtn   = document.getElementById('subscribe-submit');
+                    const spinner     = document.getElementById('subscribe-spinner');
+                    const msgRoot     = document.getElementById('subscribe-messages');
 
-    function clearMessages() {
-        messagesRoot.innerHTML = '';
-    }
+                    const colorMap = {
+                        success:    'bg-green-50 border-green-200 text-green-800',
+                        info:       'bg-blue-50 border-blue-200 text-blue-800',
+                        error:      'bg-red-50 border-red-200 text-red-800',
+                        validation: 'bg-red-50 border-red-200 text-red-800',
+                    };
 
-    function showMessage(type, html) {
-        // type: 'success' | 'info' | 'error' | 'validation'
-        const colorMap = {
-            success: 'bg-green-50 border-green-200 text-green-800',
-            info: 'bg-blue-50 border-blue-200 text-blue-800',
-            error: 'bg-red-50 border-red-200 text-red-800',
-            validation: 'bg-red-50 border-red-200 text-red-800'
-        };
-        const wrapper = document.createElement('div');
-        wrapper.className = `${colorMap[type] || colorMap.info} border p-3 rounded`;
-        wrapper.innerHTML = html;
-        clearMessages();
-        messagesRoot.appendChild(wrapper);
-    }
+                    function showMessage(type, html) {
+                        msgRoot.innerHTML = '';
+                        const el = document.createElement('div');
+                        el.className = `${colorMap[type] || colorMap.info} border p-3 rounded`;
+                        el.innerHTML = html;
+                        msgRoot.appendChild(el);
+                    }
 
-    function renderValidationErrors(errors) {
-        // errors: { field: [msg, ...], ... } or array of messages
-        if (!errors) return;
-        let html = '<strong class="block font-semibold mb-1">Please fix the following:</strong><ul class="list-disc list-inside text-sm">';
-        if (Array.isArray(errors)) {
-            errors.forEach(msg => {
-                html += `<li>${msg}</li>`;
-            });
-        } else {
-            Object.values(errors).forEach(arr => {
-                if (Array.isArray(arr)) {
-                    arr.forEach(msg => html += `<li>${msg}</li>`);
-                } else {
-                    html += `<li>${arr}</li>`;
-                }
-            });
-        }
-        html += '</ul>';
-        showMessage('validation', html);
-    }
+                    function renderValidationErrors(errors) {
+                        let html = '<strong class="block font-semibold mb-1">Please fix the following:</strong><ul class="list-disc list-inside text-sm">';
+                        if (Array.isArray(errors)) {
+                            errors.forEach(m => html += `<li>${m}</li>`);
+                        } else {
+                            Object.values(errors).forEach(arr => {
+                                (Array.isArray(arr) ? arr : [arr]).forEach(m => html += `<li>${m}</li>`);
+                            });
+                        }
+                        showMessage('validation', html + '</ul>');
+                    }
 
-    function setLoading(loading = true) {
-        if (loading) {
-            submitBtn.setAttribute('disabled', 'disabled');
-            submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
-            spinner.classList.remove('hidden');
-        } else {
-            submitBtn.removeAttribute('disabled');
-            submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
-            spinner.classList.add('hidden');
-        }
-    }
+                    function setLoading(on) {
+                        submitBtn.disabled = on;
+                        submitBtn.classList.toggle('opacity-70', on);
+                        submitBtn.classList.toggle('cursor-not-allowed', on);
+                        spinner.classList.toggle('hidden', !on);
+                    }
 
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        clearMessages();
+                    form.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        msgRoot.innerHTML = '';
+                        const email = emailInput.value.trim();
+                        if (!email) { showMessage('error', 'Please enter a valid email address.'); return; }
 
-        const email = emailInput.value.trim();
-        if (!email) {
-            showMessage('error', 'Please enter a valid email address.');
-            return;
-        }
+                        const token = form.querySelector('input[name="_token"]')?.value;
+                        setLoading(true);
 
-        // get CSRF token from hidden input
-        const csrfInput = form.querySelector('input[name="_token"]');
-        const token = csrfInput ? csrfInput.value : null;
-
-        setLoading(true);
-
-        fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': token
-            },
-            body: JSON.stringify({ email })
-        })
-        .then(async (res) => {
-            const data = await res.json().catch(() => ({}));
-
-            if (res.status === 201) {
-                // Created
-                showMessage('success', `<div>${data.message || 'Thank you for subscribing!'}</div>`);
-                emailInput.value = ''; // clear input on success
-            } else if (res.status === 200) {
-                // Exists or informational
-                if (data.exists) {
-                    showMessage('info', `<div>${data.message || 'This email address is already subscribed.'}</div>`);
-                } else {
-                    showMessage('success', `<div>${data.message || 'Success.'}</div>`);
-                }
-            } else if (res.status === 422) {
-                // Validation error
-                renderValidationErrors(data.errors || data);
-            } else {
-                // Other errors (500 etc.)
-                showMessage('error', `<div>${data.message || 'An unexpected error occurred. Please try again later.'}</div>`);
-            }
-        })
-        .catch((err) => {
-            console.error('Subscribe request failed', err);
-            showMessage('error', 'Unable to submit the form. Please check your connection and try again.');
-        })
-        .finally(() => {
-            setLoading(false);
-        });
-    });
-});
-</script>
+                        fetch(form.action, {
+                            method: 'POST',
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+                            body: JSON.stringify({ email }),
+                        })
+                        .then(async res => {
+                            const data = await res.json().catch(() => ({}));
+                            if (res.status === 201) { showMessage('success', data.message || 'Thank you for subscribing!'); emailInput.value = ''; }
+                            else if (res.status === 200) { showMessage(data.exists ? 'info' : 'success', data.message || 'Success.'); }
+                            else if (res.status === 422) { renderValidationErrors(data.errors || data); }
+                            else { showMessage('error', data.message || 'An unexpected error occurred. Please try again later.'); }
+                        })
+                        .catch(() => showMessage('error', 'Unable to submit. Please check your connection and try again.'))
+                        .finally(() => setLoading(false));
+                    });
+                });
+                </script>
                 
-                <p class="text-xs text-gray-400 mt-3">
-                    We respect your privacy. Unsubscribe at any time.
-                </p>
+                <p class="text-xs text-gray-400 mt-3">We respect your privacy. Unsubscribe at any time.</p>
             </div>
         </div>
     </div>
 
     <!-- Trust Indicators -->
-    <div class="border-t border-gray-800 bg-gray-900">
+    <div class="border-t border-gray-800 hidden bg-gray-900">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 items-center text-center">
                 <div>
@@ -493,33 +388,15 @@ document.addEventListener('DOMContentLoaded', function () {
     <div class="bg-gray-950 border-t border-gray-800">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div class="flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
-                <!-- Copyright -->
                 <div class="text-gray-400 text-sm text-center lg:text-left">
                     <p>&copy; {{ date('Y') }} Calm Africa Safaris. All rights reserved. | Designed with ❤️ for adventurers</p>
                 </div>
-                
-                <!-- Legal Links -->
                 <div class="flex flex-wrap justify-center lg:justify-end gap-x-6 gap-y-2 text-sm">
-                    <a href="{{ route('privacy-policy') }}" 
-                       class="text-gray-400 hover:text-white transition-colors duration-300">
-                        Privacy Policy
-                    </a>
-                    <a href="{{ route('terms-of-service') }}" 
-                       class="text-gray-400 hover:text-white transition-colors duration-300">
-                        Terms of Service
-                    </a>
-                    <a href="{{ route('cookie-policy') }}" 
-                       class="text-gray-400 hover:text-white transition-colors duration-300">
-                        Cookie Policy
-                    </a>
-                    <a href="{{ route('refund-policy') }}" 
-                       class="text-gray-400 hover:text-white transition-colors duration-300">
-                        Refund Policy
-                    </a>
-                    <a href="{{ route('sitemap') }}" 
-                       class="text-gray-400 hover:text-white transition-colors duration-300">
-                        Sitemap
-                    </a>
+                    <a href="{{ route('privacy-policy') }}"    class="text-gray-400 hover:text-white transition-colors duration-300">Privacy Policy</a>
+                    <a href="{{ route('terms-of-service') }}"  class="text-gray-400 hover:text-white transition-colors duration-300">Terms of Service</a>
+                    <a href="{{ route('cookie-policy') }}"     class="text-gray-400 hover:text-white transition-colors duration-300">Cookie Policy</a>
+                    <a href="{{ route('refund-policy') }}"     class="text-gray-400 hover:text-white transition-colors duration-300">Refund Policy</a>
+                    <a href="{{ route('sitemap') }}"           class="text-gray-400 hover:text-white transition-colors duration-300">Sitemap</a>
                 </div>
             </div>
         </div>
@@ -535,41 +412,14 @@ document.addEventListener('DOMContentLoaded', function () {
 </footer>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Back to top functionality
-    const backToTopBtn = document.getElementById('back-to-top');
-    
-    window.addEventListener('scroll', function() {
-        if (window.pageYOffset > 300) {
-            backToTopBtn.classList.remove('opacity-0', 'invisible');
-        } else {
-            backToTopBtn.classList.add('opacity-0', 'invisible');
-        }
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('back-to-top');
+    window.addEventListener('scroll', function () {
+        btn.classList.toggle('opacity-0',   window.pageYOffset <= 300);
+        btn.classList.toggle('invisible',   window.pageYOffset <= 300);
     });
-    
-    backToTopBtn.addEventListener('click', function() {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
+    btn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     });
-
-    // Newsletter form handling
-    const newsletterForm = document.querySelector('form[action*="newsletter"]');
-    if (newsletterForm) {
-        newsletterForm.addEventListener('submit', function(e) {
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            
-            submitBtn.textContent = 'Subscribing...';
-            submitBtn.disabled = true;
-            
-            // Reset after 3 seconds if no redirect occurs
-            setTimeout(() => {
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-            }, 3000);
-        });
-    }
 });
 </script>

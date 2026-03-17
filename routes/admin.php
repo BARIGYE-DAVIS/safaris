@@ -21,28 +21,49 @@ use App\Http\Controllers\BudgetCategoryController;
 use App\Http\Controllers\AccommodationTypeController;
 use App\Http\Controllers\CustomTourRequestController;
 
-// ========================
-// ADMIN AUTHENTICATION
-// ========================
-Route::get('admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-Route::post('admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
-Route::post('admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
-
-Route::get('admin/verify', [AdminAuthController::class, 'showTwoFactorForm'])->name('admin.2fa.form');
-Route::post('admin/verify', [AdminAuthController::class, 'verifyTwoFactorCode'])->name('admin.2fa.verify');
-Route::post('admin/verify/resend', [AdminAuthController::class, 'resendTwoFactorCode'])->name('admin.2fa.resend');
-
-Route::middleware('auth:admin')->group(function () {
-    Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-});
-
-Route::get('/admin/subscribers', [SubscribersController::class, 'index'])->name('admin.subscribers.index');
-
+/**
+ * Admin URL prefix
+ *   /me            -> redirects to /me/login
+ *   /me/login      -> admin login page
+ *   /me/dashboard  -> admin dashboard (protected)
+ */
+$ADMIN_PREFIX = 'me';
 
 // ========================
-// ADMIN ROUTES (All grouped under 'admin' prefix)
+// ADMIN AUTHENTICATION (PUBLIC)
 // ========================
-Route::prefix('admin')->name('admin.')->group(function () {
+
+// /me should open the login page
+Route::get($ADMIN_PREFIX, function () use ($ADMIN_PREFIX) {
+    return redirect("/{$ADMIN_PREFIX}/login");
+})->name('admin.entry');
+
+Route::get("{$ADMIN_PREFIX}/login", [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
+Route::post("{$ADMIN_PREFIX}/login", [AdminAuthController::class, 'login'])->name('admin.login.submit');
+
+Route::get("{$ADMIN_PREFIX}/verify", [AdminAuthController::class, 'showTwoFactorForm'])->name('admin.2fa.form');
+Route::post("{$ADMIN_PREFIX}/verify", [AdminAuthController::class, 'verifyTwoFactorCode'])->name('admin.2fa.verify');
+Route::post("{$ADMIN_PREFIX}/verify/resend", [AdminAuthController::class, 'resendTwoFactorCode'])->name('admin.2fa.resend');
+
+// Logout should be protected
+Route::post("{$ADMIN_PREFIX}/logout", [AdminAuthController::class, 'logout'])
+    ->middleware(AdminAuthenticate::class)
+    ->name('admin.logout');
+
+
+// ========================
+// ADMIN ROUTES (PROTECTED)
+// ========================
+Route::middleware(AdminAuthenticate::class)
+    ->prefix($ADMIN_PREFIX)
+    ->name('admin.')
+    ->group(function () {
+
+    // Dashboard
+    Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    // Subscribers
+    Route::get('subscribers', [SubscribersController::class, 'index'])->name('subscribers.index');
 
     // ========================
     // TOURS MANAGEMENT
@@ -156,9 +177,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/{activity}', [ActivityController::class, 'adminDestroy'])->name('destroy');
         Route::patch('/{activity}/toggle-status', [ActivityController::class, 'adminToggleStatus'])->name('toggle-status');
         Route::patch('/{activity}/toggle-popular', [ActivityController::class, 'adminTogglePopular'])->name('toggle-popular');
-       // Route::post('/bulk-delete', [ActivityController::class, 'adminBulkDelete'])->name('bulk-delete');
         Route::post('/update-order', [ActivityController::class, 'adminUpdateOrder'])->name('update-order');
+
+        // Quick actions + images
+        Route::patch('{activity}/toggle-active', [ActivityController::class, 'adminToggleActive'])->name('toggle-active');
+        Route::delete('bulk-delete', [ActivityController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('{activity}/images/reorder', [ActivityImageController::class, 'reorder'])->name('images.reorder');
+        Route::post('{activity}/images/upload', [ActivityImageController::class, 'upload'])->name('images.upload');
     });
+
+    Route::delete('activity-images/{activityImage}', [ActivityImageController::class, 'destroy'])->name('activity-images.destroy');
+    Route::post('activity-images/{activityImage}/set-featured', [ActivityImageController::class, 'setFeatured'])->name('activity-images.set-featured');
+    Route::put('activity-images/{activityImage}', [ActivityImageController::class, 'update'])->name('activity-images.update');
 
     // ========================
     // BUDGET CATEGORIES MANAGEMENT
@@ -206,83 +236,35 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/export/csv', [CustomTourRequestController::class, 'adminExport'])->name('export');
     });
 
-});
+    // BLOG routes
+    Route::get('blogs', [BlogController::class, 'adminIndex'])->name('blogs.index');
+    Route::get('blogs/create', [BlogController::class, 'create'])->name('blogs.create');
+    Route::post('blogs', [BlogController::class, 'store'])->name('blogs.store');
+    Route::get('blogs/{blog}/edit', [BlogController::class, 'edit'])->name('blogs.edit');
+    Route::put('blogs/{blog}', [BlogController::class, 'update'])->name('blogs.update');
+    Route::delete('blogs/{blog}', [BlogController::class, 'destroy'])->name('blogs.destroy');
+    Route::post('blogs/{blog}/toggle-featured', [BlogController::class, 'toggleFeatured'])->name('blogs.toggleFeatured');
+    Route::post('blogs/upload-image', [BlogController::class, 'uploadImage'])->name('blogs.uploadImage');
 
+    // Blog categories
+    Route::resource('blog-categories', BlogCategoryController::class)->except(['show']);
+    Route::post('blog-categories/bulk-destroy', [BlogCategoryController::class, 'bulkDestroy'])->name('blog-categories.bulk-destroy');
+    Route::post('blog-categories/reorder', [BlogCategoryController::class, 'reorder'])->name('blog-categories.reorder');
+    Route::get('blog-categories/api', [BlogCategoryController::class, 'apiList'])->name('blog-categories.api');
 
+    // Accommodations
+    Route::get('accommodations', [AccommodationController::class, 'adminIndex'])->name('accommodations.index');
+    Route::get('accommodations/create', [AccommodationController::class, 'adminCreate'])->name('accommodations.create');
+    Route::post('accommodations', [AccommodationController::class, 'adminStore'])->name('accommodations.store');
+    Route::get('accommodations/{accommodation}/edit', [AccommodationController::class, 'adminEdit'])->name('accommodations.edit');
+    Route::put('accommodations/{accommodation}', [AccommodationController::class, 'adminUpdate'])->name('accommodations.update');
+    Route::delete('accommodations/{accommodation}', [AccommodationController::class, 'adminDestroy'])->name('accommodations.destroy');
 
-// Admin Activity Routes
-Route::prefix('admin')->name('admin.')->group(function () {
-    
-    // Activity Quick Actions (NEW)
-    Route::patch('activities/{activity}/toggle-active', [ActivityController::class, 'adminToggleActive'])->name('activities.toggle-active');
-    Route::patch('activities/{activity}/toggle-popular', [ActivityController::class, 'adminTogglePopular'])->name('activities.toggle-popular');
-    Route::delete('activities/bulk-delete', [ActivityController::class, 'bulkDelete'])->name('activities.bulk-delete');
-    
-    // Activity Image Management (NEW)
-    Route::delete('activity-images/{activityImage}', [ActivityImageController::class, 'destroy'])->name('activity-images.destroy');
-    Route::post('activity-images/{activityImage}/set-featured', [ActivityImageController::class, 'setFeatured'])->name('activity-images.set-featured');
-    Route::put('activity-images/{activityImage}', [ActivityImageController::class, 'update'])->name('activity-images.update');
-    Route::post('activities/{activity}/images/reorder', [ActivityImageController::class, 'reorder'])->name('activities.images.reorder');
-    Route::post('activities/{activity}/images/upload', [ActivityImageController::class, 'upload'])->name('activities.images.upload');
-    
-});
+    // Accommodations API
+    Route::get('api/accommodations/search', [AccommodationController::class, 'apiSearch'])->name('api.accommodations.search');
+    Route::get('api/accommodations/{id}', [AccommodationController::class, 'apiGetById'])->name('api.accommodations.getById');
 
-// Admin blog listing
-Route::get('/admin/blogs', [BlogController::class, 'adminIndex'])->name('admin.blogs.index');
-
-// Create new blog
-Route::get('/admin/blogs/create', [BlogController::class, 'create'])->name('admin.blogs.create');
-Route::post('/admin/blogs', [BlogController::class, 'store'])->name('admin.blogs.store');
-
-// Edit/update blog
-Route::get('/admin/blogs/{blog}/edit', [BlogController::class, 'edit'])->name('admin.blogs.edit');
-Route::put('/admin/blogs/{blog}', [BlogController::class, 'update'])->name('admin.blogs.update');
-
-// Delete blog
-Route::delete('/admin/blogs/{blog}', [BlogController::class, 'destroy'])->name('admin.blogs.destroy');
-
-// Toggle featured status (AJAX)
-Route::post('/admin/blogs/{blog}/toggle-featured', [BlogController::class, 'toggleFeatured'])->name('admin.blogs.toggleFeatured');
-
-// Upload inline images for editor
-Route::post('/admin/blogs/upload-image', [BlogController::class, 'uploadImage'])->name('admin.blogs.uploadImage');
-
-Route::get('admin/api/accommodations/search', [AccommodationController::class, 'apiSearch'])->name('admin.api.accommodations.search');
-Route::get('admin/api/accommodations/{id}', [AccommodationController::class, 'apiGetById'])->name('admin.api.accommodations.getById');
-Route::prefix('admin')
-    ->name('admin.')
-    ->group(function () {
-
-        // Resourceful routes for blog categories (index, create, store, edit, update, destroy)
-        Route::resource('blog-categories', BlogCategoryController::class)->except(['show']);
-
-        // Bulk delete selected categories
-        Route::post('blog-categories/bulk-destroy', [BlogCategoryController::class, 'bulkDestroy'])
-            ->name('blog-categories.bulk-destroy');
-
-        // Reorder categories (expects JSON payload)
-        Route::post('blog-categories/reorder', [BlogCategoryController::class, 'reorder'])
-            ->name('blog-categories.reorder');
-
-        // API endpoint for select inputs (e.g. select2) - returns id, name, slug
-        Route::get('blog-categories/api', [BlogCategoryController::class, 'apiList'])
-            ->name('blog-categories.api');
-    });
-
-    // Admin (you may protect these with middleware('auth', 'admin'))
-Route::get('/admin/accommodations', [AccommodationController::class, 'adminIndex'])->name('admin.accommodations.index');
-Route::get('/admin/accommodations/create', [AccommodationController::class, 'adminCreate'])->name('admin.accommodations.create');
-Route::post('/admin/accommodations', [AccommodationController::class, 'adminStore'])->name('admin.accommodations.store');
-Route::get('/admin/accommodations/{accommodation}/edit', [AccommodationController::class, 'adminEdit'])->name('admin.accommodations.edit');
-Route::put('/admin/accommodations/{accommodation}', [AccommodationController::class, 'adminUpdate'])->name('admin.accommodations.update');
-Route::delete('/admin/accommodations/{accommodation}', [AccommodationController::class, 'adminDestroy'])->name('admin.accommodations.destroy');
-
-// email routes
-
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('emails/compose', [\App\Http\Controllers\AdminEmailController::class, 'compose'])
-        ->name('emails.compose');
-
-    Route::post('emails/send', [\App\Http\Controllers\AdminEmailController::class, 'send'])
-        ->name('emails.send');
+    // Email routes (keep fully qualified to avoid import errors)
+    Route::get('emails/compose', [\App\Http\Controllers\AdminEmailController::class, 'compose'])->name('emails.compose');
+    Route::post('emails/send', [\App\Http\Controllers\AdminEmailController::class, 'send'])->name('emails.send');
 });
