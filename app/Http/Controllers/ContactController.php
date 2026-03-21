@@ -64,28 +64,20 @@ class ContactController extends Controller
                 'is_read' => false,
             ]);
 
-            // Send notification email to admin (optional)
+            // Send notification email to ADMIN ONLY
             try {
+                $adminEmail = config('mail.admin_email', 'admin@calmafricasafaris.com');
+
                 Mail::send('emails.contact-notification', [
                     'contact' => $contactMessage
-                ], function ($message) use ($contactMessage) {
-                    $message->to(config('mail.admin_email', 'admin@calmafricasafaris.com'))
-                           ->subject('New Contact Message: ' . $contactMessage->subject)
-                           ->replyTo($contactMessage->email, $contactMessage->name);
+                ], function ($message) use ($contactMessage, $adminEmail) {
+                    $message->to($adminEmail)
+                        ->subject('New Contact Message: ' . $contactMessage->subject)
+                        ->replyTo($contactMessage->email, $contactMessage->name);
                 });
-
-                // Send confirmation email to user (optional)
-                Mail::send('emails.contact-confirmation', [
-                    'contact' => $contactMessage
-                ], function ($message) use ($contactMessage) {
-                    $message->to($contactMessage->email, $contactMessage->name)
-                           ->subject('Thank you for contacting Calm Africa Safaris')
-                           ->from(config('mail.from.address'), config('mail.from.name'));
-                });
-
             } catch (\Exception $emailError) {
                 // Log email error but don't fail the contact submission
-                Log::error('Contact form email failed: ' . $emailError->getMessage());
+                Log::error('Contact form admin email failed: ' . $emailError->getMessage());
             }
 
             // Return success response
@@ -278,10 +270,10 @@ class ContactController extends Controller
 
         $callback = function() use ($contacts) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
-                'ID', 'Name', 'Email', 'Country', 'Phone', 'Subject', 
+                'ID', 'Name', 'Email', 'Country', 'Phone', 'Subject',
                 'Message', 'Is Read', 'Created At'
             ]);
 
@@ -299,7 +291,7 @@ class ContactController extends Controller
                     $contact->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -324,7 +316,7 @@ class ContactController extends Controller
     public function search(Request $request)
     {
         $search = $request->input('search');
-        
+
         $contacts = ContactMessage::where('name', 'like', "%{$search}%")
                                  ->orWhere('email', 'like', "%{$search}%")
                                  ->orWhere('subject', 'like', "%{$search}%")

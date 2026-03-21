@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminAuthenticate;
+use App\Http\Controllers\AdminSpecialToursController;
 use App\Http\Controllers\SubscribersController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\AdminDashboardController;
@@ -267,4 +268,27 @@ Route::middleware(AdminAuthenticate::class)
     // Email routes (keep fully qualified to avoid import errors)
     Route::get('emails/compose', [\App\Http\Controllers\AdminEmailController::class, 'compose'])->name('emails.compose');
     Route::post('emails/send', [\App\Http\Controllers\AdminEmailController::class, 'send'])->name('emails.send');
+
+
+
+        // ========================
+    // SPECIAL TOURS MANAGEMENT
+    // ========================
+    Route::prefix('special-tours')->name('special-tours.')->group(function () {
+        Route::get('/', [  AdminSpecialToursController::class, 'index'])->name('index');
+        Route::get('/create', [AdminSpecialToursController::class, 'create'])->name('create');
+        Route::post('/', [AdminSpecialToursController::class, 'store'])->name('store');
+
+        Route::get('/{id}/edit', [AdminSpecialToursController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [AdminSpecialToursController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AdminSpecialToursController::class, 'destroy'])->name('destroy');
+
+        Route::patch('/{id}/activate', [AdminSpecialToursController::class, 'activate'])->name('activate');
+        Route::patch('/{id}/deactivate', [AdminSpecialToursController::class, 'deactivate'])->name('deactivate');
+
+        Route::delete('/images/{imageId}', [AdminSpecialToursController::class, 'destroyImage'])->name('images.destroy');
+        Route::post('/{tourId}/images/reorder', [AdminSpecialToursController::class, 'updateImageOrder'])->name('images.reorder');
+    });
+
 });
+

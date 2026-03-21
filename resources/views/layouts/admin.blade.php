@@ -71,6 +71,11 @@
                     <i class="fas fa-plus-circle"></i>
                     Create Tour
                 </a>
+                <a href="{{ route('admin.special-tours.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                    <i class="fas fa-star"></i>
+                    Special Tours
+                </a>
+
                 <a href="{{ route('admin.bookings.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
                     <i class="fas fa-calendar-check"></i>
                     Bookings
