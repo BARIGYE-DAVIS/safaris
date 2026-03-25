@@ -109,7 +109,7 @@
 
                         <!-- Accordion header -->
                         <button id="{{ $buttonId }}"
-                                class="accordion-toggle w-full bg-gradient-to-r from-gray-600 to-gray-700 px-4 sm:px-6 py-4 text-left hover:from-green-700 hover:to-green-800 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                class="accordion-toggle w-full bg-gradient-to-r from-green-600 to-gray-700 px-4 sm:px-6 py-4 text-left hover:from-green-700 hover:to-green-800 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                                 aria-expanded="false"
                                 aria-controls="{{ $panelId }}"
                                 type="button">

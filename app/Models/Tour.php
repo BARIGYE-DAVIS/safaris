@@ -19,6 +19,7 @@ class Tour extends Model
         'description',
         'included',
         'excluded',
+        'what_to_bring',
         'meta_keywords',
         'meta_description',
         'meta_title',

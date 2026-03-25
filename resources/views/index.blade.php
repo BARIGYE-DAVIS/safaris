@@ -2,7 +2,7 @@
 
 @section('title', 'Calm Africa Safaris - Premium Safari Tours & Wildlife Adventures in East Africa')
 @section('meta_description', 'Experience unforgettable safari adventures in East Africa with Calm Africa Safaris. Expert guides, luxury accommodations, wildlife tours, cultural experiences. Book your dream African safari today!')
-@section('meta_keywords', 'safari tours, East Africa safari, Tanzania safari, Kenya safari, Uganda safari, wildlife tours, luxury safari, family safari, honeymoon safari, Big Five safari, gorilla trekking, cultural tours, adventure tours, safari packages, African safari, wildlife photography, conservation tours, guided safari, custom safari, safari booking, Serengeti, Ngorongoro, Maasai Mara, Mount Kilimanjaro, safari holidays, eco tourism, responsible travel')
+@section('meta_keywords', 'safari tours, East Africa safari, Tanzania safari, Kenya safari, Uganda safari, wildlife tours, luxury safari, family safari, honeymoon safari, Big Five safari, gorilla trekking, cultural tours, adventure tours, safari packages, African safari, wildlife photography, conservation tours, guided safari, custom safari, safari booking, Serengeti, Ngorongoro, Maasai Mara, Mount Kilimanjaro, safari holidays, eco tourism, responsible travel,Africa tours, Africa Tour Companies, Uganda Tour, Companies, Uganda safari Companies, East Africa Tours, Grolla Trekking, Gorilla Trekking Uganda, Gorilla Trekking Tours, Gorilla Trekking Safaris, Gorilla Trekking in Uganda, Gorilla Trekking in Rwanda, Gorilla Trekking in Congo, Gorilla Trekking Africa, Gorilla Trekking East Africa, Gorilla Trekking Holidays, Gorilla Trekking Safari Tours, Gorilla Trekking Safari Packages, Gorilla Trekking Safari Vacations, Gorilla Trekking Safari Trips Gorilla Trekking Safari Itineraries, Gorilla Trekking Safari Deals, Gorilla Trekking Safari Offers, Gorilla Trekking Safari Discounts, Gorilla Trekking Safari Specials, Gorilla Trekking Safari Last Minute Deals, Gorilla Trekking Safari Last Minute Offers, Gorilla Trekking Safari Last Minute Discounts, Gorilla Trekking Safari Last Minute Specials, Gorilla Trekking Safari Group Tours, Gorilla Trekking Safari Private Tours, Gorilla Trekking Safari Custom Tours, Gorilla Trekking Safari Tailor-Made Tours, Gorilla Trekking Safari Luxury Tours, Gorilla Trekking Safari Budget Tours, Gorilla Trekking Safari Family Tours, Gorilla Trekking Safari Honeymoon Tours, Uganda safari, Tour Afric, Visit Uganda, Ugnada Best Safari companies,Uganda Budget safari companies, Uganda Luxury safari companies, Uganda Family safari companies, Uganda Honeymoon safari companies, Uganda Custom safari companies, Uganda Tailor-Made safari companies, Uganda Group safari companies, Uganda Private safari companies, Uganda Gorilla Trekking safari companies, Uganda Wildlife safari companies, Uganda Cultural safari companies, Uganda Adventure safari companies, Ugnada Adventure,  ')
 
 @section('page-header')
 <!-- =========================================================
@@ -163,10 +163,10 @@
 @include('partials.accommodation')
 
 <!-- ── WHY CHOOSE US ── -->
-<section class="py-12 sm:py-16 lg:py-24 bg-white">
+<section class="py-12 sm:py-16 lg:py-24 bg-green-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-10 sm:mb-16">
-            <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
+            <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-orange-600 mb-4 sm:mb-6 leading-tight">
                 Why Choose Calm Africa Safaris?
             </h2>
             <p class="text-base sm:text-lg text-gray-700 max-w-3xl mx-auto">

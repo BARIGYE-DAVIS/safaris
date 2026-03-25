@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 class Activity extends Model
@@ -350,5 +351,27 @@ public function getCustomTourRequestsAttribute()
     public function getMetaDescriptionAttribute($value)
     {
         return $value ?: Str::limit(strip_tags($this->description), 160);
+    }
+
+
+    public function options(): BelongsToMany
+    {
+        return $this->belongsToMany(ActivityOption::class, 'activity_activity_option')
+            ->withTimestamps();
+    }
+
+    public function bringOptions(): BelongsToMany
+    {
+        return $this->options()->where('activity_options.type', 'bring');
+    }
+
+    public function includedOptions(): BelongsToMany
+    {
+        return $this->options()->where('activity_options.type', 'included');
+    }
+
+    public function excludedOptions(): BelongsToMany
+    {
+        return $this->options()->where('activity_options.type', 'excluded');
     }
 }

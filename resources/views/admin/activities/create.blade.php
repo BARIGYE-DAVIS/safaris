@@ -122,7 +122,7 @@
                         @enderror
                     </div>
 
-                    <!-- NEW: Multi-destination checkboxes -->
+                    <!-- Multi-destination checkboxes -->
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Destinations where this activity can be carried out
@@ -235,43 +235,55 @@
                               placeholder="Key highlights and unique features...">{{ old('highlights') }}</textarea>
                 </div>
 
-                <!-- Dynamic Fields (Inclusions, Exclusions, etc.) -->
+                <!-- Reusable Options + Equipment -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Inclusions -->
+                    <!-- Included (Reusable) -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            What's Included
+                            What's Included (Reusable Options)
                         </label>
-                        <div id="inclusions-container">
-                            <div class="flex gap-2 mb-2">
-                                <input type="text" name="inclusions[]" 
-                                       class="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
-                                       placeholder="e.g., Professional guide">
-                                <button type="button" class="add-field bg-green-500 text-white px-3 py-2 rounded-lg" data-container="inclusions-container">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
+                        <div class="border border-gray-200 rounded-lg p-3 max-h-64 overflow-y-auto space-y-2">
+                            @forelse($includedOptions as $option)
+                                <label class="flex items-center space-x-2 cursor-pointer text-sm">
+                                    <input
+                                        type="checkbox"
+                                        name="included_option_ids[]"
+                                        value="{{ $option->id }}"
+                                        class="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                        {{ in_array($option->id, old('included_option_ids', [])) ? 'checked' : '' }}
+                                    >
+                                    <span class="text-gray-700">{{ $option->name }}</span>
+                                </label>
+                            @empty
+                                <p class="text-sm text-gray-500">No included options found. Add from Activity Options page.</p>
+                            @endforelse
                         </div>
                     </div>
 
-                    <!-- Exclusions -->
+                    <!-- Excluded (Reusable) -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            What's NOT Included
+                            What's NOT Included (Reusable Options)
                         </label>
-                        <div id="exclusions-container">
-                            <div class="flex gap-2 mb-2">
-                                <input type="text" name="exclusions[]" 
-                                       class="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
-                                       placeholder="e.g., Personal expenses">
-                                <button type="button" class="add-field bg-green-500 text-white px-3 py-2 rounded-lg" data-container="exclusions-container">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
+                        <div class="border border-gray-200 rounded-lg p-3 max-h-64 overflow-y-auto space-y-2">
+                            @forelse($excludedOptions as $option)
+                                <label class="flex items-center space-x-2 cursor-pointer text-sm">
+                                    <input
+                                        type="checkbox"
+                                        name="excluded_option_ids[]"
+                                        value="{{ $option->id }}"
+                                        class="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                        {{ in_array($option->id, old('excluded_option_ids', [])) ? 'checked' : '' }}
+                                    >
+                                    <span class="text-gray-700">{{ $option->name }}</span>
+                                </label>
+                            @empty
+                                <p class="text-sm text-gray-500">No excluded options found. Add from Activity Options page.</p>
+                            @endforelse
                         </div>
                     </div>
 
-                    <!-- Equipment Provided -->
+                    <!-- Equipment Provided (kept dynamic/manual) -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Equipment Provided
@@ -288,20 +300,26 @@
                         </div>
                     </div>
 
-                    <!-- What to Bring -->
+                    <!-- What to Bring (Reusable) -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            What to Bring
+                            What to Bring (Reusable Options)
                         </label>
-                        <div id="bring-container">
-                            <div class="flex gap-2 mb-2">
-                                <input type="text" name="what_to_bring[]" 
-                                       class="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
-                                       placeholder="e.g., Sunscreen">
-                                <button type="button" class="add-field bg-green-500 text-white px-3 py-2 rounded-lg" data-container="bring-container">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
+                        <div class="border border-gray-200 rounded-lg p-3 max-h-64 overflow-y-auto space-y-2">
+                            @forelse($bringOptions as $option)
+                                <label class="flex items-center space-x-2 cursor-pointer text-sm">
+                                    <input
+                                        type="checkbox"
+                                        name="bring_option_ids[]"
+                                        value="{{ $option->id }}"
+                                        class="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                        {{ in_array($option->id, old('bring_option_ids', [])) ? 'checked' : '' }}
+                                    >
+                                    <span class="text-gray-700">{{ $option->name }}</span>
+                                </label>
+                            @empty
+                                <p class="text-sm text-gray-500">No bring options found. Add from Activity Options page.</p>
+                            @endforelse
                         </div>
                     </div>
                 </div>
@@ -686,7 +704,7 @@ document.getElementById('gallery_images').addEventListener('change', function(e)
     }
 });
 
-// Dynamic Field Addition
+// Dynamic Field Addition (equipment only now)
 document.querySelectorAll('.add-field').forEach(button => {
     button.addEventListener('click', function() {
         const containerId = this.dataset.container;
@@ -713,7 +731,7 @@ document.querySelectorAll('.add-field').forEach(button => {
     });
 });
 
-// Remove field functionality for initial fields
+// Remove field functionality
 document.addEventListener('click', function(e) {
     if (e.target.closest('.remove-field')) {
         e.target.closest('.flex').remove();

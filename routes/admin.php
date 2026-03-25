@@ -34,7 +34,6 @@ $ADMIN_PREFIX = 'me';
 // ADMIN AUTHENTICATION (PUBLIC)
 // ========================
 
-// /me should open the login page
 Route::get($ADMIN_PREFIX, function () use ($ADMIN_PREFIX) {
     return redirect("/{$ADMIN_PREFIX}/login");
 })->name('admin.entry');
@@ -46,7 +45,6 @@ Route::get("{$ADMIN_PREFIX}/verify", [AdminAuthController::class, 'showTwoFactor
 Route::post("{$ADMIN_PREFIX}/verify", [AdminAuthController::class, 'verifyTwoFactorCode'])->name('admin.2fa.verify');
 Route::post("{$ADMIN_PREFIX}/verify/resend", [AdminAuthController::class, 'resendTwoFactorCode'])->name('admin.2fa.resend');
 
-// Logout should be protected
 Route::post("{$ADMIN_PREFIX}/logout", [AdminAuthController::class, 'logout'])
     ->middleware(AdminAuthenticate::class)
     ->name('admin.logout');
@@ -185,6 +183,16 @@ Route::middleware(AdminAuthenticate::class)
         Route::delete('bulk-delete', [ActivityController::class, 'bulkDelete'])->name('bulk-delete');
         Route::post('{activity}/images/reorder', [ActivityImageController::class, 'reorder'])->name('images.reorder');
         Route::post('{activity}/images/upload', [ActivityImageController::class, 'upload'])->name('images.upload');
+
+        // ========================
+        // ACTIVITY OPTIONS MANAGEMENT
+        // ========================
+        Route::prefix('options')->name('options.')->group(function () {
+            Route::get('/', [ActivityController::class, 'adminOptionsIndex'])->name('index');
+            Route::post('/', [ActivityController::class, 'adminOptionsStore'])->name('store');
+            Route::put('/{option}', [ActivityController::class, 'adminOptionsUpdate'])->name('update');
+            Route::delete('/{option}', [ActivityController::class, 'adminOptionsDestroy'])->name('destroy');
+        });
     });
 
     Route::delete('activity-images/{activityImage}', [ActivityImageController::class, 'destroy'])->name('activity-images.destroy');
@@ -237,7 +245,9 @@ Route::middleware(AdminAuthenticate::class)
         Route::get('/export/csv', [CustomTourRequestController::class, 'adminExport'])->name('export');
     });
 
-    // BLOG routes
+    // ========================
+    // BLOG MANAGEMENT
+    // ========================
     Route::get('blogs', [BlogController::class, 'adminIndex'])->name('blogs.index');
     Route::get('blogs/create', [BlogController::class, 'create'])->name('blogs.create');
     Route::post('blogs', [BlogController::class, 'store'])->name('blogs.store');
@@ -253,7 +263,9 @@ Route::middleware(AdminAuthenticate::class)
     Route::post('blog-categories/reorder', [BlogCategoryController::class, 'reorder'])->name('blog-categories.reorder');
     Route::get('blog-categories/api', [BlogCategoryController::class, 'apiList'])->name('blog-categories.api');
 
-    // Accommodations
+    // ========================
+    // ACCOMMODATIONS MANAGEMENT
+    // ========================
     Route::get('accommodations', [AccommodationController::class, 'adminIndex'])->name('accommodations.index');
     Route::get('accommodations/create', [AccommodationController::class, 'adminCreate'])->name('accommodations.create');
     Route::post('accommodations', [AccommodationController::class, 'adminStore'])->name('accommodations.store');
@@ -265,30 +277,26 @@ Route::middleware(AdminAuthenticate::class)
     Route::get('api/accommodations/search', [AccommodationController::class, 'apiSearch'])->name('api.accommodations.search');
     Route::get('api/accommodations/{id}', [AccommodationController::class, 'apiGetById'])->name('api.accommodations.getById');
 
-    // Email routes (keep fully qualified to avoid import errors)
+    // ========================
+    // EMAIL MANAGEMENT
+    // ========================
     Route::get('emails/compose', [\App\Http\Controllers\AdminEmailController::class, 'compose'])->name('emails.compose');
     Route::post('emails/send', [\App\Http\Controllers\AdminEmailController::class, 'send'])->name('emails.send');
 
-
-
-        // ========================
+    // ========================
     // SPECIAL TOURS MANAGEMENT
     // ========================
     Route::prefix('special-tours')->name('special-tours.')->group(function () {
-        Route::get('/', [  AdminSpecialToursController::class, 'index'])->name('index');
+        Route::get('/', [AdminSpecialToursController::class, 'index'])->name('index');
         Route::get('/create', [AdminSpecialToursController::class, 'create'])->name('create');
         Route::post('/', [AdminSpecialToursController::class, 'store'])->name('store');
-
         Route::get('/{id}/edit', [AdminSpecialToursController::class, 'edit'])->name('edit');
         Route::put('/{id}', [AdminSpecialToursController::class, 'update'])->name('update');
         Route::delete('/{id}', [AdminSpecialToursController::class, 'destroy'])->name('destroy');
-
         Route::patch('/{id}/activate', [AdminSpecialToursController::class, 'activate'])->name('activate');
         Route::patch('/{id}/deactivate', [AdminSpecialToursController::class, 'deactivate'])->name('deactivate');
-
         Route::delete('/images/{imageId}', [AdminSpecialToursController::class, 'destroyImage'])->name('images.destroy');
         Route::post('/{tourId}/images/reorder', [AdminSpecialToursController::class, 'updateImageOrder'])->name('images.reorder');
     });
 
 });
-

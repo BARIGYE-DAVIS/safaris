@@ -113,6 +113,11 @@
                     Activities
                 </a>
 
+                <a href="{{ route('admin.activities.options.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                    <i class="fas fa-cogs"></i>
+                    Activity Options
+                </a>
+
                 <div class="sidebar-divider"></div>
 
                 <!-- Configuration -->
