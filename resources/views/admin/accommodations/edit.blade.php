@@ -232,31 +232,30 @@
 
                 {{-- Existing saved gallery images --}}
                 @if($accommodation->images->count())
-                    <p class="text-xs font-semibold text-gray-600 mb-1">Existing images — check to delete:</p>
+                    <p class="text-xs font-semibold text-gray-600 mb-1">Existing images — click to mark for deletion:</p>
                     <div class="grid grid-cols-3 gap-2 mb-4">
                         @foreach($accommodation->images as $image)
-                            <div class="relative group">
+                            <div class="relative group gallery-item" data-image-id="{{ $image->id }}">
                                 <img src="{{ $image->url }}"
                                      alt="{{ $image->alt_text ?? $accommodation->name }}"
-                                     class="w-full h-24 object-cover rounded-lg border shadow">
-                                <label class="absolute inset-0 flex flex-col items-center justify-center
-                                              bg-black bg-opacity-0 group-hover:bg-opacity-40
-                                              rounded-lg cursor-pointer transition"
-                                       title="Check to delete this image">
-                                    <input type="checkbox"
-                                           name="delete_images[]"
-                                           value="{{ $image->id }}"
-                                           class="delete-checkbox hidden"
-                                           onchange="toggleDeleteOverlay(this)">
-                                    <span class="delete-icon text-white text-2xl opacity-0 group-hover:opacity-100 transition select-none">
-                                        🗑
-                                    </span>
-                                    <span class="delete-label text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition">
-                                        Delete
-                                    </span>
-                                </label>
-                                <div class="delete-badge absolute top-1 right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded hidden">
-                                    ✕ Delete
+                                     class="gallery-thumb w-full h-24 object-cover rounded-lg border shadow cursor-pointer transition">
+
+                                {{-- Hidden checkbox submitted with form --}}
+                                <input type="checkbox"
+                                       name="delete_images[]"
+                                       value="{{ $image->id }}"
+                                       class="delete-checkbox hidden">
+
+                                {{-- Delete badge shown when marked --}}
+                                <div class="delete-badge absolute inset-0 rounded-lg hidden flex-col items-center justify-center bg-red-500 bg-opacity-60">
+                                    <span class="text-white text-2xl leading-none">🗑</span>
+                                    <span class="text-white text-xs font-bold mt-1">Delete</span>
+                                </div>
+
+                                {{-- Hover hint when NOT marked --}}
+                                <div class="hover-hint absolute inset-0 rounded-lg flex flex-col items-center justify-center
+                                            bg-black bg-opacity-0 group-hover:bg-opacity-30 transition pointer-events-none">
+                                    <span class="text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition">Click to delete</span>
                                 </div>
                             </div>
                         @endforeach
@@ -337,10 +336,8 @@
 
             const reader = new FileReader();
             reader.onload = function (e) {
-                document.getElementById('featured_preview_img').src =
-                    e.target.result;
-                document.getElementById('featured_preview_wrap').classList
-                    .remove('hidden');
+                document.getElementById('featured_preview_img').src = e.target.result;
+                document.getElementById('featured_preview_wrap').classList.remove('hidden');
             };
             reader.readAsDataURL(file);
         });
@@ -348,41 +345,40 @@
 
     function clearFeaturedImage() {
         const input = document.getElementById('featured_image_input');
-        if (input) {
-            input.value = '';
-        }
+        if (input) input.value = '';
         document.getElementById('featured_preview_img').src = '#';
         document.getElementById('featured_preview_wrap').classList.add('hidden');
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Existing gallery image — delete toggle
+    | Existing Gallery Images — click image to toggle delete
     |--------------------------------------------------------------------------
     */
-    function toggleDeleteOverlay(checkbox) {
-        const wrapper = checkbox.closest('.relative');
-        const badge   = wrapper.querySelector('.delete-badge');
-        const img     = wrapper.querySelector('img');
+    document.querySelectorAll('.gallery-item').forEach(function (item) {
+        const thumb    = item.querySelector('.gallery-thumb');
+        const checkbox = item.querySelector('.delete-checkbox');
+        const badge    = item.querySelector('.delete-badge');
+        const hint     = item.querySelector('.hover-hint');
 
-        if (checkbox.checked) {
-            badge.classList.remove('hidden');
-            img.classList.add('opacity-40');
-        } else {
-            badge.classList.add('hidden');
-            img.classList.remove('opacity-40');
-        }
-    }
+        thumb.addEventListener('click', function () {
+            // Toggle the checkbox state
+            checkbox.checked = !checkbox.checked;
 
-    document.querySelectorAll('.delete-checkbox').forEach(function (checkbox) {
-        const label = checkbox.closest('label');
-        if (label) {
-            label.addEventListener('click', function (e) {
-                e.preventDefault();
-                checkbox.checked = !checkbox.checked;
-                toggleDeleteOverlay(checkbox);
-            });
-        }
+            if (checkbox.checked) {
+                // Show red delete overlay, dim the image
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+                thumb.classList.add('opacity-40');
+                hint.classList.add('hidden');
+            } else {
+                // Remove delete overlay
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+                thumb.classList.remove('opacity-40');
+                hint.classList.remove('hidden');
+            }
+        });
     });
 
     /*
@@ -416,8 +412,6 @@
             editGalleryInput.files = dt.files;
 
             renderEditGalleryPreviews();
-
-            
         });
     }
 
@@ -444,17 +438,14 @@
                     <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-lg transition"></div>
                     <button type="button"
                             data-index="${index}"
-                            class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition">
+                            class="remove-new-img absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition">
                         &times;
                     </button>
                     <p class="text-xs text-gray-500 mt-1 truncate" title="${file.name}">${file.name}</p>
                 `;
 
-                const btn = wrapper.querySelector('button');
-                btn.addEventListener('click', function () {
-                    removeEditGalleryImage(
-                        parseInt(this.getAttribute('data-index'), 10)
-                    );
+                wrapper.querySelector('.remove-new-img').addEventListener('click', function () {
+                    removeEditGalleryImage(parseInt(this.getAttribute('data-index'), 10));
                 });
 
                 editGalleryGrid.appendChild(wrapper);
