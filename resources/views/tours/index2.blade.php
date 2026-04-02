@@ -1,58 +1,35 @@
 @extends('layouts.app')
 
-{{-- ============================================================
-     SEO META — consistent across all tags
-     ============================================================ --}}
 @section('title', 'Uganda Safari Tours 2026 | Gorilla Trekking & Wildlife Packages | Calm Africa Safaris')
-@section('meta_description', 'Book Uganda safari tours from $1,300. Gorilla trekking Bwindi, chimp tracking Kibale, Big Five Queen Elizabeth & Murchison Falls. Expert guides, small groups, guaranteed departures. Plan your East Africa safari today!')
-@section('meta_keywords', 'Uganda safari tours, gorilla trekking Uganda, Bwindi gorilla trek, Uganda wildlife safari, chimp tracking Kibale, Queen Elizabeth safari, Murchison Falls tour, East Africa safari packages 2026')
+@section('meta_description', 'Book Uganda safari tours from $1300. Gorilla trekking Bwindi, chimp tracking Kibale, Big Five Queen Elizabeth & Murchison Falls. Expert guides, small groups, guaranteed departures. Plan your East Africa safari today!')
 @section('canonical', 'https://calmafricasafaris.com/tours')
 
 {{-- Open Graph --}}
-@section('og_title', 'Uganda Safari Tours 2026 | Gorilla Trekking Packages | Calm Africa Safaris')
-@section('og_description', 'Explore Uganda gorilla trekking, chimp tracking, Big Five safaris and more. Budget to luxury packages from $1,300. Book with East Africa\'s trusted safari operator.')
+@section('og_title', 'Uganda Safari Tours 2025 | Gorilla Trekking Packages | Calm Africa Safaris')
+@section('og_description', 'Explore Uganda gorilla trekking, chimp tracking, Big Five safaris and more. Budget to luxury packages. Book with East Africa\'s trusted safari operator.')
 @section('og_image', asset('images/BIG FIVE.jpg'))
-@section('og_type', 'website')
-
 
 @section('page-header')
-<header id="tours-hero" class="relative w-full overflow-hidden" style="height:420px;">
+<header id="tours-hero" class="relative w-full overflow-hidden" style="height: 420px;">
     <img id="hero-img"
          src="{{ $headerImage ?? asset('images/BIG FIVE.jpg') }}"
-         alt="Uganda safari tours 2026 — gorilla trekking in Bwindi Impenetrable Forest and wildlife safaris in East Africa"
+         alt="Uganda safari tours - gorilla trekking and wildlife packages in East Africa"
          class="absolute inset-0 w-full h-full object-cover object-center"
          style="transform:translateY(0); will-change:transform;"
          onerror="this.style.display='none'">
     <div class="absolute inset-0 bg-black/55"></div>
     <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6">
-        <span class="inline-block bg-green-600/90 text-white text-xs font-semibold px-3 py-1 rounded-full mb-3 tracking-wide uppercase">
-            East Africa's Trusted Safari Operator
-        </span>
-<h1 class="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-2 sm:mb-3 drop-shadow-lg leading-tight">
-    Uganda Safari Tours &amp; Gorilla Trekking Packages 2026
-</h1>
-        <p class="text-sm sm:text-lg text-white/90 max-w-2xl mb-4 px-2">
+        <h1 class="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-2 sm:mb-3 drop-shadow-lg leading-tight">
+            Uganda Safari Tours &amp; Gorilla Trekking Packages 2026
+        </h1>
+        <p class="text-sm sm:text-lg text-white/90 max-w-2xl mb-3 px-2">
             Gorilla trekking · Chimp tracking · Big Five safaris · Birdwatching · Cultural tours
         </p>
-        <div class="flex flex-wrap justify-center gap-2 mb-4">
-            <span class="bg-white/20 backdrop-blur text-white text-xs px-3 py-1 rounded-full">From $1,300/person</span>
-            <span class="bg-white/20 backdrop-blur text-white text-xs px-3 py-1 rounded-full">Small Groups</span>
-            <span class="bg-white/20 backdrop-blur text-white text-xs px-3 py-1 rounded-full">Permits Included</span>
-            <span class="bg-white/20 backdrop-blur text-white text-xs px-3 py-1 rounded-full">Expert Local Guides</span>
-        </div>
         <nav aria-label="Breadcrumb">
-            <ol class="flex items-center gap-2 text-xs sm:text-sm text-green-200" itemscope itemtype="https://schema.org/BreadcrumbList">
-                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-                    <a href="{{ route('index') }}" itemprop="item" class="hover:text-white transition-colors">
-                        <span itemprop="name">Home</span>
-                    </a>
-                    <meta itemprop="position" content="1">
-                </li>
+            <ol class="flex items-center gap-2 text-xs sm:text-sm text-green-200">
+                <li><a href="{{ route('index') }}" class="hover:text-white transition-colors">Home</a></li>
                 <li class="text-white/50">/</li>
-                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-                    <span itemprop="name" class="text-white font-medium">Safari Tours</span>
-                    <meta itemprop="position" content="2">
-                </li>
+                <li class="text-white font-medium">Safari Tours</li>
             </ol>
         </nav>
     </div>
@@ -63,45 +40,26 @@
 <div class="w-full overflow-x-hidden">
 
     
-        <!-- introd -->
+    <!-- INTRO -->
     <section class="py-10 sm:py-14 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-8 sm:mb-10">
-            <h2 class="text-xl sm:text-3xl md:text-4xl font-bold text-green-900 mb-3 sm:mb-4 leading-tight">
-             Explore Bwindi Gorilla Trekking, Kibale Chimps, Big Five Game Drives &amp; More
-            </h2>
+                <h2 class="text-xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
+                    Uganda Gorilla Trekking, Wildlife &amp; Adventure Safari Packages
+                </h2>
                 <p class="text-sm sm:text-base md:text-lg text-gray-700 max-w-4xl mx-auto leading-relaxed">
-                    Plan your <strong>Uganda safari</strong> with Calm Africa Safaris  East Africa's trusted
+                    Plan your <strong>Uganda safari</strong> with Calm Africa Safaris East Africa's trusted
                     <strong>gorilla trekking</strong> and wildlife tour operator. Choose from
                     <strong>budget, midrange and luxury safari packages</strong> covering
                     <strong>Bwindi Impenetrable Forest</strong>, <strong>Kibale National Park</strong>,
-                    <strong>Queen Elizabeth National Park</strong>, <strong>Murchison Falls National Park</strong>,
-                    <strong>Kidepo Valley National Park</strong> and more. All tours include expert local guides,
-                    accommodation and airport transfers. We also specialise in
-                    <strong>gorilla trekking in Rwanda</strong>, Kenya safaris, and Tanzania safari packages.
-                    Uganda gorilla trekking permits cost <strong>$800 per person</strong> and our all-inclusive
-                    packages start from <strong>$1,300 per person</strong>.
+                    <strong>Queen Elizabeth National Park</strong>, <strong>Murchison Falls</strong>,
+                    <strong>Kidepo Valley</strong> and more. All tours include expert local guides,
+                    accommodation and airport transfers. We also offer
+                    <strong>gorilla trekking in Rwanda</strong>, Kenya, and Tanzania safari packages.
                 </p>
             </div>
 
-            {{-- Destination quick-links — internal linking boost --}}
-            <div class="flex flex-wrap justify-center gap-2 mb-8 sm:mb-10">
-                @foreach([
-                    'Bwindi Gorilla Trekking',
-                    'Kibale Chimp Tracking',
-                    'Queen Elizabeth Safari',
-                    'Murchison Falls Tours',
-                    'Kidepo Valley Safari',
-                    'Rwanda Gorilla Trek',
-                    'Uganda Birding Tours',
-                ] as $dest)
-                <span class="bg-green-50 border border-green-200 text-green-800 text-xs font-medium px-3 py-1.5 rounded-full">
-                    {{ $dest }}
-                </span>
-                @endforeach
-            </div>
-
-            {{-- Category cards --}}
+            <!-- Category cards -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-10">
                 <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 text-center hover:shadow-lg transition-shadow">
                     <div class="w-10 h-10 sm:w-14 sm:h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -133,38 +91,43 @@
                 </div>
             </div>
 
-            {{-- Why us --}}
+            <!-- Why us -->
             <div class="bg-white rounded-xl shadow-lg p-5 sm:p-8">
                 <h3 class="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">
-                    Why Book Your Uganda Safari With Calm Africa Safaris?
+                    Why Book Your Uganda Safari With Us?
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                     <div class="text-center">
                         <div class="w-9 h-9 sm:w-11 sm:h-11 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                             <svg class="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
-                        <h4 class="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Certified Uganda Wildlife Guides</h4>
-                        <p class="text-gray-500 text-xs sm:text-sm">Uganda Wildlife Authority certified guides with decades of gorilla trekking and wildlife experience.</p>
+                        <h4 class="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Expert Local Safari Guides</h4>
+                        <p class="text-gray-500 text-xs sm:text-sm">Certified Uganda Wildlife Authority guides with decades of gorilla trekking experience.</p>
                     </div>
                     <div class="text-center">
                         <div class="w-9 h-9 sm:w-11 sm:h-11 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                             <svg class="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                         </div>
-                        <h4 class="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Gorilla Permit Booking</h4>
-                        <p class="text-gray-500 text-xs sm:text-sm">We secure your Uganda gorilla trekking permits ($800/person), Rwanda permits and all national park fees.</p>
+                        <h4 class="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Gorilla Permit Assistance</h4>
+                        <p class="text-gray-500 text-xs sm:text-sm">We handle your Uganda gorilla trekking permits, Rwanda permits and all park fees.</p>
                     </div>
                     <div class="text-center">
                         <div class="w-9 h-9 sm:w-11 sm:h-11 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                             <svg class="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
-                        <h4 class="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Tailor-Made Itineraries</h4>
-                        <p class="text-gray-500 text-xs sm:text-sm">Custom safari packages built around your budget, travel dates, group size and wildlife interests.</p>
+                        <h4 class="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Flexible Custom Itineraries</h4>
+                        <p class="text-gray-500 text-xs sm:text-sm">Tailor-made safari packages adapted to your budget, travel dates and interests.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-        {{-- ── FILTER BAR ── --}}
+
+    <!-- ══════════════════════════════════════════════════════════
+         FILTER BAR
+         key fix: sticky top uses --nav-height CSS var so it always
+         sits just below the fixed nav, never hidden underneath it.
+    ══════════════════════════════════════════════════════════ -->
     <section id="tour-filters"
              class="py-4 sm:py-6 bg-white border-b shadow-sm sticky z-40"
              style="top: var(--nav-height, 70px);">
@@ -172,11 +135,13 @@
 
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <div>
-                    <h2 class="text-lg sm:text-2xl font-bold text-gray-900 leading-tight">Browse Uganda Safari Packages 2026</h2>
-                    <p class="text-gray-500 text-xs sm:text-sm mt-0.5">{{ $tours->total() }} safari adventures available</p>
+                    <h2 class="text-lg sm:text-2xl font-bold text-gray-900 leading-tight">Browse Our Safari Collection</h2>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-0.5">{{ $tours->total() }} incredible adventures await</p>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
-                    
+                    <a href="{{ route('tours.budget') }}" class="text-xs sm:text-sm text-green-600 hover:text-green-800 font-medium whitespace-nowrap">
+                        View Budget Options →
+                    </a>
                     <button id="mobile-filter-toggle"
                             class="md:hidden flex items-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-lg text-xs font-medium">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +166,7 @@
                         <select name="{{ $f['name'] }}" class="tour-filter w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 bg-white">
                             <option value="">{{ $f['placeholder'] }}</option>
                             @foreach($f['items'] as $item)
-                                <option value="{{ $item }}" {{ request($f['name'])==$item ? 'selected' : '' }}>
+                                <option value="{{ $item }}" {{ request($f['name'])==$item?'selected':'' }}>
                                     {{ $f['fmt']==='ucfirst' ? ucfirst($item) : $item }}
                                 </option>
                             @endforeach
@@ -214,9 +179,7 @@
                         <select name="duration" class="tour-filter w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 bg-white">
                             <option value="">Any Duration</option>
                             @foreach($availableDurations as $d)
-                                <option value="{{ $d }}" {{ request('duration')==$d ? 'selected' : '' }}>
-                                    {{ $d }} {{ $d==1 ? 'Day' : 'Days' }}
-                                </option>
+                                <option value="{{ $d }}" {{ request('duration')==$d?'selected':'' }}>{{ $d }} {{ $d==1?'Day':'Days' }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -227,17 +190,17 @@
                             <option value="">Any Price</option>
                             @if($priceRanges['min'] > 0 && $priceRanges['max'] > 0)
                                 @php
-                                    $step   = ($priceRanges['max'] - $priceRanges['min']) / 4;
+                                    $step = ($priceRanges['max'] - $priceRanges['min']) / 4;
                                     $ranges = [
-                                        'low'      => [$priceRanges['min'],         $priceRanges['min']+$step],
-                                        'mid-low'  => [$priceRanges['min']+$step,   $priceRanges['min']+$step*2],
-                                        'mid-high' => [$priceRanges['min']+$step*2, $priceRanges['min']+$step*3],
-                                        'high'     => [$priceRanges['min']+$step*3, $priceRanges['max']],
+                                        'low'      => [$priceRanges['min'],           $priceRanges['min']+$step],
+                                        'mid-low'  => [$priceRanges['min']+$step,     $priceRanges['min']+$step*2],
+                                        'mid-high' => [$priceRanges['min']+$step*2,   $priceRanges['min']+$step*3],
+                                        'high'     => [$priceRanges['min']+$step*3,   $priceRanges['max']],
                                     ];
                                 @endphp
                                 @foreach($ranges as $key=>[$mn,$mx])
-                                    <option value="{{ $key }}" {{ request('price_range')==$key ? 'selected' : '' }}>
-                                        ${{ number_format($mn) }} &ndash; ${{ number_format($mx) }}
+                                    <option value="{{ $key }}" {{ request('price_range')==$key?'selected':'' }}>
+                                        ${{ number_format($mn) }} – ${{ number_format($mx) }}
                                     </option>
                                 @endforeach
                             @endif
@@ -248,16 +211,8 @@
                         <label class="block text-xs font-medium text-gray-500 mb-1 md:hidden">Sort By</label>
                         <select name="sort" class="tour-filter w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 bg-white">
                             <option value="">Sort By</option>
-                            @foreach([
-                                'price_low'       => 'Price: Low to High',
-                                'price_high'      => 'Price: High to Low',
-                                'duration_short'  => 'Duration: Short to Long',
-                                'duration_long'   => 'Duration: Long to Short',
-                                'newest'          => 'Newest First',
-                                'title_az'        => 'Title: A-Z',
-                                'title_za'        => 'Title: Z-A',
-                            ] as $val=>$lbl)
-                                <option value="{{ $val }}" {{ request('sort')==$val ? 'selected' : '' }}>{{ $lbl }}</option>
+                            @foreach(['price_low'=>'Price: Low → High','price_high'=>'Price: High → Low','duration_short'=>'Duration: Short → Long','duration_long'=>'Duration: Long → Short','newest'=>'Newest First','title_az'=>'Title: A–Z','title_za'=>'Title: Z–A'] as $val=>$lbl)
+                                <option value="{{ $val }}" {{ request('sort')==$val?'selected':'' }}>{{ $lbl }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -265,64 +220,35 @@
                     <div class="flex gap-2 md:hidden">
                         <button type="submit" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium">Apply</button>
                         @if(request()->hasAny(['category','type','destination','duration','price_range','sort']))
-                            <a href="{{ route('tours.index') }}#tour-filters" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium">Clear</a>
+                        <a href="{{ route('tours.index') }}#tour-filters" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium">Clear</a>
                         @endif
                     </div>
 
                     @if(request()->hasAny(['category','type','destination','duration','price_range','sort']))
-                        <a href="{{ route('tours.index') }}#tour-filters"
-                           class="hidden md:inline-flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium whitespace-nowrap">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                            Clear All
-                        </a>
+                    <a href="{{ route('tours.index') }}#tour-filters"
+                       class="hidden md:inline-flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium whitespace-nowrap">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        Clear All
+                    </a>
                     @endif
                 </form>
 
                 @if(request()->hasAny(['category','type','destination','duration','price_range','sort']))
-                    <div class="mt-3 flex flex-wrap gap-2 items-center">
-                        <span class="text-xs text-gray-500 font-medium">Active filters:</span>
-                        @if(request('category'))
-                            <span class="inline-flex items-center bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">
-                                {{ ucfirst(request('category')) }}
-                                <a href="{{ request()->fullUrlWithQuery(['category'=>null]) }}#tour-filters" class="ml-1 font-bold">&times;</a>
-                            </span>
-                        @endif
-                        @if(request('type'))
-                            <span class="inline-flex items-center bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">
-                                {{ ucfirst(request('type')) }}
-                                <a href="{{ request()->fullUrlWithQuery(['type'=>null]) }}#tour-filters" class="ml-1 font-bold">&times;</a>
-                            </span>
-                        @endif
-                        @if(request('destination'))
-                            <span class="inline-flex items-center bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs">
-                                {{ request('destination') }}
-                                <a href="{{ request()->fullUrlWithQuery(['destination'=>null]) }}#tour-filters" class="ml-1 font-bold">&times;</a>
-                            </span>
-                        @endif
-                        @if(request('duration'))
-                            <span class="inline-flex items-center bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full text-xs">
-                                {{ request('duration') }} {{ request('duration')==1 ? 'Day' : 'Days' }}
-                                <a href="{{ request()->fullUrlWithQuery(['duration'=>null]) }}#tour-filters" class="ml-1 font-bold">&times;</a>
-                            </span>
-                        @endif
-                        @if(request('price_range'))
-                            <span class="inline-flex items-center bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full text-xs">
-                                {{ ucfirst(str_replace('-',' ',request('price_range'))) }}
-                                <a href="{{ request()->fullUrlWithQuery(['price_range'=>null]) }}#tour-filters" class="ml-1 font-bold">&times;</a>
-                            </span>
-                        @endif
-                        @if(request('sort'))
-                            <span class="inline-flex items-center bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full text-xs">
-                                {{ ucfirst(str_replace('_',' ',request('sort'))) }}
-                                <a href="{{ request()->fullUrlWithQuery(['sort'=>null]) }}#tour-filters" class="ml-1 font-bold">&times;</a>
-                            </span>
-                        @endif
-                    </div>
+                <div class="mt-3 flex flex-wrap gap-2 items-center">
+                    <span class="text-xs text-gray-500 font-medium">Active:</span>
+                    @if(request('category'))<span class="inline-flex items-center bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">{{ ucfirst(request('category')) }} <a href="{{ request()->fullUrlWithQuery(['category'=>null]) }}#tour-filters" class="ml-1 font-bold">×</a></span>@endif
+                    @if(request('type'))<span class="inline-flex items-center bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">{{ ucfirst(request('type')) }} <a href="{{ request()->fullUrlWithQuery(['type'=>null]) }}#tour-filters" class="ml-1 font-bold">×</a></span>@endif
+                    @if(request('destination'))<span class="inline-flex items-center bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs">{{ request('destination') }} <a href="{{ request()->fullUrlWithQuery(['destination'=>null]) }}#tour-filters" class="ml-1 font-bold">×</a></span>@endif
+                    @if(request('duration'))<span class="inline-flex items-center bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full text-xs">{{ request('duration') }} {{ request('duration')==1?'Day':'Days' }} <a href="{{ request()->fullUrlWithQuery(['duration'=>null]) }}#tour-filters" class="ml-1 font-bold">×</a></span>@endif
+                    @if(request('price_range'))<span class="inline-flex items-center bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full text-xs">{{ ucfirst(str_replace('-',' ',request('price_range'))) }} <a href="{{ request()->fullUrlWithQuery(['price_range'=>null]) }}#tour-filters" class="ml-1 font-bold">×</a></span>@endif
+                    @if(request('sort'))<span class="inline-flex items-center bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full text-xs">{{ ucfirst(str_replace('_',' ',request('sort'))) }} <a href="{{ request()->fullUrlWithQuery(['sort'=>null]) }}#tour-filters" class="ml-1 font-bold">×</a></span>@endif
+                </div>
                 @endif
             </div>
         </div>
     </section>
-     {{-- ── TOURS GRID ── --}}
+
+    <!-- ── TOURS GRID ── -->
     <section id="tours-results" class="py-8 sm:py-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -333,18 +259,14 @@
                 </div>
             </div>
 
-            {{-- Grid --}}
+            <!-- Grid -->
             <div id="grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
                 @forelse($tours as $tour)
-                <article class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group flex flex-col"
-                         itemscope itemtype="https://schema.org/TouristTrip">
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group flex flex-col">
                     <div class="relative h-44 sm:h-52 md:h-64 overflow-hidden shrink-0">
                         @if($tour->featured_image)
-                            <img src="{{ asset('storage/'.$tour->featured_image) }}"
-                                 alt="{{ $tour->title }} — Uganda safari tour package in {{ $tour->destinations ?: 'East Africa' }}"
-                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                 loading="lazy"
-                                 itemprop="image">
+                            <img src="{{ asset('storage/'.$tour->featured_image) }}" alt="{{ $tour->title }}"
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                         @else
                             <div class="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
                                 <svg class="w-12 h-12 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -352,30 +274,21 @@
                         @endif
                         <span class="absolute top-2 left-2 bg-green-600 text-white px-2 py-0.5 rounded-full text-xs font-semibold">{{ $tour->category ?? 'Safari' }}</span>
                         <span class="absolute top-2 right-2 bg-white/90 backdrop-blur text-gray-800 px-2 py-0.5 rounded-full text-xs font-semibold">
-                            {{ $tour->itineraries->count() ?: 'Multi' }} {{ $tour->itineraries->count()==1 ? 'Day' : 'Days' }}
+                            {{ $tour->itineraries->count() ?: 'Multi' }} {{ $tour->itineraries->count()==1?'Day':'Days' }}
                         </span>
-                        @if($tour->type)
-                            <span class="absolute bottom-2 left-2 bg-blue-600 text-white px-2 py-0.5 rounded-full text-xs font-semibold">{{ $tour->type }}</span>
-                        @endif
+                        @if($tour->type)<span class="absolute bottom-2 left-2 bg-blue-600 text-white px-2 py-0.5 rounded-full text-xs font-semibold">{{ $tour->type }}</span>@endif
                     </div>
                     <div class="p-3 sm:p-4 md:p-6 flex flex-col flex-1">
-                        <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-2 line-clamp-2 leading-snug" itemprop="name">
-                            {{ $tour->title }}
-                        </h3>
-                        <p class="text-gray-500 mb-3 text-xs sm:text-sm line-clamp-2 flex-1" itemprop="description">
-                            {{ Str::limit($tour->description, 120) }}
-                        </p>
+                        <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-2 line-clamp-2 leading-snug">{{ $tour->title }}</h3>
+                        <p class="text-gray-500 mb-3 text-xs sm:text-sm line-clamp-2 flex-1">{{ Str::limit($tour->description, 120) }}</p>
                         <div class="flex items-center mb-3 text-xs text-gray-500">
                             <svg class="w-3.5 h-3.5 text-green-600 mr-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <span class="line-clamp-1" itemprop="touristType">{{ $tour->destinations ?: 'Uganda, East Africa' }}</span>
+                            <span class="line-clamp-1">{{ $tour->destinations ?: 'East Africa' }}</span>
                         </div>
-                        <div class="flex items-center justify-between mb-3" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                        <div class="flex items-center justify-between mb-3">
                             <div>
                                 @if($tour->prices && $tour->prices->count() > 0)
                                     @php $minPrice = $tour->prices->min('price'); @endphp
-                                    <meta itemprop="priceCurrency" content="USD">
-                                    <meta itemprop="price" content="{{ $minPrice }}">
-                                    <meta itemprop="availability" content="https://schema.org/InStock">
                                     <span class="text-lg sm:text-xl font-bold text-green-600">${{ number_format($minPrice) }}</span>
                                     <span class="text-gray-400 text-xs"> / person</span>
                                     <p class="text-xs text-gray-400">Starting from</p>
@@ -383,56 +296,45 @@
                                     <span class="text-green-600 font-semibold text-xs">Contact for Pricing</span>
                                 @endif
                             </div>
-                            <div class="flex text-yellow-400 items-center gap-0.5"
-                                 itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
-                                <meta itemprop="ratingValue" content="4.9">
-                                <meta itemprop="reviewCount" content="47">
-                                <meta itemprop="bestRating" content="5">
-                                @for($i=1;$i<=5;$i++)
-                                    <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                                @endfor
+                            <div class="flex text-yellow-400 items-center gap-0.5">
+                                @for($i=1;$i<=5;$i++)<svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>@endfor
                                 <span class="text-xs text-gray-500 ml-1">4.9</span>
                             </div>
                         </div>
                         <div class="flex gap-2 mt-auto">
                             <a href="{{ route('tours.show', $tour->slug) }}"
-                               class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors"
-                               itemprop="url">
+                               class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors">
                                 View Details
                             </a>
                             <button onclick="quickBook('{{ $tour->slug }}')"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors"
-                                    title="Quick Book {{ $tour->title }}">
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors" title="Quick Book">
                                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             </button>
                         </div>
                     </div>
-                </article>
+                </div>
                 @empty
                 <div class="col-span-full text-center py-12">
                     <svg class="w-16 h-16 text-gray-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     <h3 class="text-lg font-bold text-gray-500 mb-2">No Tours Found</h3>
                     @if(request()->hasAny(['category','type','destination','duration','price_range','sort']))
-                        <p class="text-gray-400 mb-4 text-sm">No Uganda safari tours match your current filters. Try broadening your search.</p>
-                        <a href="{{ route('tours.index') }}#tour-filters" class="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 text-sm">View All Safari Tours</a>
+                        <p class="text-gray-400 mb-4 text-sm">No tours match your current filters.</p>
+                        <a href="{{ route('tours.index') }}#tour-filters" class="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 text-sm">View All Tours</a>
                     @else
-                        <p class="text-gray-400 text-sm">Check back soon for amazing Uganda safari adventures!</p>
+                        <p class="text-gray-400 text-sm">Check back soon for amazing safari adventures!</p>
                     @endif
                 </div>
                 @endforelse
             </div>
 
-            {{-- Slide view --}}
+            <!-- Slide view -->
             <div id="horizontal-container" class="hidden">
                 <div class="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4">
                     @forelse($tours as $tour)
                     <div class="flex-shrink-0 w-64 snap-start bg-white rounded-xl shadow-lg overflow-hidden">
                         <div class="relative h-36 overflow-hidden">
                             @if($tour->featured_image)
-                                <img src="{{ asset('storage/'.$tour->featured_image) }}"
-                                     alt="{{ $tour->title }} — Uganda safari"
-                                     class="w-full h-full object-cover"
-                                     loading="lazy">
+                                <img src="{{ asset('storage/'.$tour->featured_image) }}" alt="{{ $tour->title }}" class="w-full h-full object-cover">
                             @else
                                 <div class="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
                                     <svg class="w-10 h-10 text-white opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -444,7 +346,7 @@
                             <h3 class="text-sm font-bold text-gray-900 mb-1 line-clamp-1">{{ $tour->title }}</h3>
                             <div class="flex items-center mb-2 text-xs text-gray-500">
                                 <svg class="w-3 h-3 text-green-600 mr-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
-                                <span class="line-clamp-1">{{ $tour->destinations ?: 'Uganda, East Africa' }}</span>
+                                <span class="line-clamp-1">{{ $tour->destinations ?: 'East Africa' }}</span>
                             </div>
                             <div class="flex items-center justify-between mb-2">
                                 @if($tour->prices && $tour->prices->count() > 0)
@@ -453,15 +355,11 @@
                                 @else
                                     <span class="text-green-600 text-xs font-semibold">Ask for Price</span>
                                 @endif
-                                <div class="flex text-yellow-400">
-                                    @for($i=1;$i<=5;$i++)
-                                        <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                                    @endfor
-                                </div>
+                                <div class="flex text-yellow-400">@for($i=1;$i<=5;$i++)<svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>@endfor</div>
                             </div>
                             <div class="flex gap-2">
                                 <a href="{{ route('tours.show', $tour->slug) }}" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 rounded-lg text-xs font-semibold">View Details</a>
-                                <button onclick="quickBook('{{ $tour->slug }}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-2 rounded-lg" title="Book {{ $tour->title }}">
+                                <button onclick="quickBook('{{ $tour->slug }}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-2 rounded-lg">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 </button>
                             </div>
@@ -480,100 +378,21 @@
             @endif
         </div>
 
-        @include('partials.reviews', [
-            'title'    => 'TripAdvisor Reviews',
-            'subtitle' => 'Real stories from travelers who toured with Calm Africa Safaris',
-            'reviews'  => $reviews ?? []
-        ])
+@include('partials.reviews', [
+    'title' => 'TripAdvisor Reviews',
+    'subtitle' => 'Real stories from travelers who toured with Calm Africa Safaris',
+    'reviews' => $reviews ?? []
+])
 
     </section>
 
-     {{-- ── ABOUT SECTION — extra indexable keyword-rich body copy ── --}}
-    <section class="py-12 sm:py-16 bg-white">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-green-900 mb-6 text-center">
-                About Uganda Safari Tours with Calm Africa Safaris
-            </h2>
-            <div class="prose prose-green max-w-none text-gray-700 text-sm sm:text-base leading-relaxed space-y-4">
-                <p>
-                    <strong>Uganda</strong> is one of Africa's most extraordinary safari destinations, offering a unique combination of
-                    <strong>mountain gorilla trekking</strong>, chimpanzee tracking, Big Five game drives and world-class birdwatching  all within a compact, accessible country.
-                    Calm Africa Safaris specialises in <strong>Uganda safari tours</strong>, delivering small-group and private experiences that deliver genuine wildlife encounters and authentic cultural experiences.
-                </p>
-                <p>
-                    Our most popular experience is <strong>gorilla trekking in Bwindi Impenetrable National Park</strong>, home to over 400 habituated mountain gorillas nearly half the world's entire population.
-                    Uganda gorilla trekking permits cost <strong>$800 per person</strong> and must be booked in advance. We also offer <strong>gorilla trekking in Mgahinga Gorilla National Park</strong> and, for those with a larger budget, <strong>gorilla trekking in Rwanda's Volcanoes National Park</strong> where permits cost $1,500 per person.
-                </p>
-                <p>
-                    Beyond gorillas, our <strong>Uganda wildlife safaris</strong> cover <strong>Kibale National Park</strong> for chimpanzee tracking,
-                    <strong>Queen Elizabeth National Park</strong> for tree-climbing lions and the famous Kazinga Channel boat cruise,
-                    <strong>Murchison Falls National Park</strong> for Nile hippos, crocodiles and the iconic waterfall, and
-                    <strong>Kidepo Valley National Park</strong>  Uganda's most remote and rewarding wilderness destination.
-                    With over 1,070 recorded bird species, Uganda is also rated Africa's number one <strong>birding safari</strong> destination.
-                </p>
-                <p>
-                    All our Uganda safari packages include airport transfers from Entebbe International Airport, comfortable accommodation, all meals on safari, national park entrance fees, and the services of our expert local guides.
-                    We offer <strong>budget Uganda safaris</strong> using mid-range lodges and tented camps, <strong>midrange safari packages</strong> with superior lodges, and <strong>luxury Uganda safaris</strong> at exclusive boutique properties and high-end tented camps.
-                </p>
-            </div>
-        </div>
-    </section>
-
-
-     {{-- ── FAQ — ── --}}
-    <section class="py-12 sm:py-16 bg-gray-50" itemscope itemtype="https://schema.org/FAQPage">
+      <!-- FAQ SECTION — built entirely by JavaScript, zero Blade/PHP -->
+    <section class="py-12 sm:py-16 bg-gray-50">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 text-center">
-                Frequently Asked Questions About Uganda Safari Tours
+                Frequently Asked Questions About Uganda Safaris
             </h2>
-            <div class="space-y-4">
-
-                @php
-                $faqs = [
-                    [
-                        'q' => 'How much does a gorilla trekking safari in Uganda cost?',
-                        'a' => 'A gorilla trekking safari in Uganda starts from $1,300 per person for a budget 3-day package, which includes the gorilla permit ($800), accommodation, meals and transport. Midrange 7-day Uganda safari packages typically cost $2,500 to $4,500 per person. Luxury Uganda safaris start from $5,000 per person. All our packages include the gorilla permit, accommodation, meals and airport transfers.',
-                    ],
-                    [
-                        'q' => 'What is the best time to visit Uganda for a gorilla trekking safari?',
-                        'a' => 'Uganda can be visited year-round for gorilla trekking. The best time for Uganda safaris is during the dry seasons: June to September and December to February. During these months forest trails are drier, wildlife is easier to spot and gorilla trekking conditions are better. The wet season offers lush green scenery, fewer tourists and lower accommodation rates.',
-                    ],
-                    [
-                        'q' => 'What is the difference between gorilla trekking in Uganda vs Rwanda?',
-                        'a' => 'Uganda gorilla trekking permits cost $800 per person while Rwanda gorilla permits cost $1,500 per person. Uganda\'s Bwindi Impenetrable Forest is home to half the world\'s mountain gorilla population across four sectors: Buhoma, Ruhija, Rushaga and Nkuringo. Rwanda\'s Volcanoes National Park offers shorter treks and more luxury lodges nearby. Uganda is significantly better value for budget and midrange travelers.',
-                    ],
-                    [
-                        'q' => 'How do I book a Uganda safari tour with Calm Africa Safaris?',
-                        'a' => 'You can book a Uganda safari with Calm Africa Safaris by filling in our online booking form, calling +256 752 088 768, or messaging us on WhatsApp. We handle everything including gorilla trekking permit reservations, accommodation bookings, airport transfers and national park fees. We recommend booking at least 3 months in advance to secure gorilla permits, especially for peak season travel in June to September.',
-                    ],
-                    [
-                        'q' => 'What animals can I see on a Uganda safari?',
-                        'a' => 'Uganda is home to extraordinary wildlife diversity. On a Uganda safari you can see mountain gorillas in Bwindi, chimpanzees in Kibale Forest, the Big Five including lions, elephants, buffaloes, leopards and rhinos in Queen Elizabeth National Park and Ziwa Rhino Sanctuary, tree-climbing lions in Queen Elizabeth\'s Ishasha sector, hippos and Nile crocodiles in Murchison Falls, and over 1,070 bird species making Uganda Africa\'s top birding safari destination.',
-                    ],
-                    [
-                        'q' => 'Do I need a visa to visit Uganda for a safari?',
-                        'a' => 'Most international visitors require a visa to enter Uganda. You can apply online for an East Africa Tourist Visa covering Uganda, Kenya and Rwanda, or obtain a Uganda single-entry visa on arrival at Entebbe International Airport. We recommend applying online at least 2 weeks before travel. Calm Africa Safaris can assist with visa guidance and pre-departure information.',
-                    ],
-                ];
-                @endphp
-
-                @foreach($faqs as $faq)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
-                     itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-                    <button class="faq-toggle w-full text-left px-5 py-4 font-semibold text-gray-900 flex justify-between items-center hover:bg-gray-50 transition-colors text-sm sm:text-base">
-                        <span itemprop="name">{{ $faq['q'] }}</span>
-                        <svg class="faq-icon w-5 h-5 text-green-600 flex-shrink-0 ml-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-                    <div class="faq-answer hidden px-5 pb-4 text-gray-600 text-sm leading-relaxed"
-                         itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                        <p itemprop="text">{{ $faq['a'] }}</p>
-                    </div>
-                </div>
-                @endforeach
-
-            </div>
+            <div id="faq-container" class="space-y-4"></div>
         </div>
     </section>
 
@@ -622,34 +441,10 @@
 @endpush
 
 
+
 @push('scripts')
 
 @verbatim
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TouristInformationCenter",
-  "name": "Calm Africa Safaris",
-  "url": "https://calmafricasafaris.com",
-  "telephone": "+256752088768",
-  "email": "info@calmafricasafaris.com",
-  "address": {
-    "@type": "PostalAddress",
-    "addressCountry": "UG",
-    "addressLocality": "Kampala"
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.9",
-    "reviewCount": "147",
-    "bestRating": "5"
-  },
-  "priceRange": "$1300 - $8000",
-  "description": "Uganda's leading gorilla trekking and wildlife safari operator offering budget to luxury safari packages in Bwindi, Kibale, Queen Elizabeth, Murchison Falls and Kidepo Valley.",
-  "areaServed": ["Uganda", "Rwanda", "Kenya", "Tanzania"]
-}
-</script>
-
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -669,7 +464,7 @@
     {
       "@type": "Question",
       "name": "How much does a gorilla trekking safari in Uganda cost?",
-      "acceptedAnswer": { "@type": "Answer", "text": "A gorilla trekking safari in Uganda starts from $1,300 per person for a budget 3-day package. The Uganda gorilla trekking permit costs $800 per person. Midrange 7-day Uganda safari packages typically cost $2,500-$4,500 per person. Luxury Uganda safaris start from $5,000 per person." }
+      "acceptedAnswer": { "@type": "Answer", "text": "A gorilla trekking safari in Uganda starts from around $700 per person for a budget 3-day package. The Uganda gorilla trekking permit costs $800 per person. Midrange 7-day Uganda safari packages typically cost $1,500-$2,500 per person. Luxury Uganda safaris start from $3,000 per person." }
     },
     {
       "@type": "Question",
@@ -694,40 +489,65 @@
   ]
 }
 </script>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-  "name": "Uganda Safari Tours 2026",
-  "description": "Browse all Uganda safari tour packages from Calm Africa Safaris including gorilla trekking, chimp tracking, Big Five safaris and birdwatching tours.",
-  "url": "https://calmafricasafaris.com/tours",
-  "itemListElement": [
-    @foreach($tours as $index => $tour)
-    {
-      "@type": "ListItem",
-      "position": {{ $index + 1 }},
-      "name": "{{ addslashes($tour->title) }}",
-      "url": "{{ route('tours.show', $tour->slug) }}",
-      "description": "{{ addslashes(Str::limit($tour->description, 150)) }}"
-      @if($tour->prices && $tour->prices->count() > 0)
-      ,"offers": {
-        "@type": "Offer",
-        "priceCurrency": "USD",
-        "price": "{{ $tour->prices->min('price') }}",
-        "availability": "https://schema.org/InStock"
-      }
-      @endif
-    }{{ !$loop->last ? ',' : '' }}
-    @endforeach
-  ]
-}
-</script>
 @endverbatim
-
 
 <script>
 (function () {
+
+    /* ================================================================
+       FAQ — 100% JavaScript, no Blade/PHP whatsoever
+    ================================================================ */
+    var faqs = [
+        {
+            q: 'How much does a gorilla trekking safari in Uganda cost?',
+            a: 'A gorilla trekking safari in Uganda starts from around $800 per person for a budget 3-day package. The Uganda gorilla trekking permit costs $800 per person. Midrange 7-day Uganda safari packages typically cost $1,500-$2,500 per person. Luxury Uganda safaris start from $3,000 per person. All our packages include the gorilla permit, accommodation, meals and transport.'
+        },
+        {
+            q: 'What is the best time to visit Uganda for a safari?',
+            a: 'Uganda can be visited year-round for gorilla trekking. The best time for Uganda safaris is during the dry seasons: June to September and December to February. During these months trails are drier, wildlife is easier to spot around water sources, and gorilla trekking conditions are better. However gorilla permits are available all year and the wet season also offers lush green scenery and fewer tourists.'
+        },
+        {
+            q: 'What is the difference between gorilla trekking in Uganda vs Rwanda?',
+            a: "Uganda gorilla trekking permits cost $800 per person while Rwanda gorilla permits cost $1,500 per person. Uganda's Bwindi Impenetrable Forest is home to half the world's mountain gorilla population across multiple sectors. Rwanda's Volcanoes National Park offers a shorter trek and more luxury lodges nearby. Uganda is better for budget and midrange travelers while Rwanda suits luxury travelers with limited time."
+        },
+        {
+            q: 'How do I book a Uganda safari tour?',
+            a: 'You can book a Uganda safari with Calm Africa Safaris by filling in our custom tour request form, calling us on +256 752 088 768, or chatting on WhatsApp. We handle everything including gorilla trekking permits, accommodation bookings, airport transfers and park fees. We recommend booking at least 3 months in advance to secure gorilla permits especially for peak season travel.'
+        },
+        {
+            q: 'What animals can I see on a Uganda safari?',
+            a: "Uganda is home to an extraordinary range of wildlife. On a Uganda safari you can see mountain gorillas in Bwindi, chimpanzees in Kibale Forest, the Big Five including lions, elephants, buffaloes, leopards and rhinos in Queen Elizabeth and Ziwa Rhino Sanctuary, tree-climbing lions in Queen Elizabeth, hippos and Nile crocodiles in Murchison Falls, and over 1,070 bird species making Uganda Africa's top birding destination."
+        }
+    ];
+
+    function buildFaqs() {
+        var container = document.getElementById('faq-container');
+        if (!container) return;
+        faqs.forEach(function (faq) {
+            var wrapper = document.createElement('div');
+            wrapper.className = 'bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden';
+
+            var btn = document.createElement('button');
+            btn.className = 'faq-toggle w-full text-left px-5 py-4 font-semibold text-gray-900 flex justify-between items-center hover:bg-gray-50 transition-colors text-sm sm:text-base';
+            btn.innerHTML =
+                '<span>' + faq.q + '</span>' +
+                '<svg class="faq-icon w-5 h-5 text-green-600 flex-shrink-0 ml-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
+
+            var answer = document.createElement('div');
+            answer.className = 'faq-answer hidden px-5 pb-4 text-gray-600 text-sm leading-relaxed';
+            answer.textContent = faq.a;
+
+            btn.addEventListener('click', function () {
+                var icon = btn.querySelector('.faq-icon');
+                answer.classList.toggle('hidden');
+                icon.style.transform = answer.classList.contains('hidden') ? '' : 'rotate(180deg)';
+            });
+
+            wrapper.appendChild(btn);
+            wrapper.appendChild(answer);
+            container.appendChild(wrapper);
+        });
+    }
 
     /* ── Hero parallax ── */
     var img  = document.getElementById('hero-img');
@@ -741,6 +561,9 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+
+        /* Build FAQ */
+        buildFaqs();
 
         /* Scroll to filter bar offset by nav */
         if (window.location.hash === '#tour-filters') {
@@ -783,16 +606,6 @@
                 slideC.classList.remove('hidden'); gridC.classList.add('hidden');
             });
         }
-
-        /* FAQ accordion */
-        document.querySelectorAll('.faq-toggle').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var answer = this.nextElementSibling;
-                var icon   = this.querySelector('.faq-icon');
-                answer.classList.toggle('hidden');
-                icon.style.transform = answer.classList.contains('hidden') ? '' : 'rotate(180deg)';
-            });
-        });
 
         window.quickBook = function (slug) { window.location.href = '/tours/' + slug + '#booking'; };
     });

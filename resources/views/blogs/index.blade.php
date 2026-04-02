@@ -1,6 +1,12 @@
 {{-- resources/views/blogs/index.blade.php --}}
 @extends('layouts.app')
 
+@php
+    function clean_title($text) {
+        return html_entity_decode(strip_tags($text ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+@endphp
+
 @section('title', 'Safari Stories & Travel Guides')
 @section('description', 'Discover expert tips, wildlife encounters, and unforgettable adventures from the heart of Africa.')
 
@@ -95,7 +101,7 @@
                 <div class="relative overflow-hidden aspect-video lg:aspect-auto lg:min-h-[420px] bg-slate-200 dark:bg-slate-700">
                     @if($hero->featured_image)
                         <img src="{{ asset('storage/' . $hero->featured_image) }}"
-                             alt="{{ strip_tags($hero->title) }}"
+                             alt="{{ clean_title($hero->title) }}"
                              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
                     @else
                         <div class="w-full h-full flex items-center justify-center
@@ -126,11 +132,11 @@
 
                     <h2 class="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white
                                leading-tight mb-4 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                        {{ strip_tags($hero->title) }}
+                        {{ clean_title($hero->title) }}
                     </h2>
 
                     <p class="text-slate-500 dark:text-slate-400 leading-relaxed mb-6 line-clamp-3">
-                        {{ strip_tags($hero->excerpt ?: Str::limit(strip_tags($hero->content), 200)) }}
+                        {{ html_entity_decode(strip_tags($hero->excerpt ?: Str::limit(strip_tags($hero->content), 200)), ENT_QUOTES | ENT_HTML5, 'UTF-8') }}
                     </p>
 
                     <div class="flex items-center gap-4 text-xs text-slate-400 mb-8">
@@ -197,7 +203,7 @@
                    class="relative block overflow-hidden aspect-video bg-slate-200 dark:bg-slate-700 shrink-0">
                     @if($blog->featured_image)
                         <img src="{{ asset('storage/' . $blog->featured_image) }}"
-                             alt="{{ strip_tags($blog->title) }}"
+                             alt="{{ clean_title($blog->title) }}"
                              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
                     @else
                         <div class="w-full h-full flex items-center justify-center
@@ -249,13 +255,13 @@
                         <h3 class="text-lg font-bold text-slate-900 dark:text-white leading-snug
                                    group-hover:text-indigo-600 dark:group-hover:text-indigo-400
                                    transition-colors line-clamp-2">
-                            {{ strip_tags($blog->title) }}
+                            {{ clean_title($blog->title) }}
                         </h3>
                     </a>
 
                     <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed
                                line-clamp-3 flex-1 mb-4">
-                        {{ strip_tags($blog->excerpt ?: Str::limit(strip_tags($blog->content), 130)) }}
+                        {{ html_entity_decode(strip_tags($blog->excerpt ?: Str::limit(strip_tags($blog->content), 130)), ENT_QUOTES | ENT_HTML5, 'UTF-8') }}
                     </p>
 
                     {{-- Footer row --}}

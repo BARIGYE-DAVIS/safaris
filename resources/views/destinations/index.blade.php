@@ -5,7 +5,7 @@
 
 @section('content')
 
-<!-- Hero Section with Slideshow -->
+<!-- Hero Section with Parallax Slideshow -->
 <div class="relative hero-section bg-gray-900 overflow-hidden">
     <!-- Slideshow Container -->
     <div class="slideshow-container absolute inset-0">
@@ -24,17 +24,20 @@
 
         @foreach($heroDestinations as $index => $heroDestination)
         <div class="slide {{ $index === 0 ? 'slide-active' : '' }} absolute inset-0">
-            @if($heroDestination->featured_image)
-                <img src="{{ asset('storage/' . $heroDestination->featured_image) }}"
-                     alt="{{ $heroDestination->name }}"
-                     class="absolute inset-0 w-full h-full object-cover">
-            @elseif($heroDestination->image)
-                <img src="{{ asset('storage/' . $heroDestination->image) }}"
-                     alt="{{ $heroDestination->name }}"
-                     class="absolute inset-0 w-full h-full object-cover">
-            @else
-                <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-green-600 via-teal-600 to-blue-600"></div>
-            @endif
+            {{-- Parallax image wrapper --}}
+            <div class="parallax-bg absolute inset-0" style="top: -30%; height: 160%;">
+                @if($heroDestination->featured_image)
+                    <img src="{{ asset('storage/' . $heroDestination->featured_image) }}"
+                         alt="{{ $heroDestination->name }}"
+                         class="parallax-img w-full h-full object-cover">
+                @elseif($heroDestination->image)
+                    <img src="{{ asset('storage/' . $heroDestination->image) }}"
+                         alt="{{ $heroDestination->name }}"
+                         class="parallax-img w-full h-full object-cover">
+                @else
+                    <div class="w-full h-full bg-gradient-to-br from-green-600 via-teal-600 to-blue-600"></div>
+                @endif
+            </div>
 
             <!-- Gradient Overlay -->
             <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/20"></div>
@@ -86,9 +89,19 @@
                 data-slide="{{ $index }}"></button>
         @endforeach
     </div>
+
+    <!-- Scroll cue arrow -->
+    <div class="absolute bottom-8 right-8 z-10 animate-bounce hidden sm:block">
+        <div class="flex flex-col items-center text-white/70 text-xs">
+            <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+            Scroll
+        </div>
+    </div>
 </div>
 
-<!-- Search Bar — sits right where destinations begin -->
+<!-- Search Bar -->
 <div class="bg-gray-50 border-b border-gray-200 py-5 px-4">
     <div class="container mx-auto max-w-3xl">
         <form method="GET" action="{{ route('destinations.index') }}"
@@ -118,7 +131,6 @@
                 <input type="hidden" name="search" value="{{ request('search') }}">
             @endif
 
-            <!-- Filter label (hidden on small screens) -->
             <span class="hidden sm:inline-flex items-center text-gray-500 text-sm font-medium">
                 <i class="fas fa-filter mr-2 text-green-600"></i> Filter:
             </span>
@@ -156,7 +168,7 @@
     </div>
 </div>
 
-<!-- Popular Destinations (if no filters) -->
+<!-- Popular Destinations -->
 @if(!request()->hasAny(['search', 'country', 'popular']) && $popularDestinations->count() > 0)
 <div class="bg-gradient-to-b from-green-50 to-white py-12 sm:py-16">
     <div class="container mx-auto px-4">
@@ -231,7 +243,7 @@
 </div>
 @endif
 
-<!-- All Destinations Grid — anchor target for pagination scroll -->
+<!-- All Destinations Grid -->
 <div id="all-destinations" class="container mx-auto px-4 py-10 sm:py-16">
     @if(!request()->hasAny(['search', 'country', 'popular']))
         <div class="text-center mb-8 sm:mb-12">
@@ -396,44 +408,68 @@
     startAutoplay();
 })();
 
-// ── Pagination: scroll back to #all-destinations on page change ──────────────
+// ── Parallax scrolling on hero images ───────────────────────────────────────
+(function () {
+    const heroSection = document.querySelector('.hero-section');
+    if (!heroSection) return;
+
+    // Disable parallax on mobile/iOS — fixed backgrounds break inside overflow:hidden
+    const isMobile = window.matchMedia('(max-width: 768px)').matches ||
+                     /iPad|iPhone|iPod|Android/.test(navigator.userAgent);
+    if (isMobile) return;
+
+    const parallaxBgs = document.querySelectorAll('.parallax-bg');
+
+    function applyParallax() {
+        const heroRect  = heroSection.getBoundingClientRect();
+        const heroH     = heroSection.offsetHeight;
+
+        // Only run while hero is visible
+        if (heroRect.bottom < 0 || heroRect.top > window.innerHeight) return;
+
+        // scrollProgress: 0 = hero at top of viewport, 1 = hero fully scrolled past
+        const scrollProgress = Math.max(0, -heroRect.top) / heroH;
+
+        // Move image up to 30% of its own height as user scrolls — smooth parallax
+        const translateY = scrollProgress * 30; // percentage
+
+        parallaxBgs.forEach(bg => {
+            bg.style.transform = `translateY(${translateY}%)`;
+        });
+    }
+
+    // Use passive listener for performance
+    window.addEventListener('scroll', applyParallax, { passive: true });
+    applyParallax(); // run once on load
+})();
+
+// ── Pagination scroll ────────────────────────────────────────────────────────
 (function () {
     const section = document.getElementById('all-destinations');
     if (!section) return;
 
-    // If the URL already contains a page parameter on load, scroll to the section
-    // (handles the case where the user arrived via a paginated URL)
     if (new URLSearchParams(window.location.search).has('page')) {
-        // Small delay so the browser finishes painting before we scroll
         setTimeout(() => {
             section.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 120);
     }
 
-    // Intercept all pagination link clicks inside #pagination-links
     const paginationWrap = document.getElementById('pagination-links');
     if (!paginationWrap) return;
 
     paginationWrap.addEventListener('click', function (e) {
-        // Find the closest <a> that was clicked
         const link = e.target.closest('a[href]');
         if (!link) return;
-
         e.preventDefault();
-
         const url = new URL(link.href);
-
-        // Push the new page URL to history so the browser back button works correctly
         history.pushState(null, '', url.toString());
-
-        // Navigate — the page will reload at the top, then our onload scroll kicks in
         window.location.href = url.toString();
     });
 })();
 </script>
 
 <style>
-/* Hero height — tall on desktop, shorter on mobile */
+/* Hero height */
 .hero-section {
     height: 75vw;
     min-height: 340px;
@@ -454,7 +490,14 @@
     }
 }
 
-/* Slideshow */
+/* Parallax background wrapper —
+   oversized vertically so translateY never reveals edges */
+.parallax-bg {
+    will-change: transform;
+    transition: transform 0.05s linear;
+}
+
+/* Slideshow fade */
 .slide {
     opacity: 0;
     transition: opacity 1s ease-in-out;

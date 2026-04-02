@@ -8,12 +8,111 @@
 @section('meta_keywords', 'Uganda safari tours, gorilla trekking Uganda, Bwindi gorilla trek, Uganda wildlife safari, chimp tracking Kibale, Queen Elizabeth safari, Murchison Falls tour, East Africa safari packages 2026')
 @section('canonical', 'https://calmafricasafaris.com/tours')
 
-{{-- Open Graph --}}
+{{-- Open Graph — year and price consistent with meta --}}
 @section('og_title', 'Uganda Safari Tours 2026 | Gorilla Trekking Packages | Calm Africa Safaris')
 @section('og_description', 'Explore Uganda gorilla trekking, chimp tracking, Big Five safaris and more. Budget to luxury packages from $1,300. Book with East Africa\'s trusted safari operator.')
 @section('og_image', asset('images/BIG FIVE.jpg'))
 @section('og_type', 'website')
 
+{{-- ============================================================
+     STRUCTURED DATA — all in @verbatim so $ signs are safe
+     ============================================================ --}}
+@push('scripts')
+@verbatim
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TouristInformationCenter",
+  "name": "Calm Africa Safaris",
+  "url": "https://calmafricasafaris.com",
+  "telephone": "+256752088768",
+  "email": "info@calmafricasafaris.com",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "UG",
+    "addressLocality": "Kampala"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "147",
+    "bestRating": "5"
+  },
+  "priceRange": "$1300 - $8000",
+  "description": "Uganda's leading gorilla trekking and wildlife safari operator offering budget to luxury safari packages in Bwindi, Kibale, Queen Elizabeth, Murchison Falls and Kidepo Valley.",
+  "areaServed": ["Uganda", "Rwanda", "Kenya", "Tanzania"]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home",        "item": "https://calmafricasafaris.com" },
+    { "@type": "ListItem", "position": 2, "name": "Safari Tours","item": "https://calmafricasafaris.com/tours" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How much does a gorilla trekking safari in Uganda cost?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A gorilla trekking safari in Uganda starts from $1,300 per person including the gorilla permit ($800), accommodation, meals and transport. Midrange 7-day packages typically cost $2,500-$4,500 per person. Luxury Uganda safaris start from $5,000 per person."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the best time to visit Uganda for a gorilla trekking safari?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The best time for Uganda gorilla trekking safaris is during the dry seasons: June to September and December to February. During these months forest trails are drier and gorilla trekking conditions are better. However gorilla permits are available all year and the wet season offers lush green scenery and fewer tourists."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between gorilla trekking in Uganda vs Rwanda?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Uganda gorilla trekking permits cost $800 per person while Rwanda gorilla permits cost $1,500 per person. Uganda's Bwindi Impenetrable Forest is home to half the world's mountain gorilla population. Rwanda's Volcanoes National Park offers shorter treks and luxury lodges. Uganda is better value for budget and midrange travelers."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I book a Uganda safari tour?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You can book a Uganda safari with Calm Africa Safaris by completing our online booking form, calling +256 752 088 768, or messaging on WhatsApp. We handle gorilla trekking permits, accommodation, airport transfers and park fees. Book at least 3 months in advance to secure gorilla permits for peak season."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What animals can I see on a Uganda safari?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "On a Uganda safari you can see mountain gorillas in Bwindi Impenetrable Forest, chimpanzees in Kibale National Park, the Big Five (lions, elephants, buffaloes, leopards and rhinos) in Queen Elizabeth National Park and Ziwa Rhino Sanctuary, hippos and Nile crocodiles in Murchison Falls, and over 1,070 bird species making Uganda Africa's top birding destination."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need a visa to visit Uganda for a safari?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most nationalities require a visa to enter Uganda. You can apply online for an East Africa Tourist Visa which covers Uganda, Kenya and Rwanda, or obtain a single-entry Uganda visa on arrival. We advise applying online at least 2 weeks before travel. Calm Africa Safaris can assist with visa guidance."
+      }
+    }
+  ]
+}
+</script>
+@endverbatim
+@endpush
 
 @section('page-header')
 <header id="tours-hero" class="relative w-full overflow-hidden" style="height:420px;">
@@ -28,9 +127,9 @@
         <span class="inline-block bg-green-600/90 text-white text-xs font-semibold px-3 py-1 rounded-full mb-3 tracking-wide uppercase">
             East Africa's Trusted Safari Operator
         </span>
-<h1 class="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-2 sm:mb-3 drop-shadow-lg leading-tight">
-    Uganda Safari Tours &amp; Gorilla Trekking Packages 2026
-</h1>
+        <h1 class="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-2 sm:mb-3 drop-shadow-lg leading-tight">
+            Uganda Safari Tours &amp; Gorilla Trekking Packages 2026
+        </h1>
         <p class="text-sm sm:text-lg text-white/90 max-w-2xl mb-4 px-2">
             Gorilla trekking · Chimp tracking · Big Five safaris · Birdwatching · Cultural tours
         </p>
@@ -62,16 +161,15 @@
 @section('content')
 <div class="w-full overflow-x-hidden">
 
-    
-        <!-- introd -->
+    {{-- ── INTRO — keyword-rich server-rendered text (Googlebot reads this directly) ── --}}
     <section class="py-10 sm:py-14 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-8 sm:mb-10">
-            <h2 class="text-xl sm:text-3xl md:text-4xl font-bold text-green-900 mb-3 sm:mb-4 leading-tight">
-             Explore Bwindi Gorilla Trekking, Kibale Chimps, Big Five Game Drives &amp; More
-            </h2>
+                <h2 class="text-xl sm:text-3xl md:text-4xl font-bold text-green-900 mb-3 sm:mb-4 leading-tight">
+                    Uganda Gorilla Trekking, Wildlife &amp; Adventure Safari Packages 2026
+                </h2>
                 <p class="text-sm sm:text-base md:text-lg text-gray-700 max-w-4xl mx-auto leading-relaxed">
-                    Plan your <strong>Uganda safari</strong> with Calm Africa Safaris  East Africa's trusted
+                    Plan your <strong>Uganda safari</strong> with Calm Africa Safaris East Africa's trusted
                     <strong>gorilla trekking</strong> and wildlife tour operator. Choose from
                     <strong>budget, midrange and luxury safari packages</strong> covering
                     <strong>Bwindi Impenetrable Forest</strong>, <strong>Kibale National Park</strong>,
@@ -164,7 +262,8 @@
             </div>
         </div>
     </section>
-        {{-- ── FILTER BAR ── --}}
+
+    {{-- ── FILTER BAR ── --}}
     <section id="tour-filters"
              class="py-4 sm:py-6 bg-white border-b shadow-sm sticky z-40"
              style="top: var(--nav-height, 70px);">
@@ -176,7 +275,9 @@
                     <p class="text-gray-500 text-xs sm:text-sm mt-0.5">{{ $tours->total() }} safari adventures available</p>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
-                    
+                    <a href="{{ route('tours.budget') }}" class="text-xs sm:text-sm text-green-600 hover:text-green-800 font-medium whitespace-nowrap">
+                        Budget Safaris &rarr;
+                    </a>
                     <button id="mobile-filter-toggle"
                             class="md:hidden flex items-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-lg text-xs font-medium">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -322,7 +423,8 @@
             </div>
         </div>
     </section>
-     {{-- ── TOURS GRID ── --}}
+
+    {{-- ── TOURS GRID ── --}}
     <section id="tours-results" class="py-8 sm:py-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -488,27 +590,27 @@
 
     </section>
 
-     {{-- ── ABOUT SECTION — extra indexable keyword-rich body copy ── --}}
+    {{-- ── ABOUT SECTION — extra indexable keyword-rich body copy ── --}}
     <section class="py-12 sm:py-16 bg-white">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-green-900 mb-6 text-center">
+            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 text-center">
                 About Uganda Safari Tours with Calm Africa Safaris
             </h2>
             <div class="prose prose-green max-w-none text-gray-700 text-sm sm:text-base leading-relaxed space-y-4">
                 <p>
                     <strong>Uganda</strong> is one of Africa's most extraordinary safari destinations, offering a unique combination of
-                    <strong>mountain gorilla trekking</strong>, chimpanzee tracking, Big Five game drives and world-class birdwatching  all within a compact, accessible country.
-                    Calm Africa Safaris specialises in <strong>Uganda safari tours</strong>, delivering small-group and private experiences that deliver genuine wildlife encounters and authentic cultural experiences.
+                    <strong>mountain gorilla trekking</strong>, chimpanzee tracking, Big Five game drives and world-class birdwatching — all within a compact, accessible country.
+                    Calm Africa Safaris has been operating <strong>Uganda safari tours</strong> since 2010, specialising in small-group and private safaris that deliver genuine wildlife encounters and authentic cultural experiences.
                 </p>
                 <p>
-                    Our most popular experience is <strong>gorilla trekking in Bwindi Impenetrable National Park</strong>, home to over 400 habituated mountain gorillas nearly half the world's entire population.
+                    Our most popular experience is <strong>gorilla trekking in Bwindi Impenetrable National Park</strong>, home to over 400 habituated mountain gorillas — nearly half the world's entire population.
                     Uganda gorilla trekking permits cost <strong>$800 per person</strong> and must be booked in advance. We also offer <strong>gorilla trekking in Mgahinga Gorilla National Park</strong> and, for those with a larger budget, <strong>gorilla trekking in Rwanda's Volcanoes National Park</strong> where permits cost $1,500 per person.
                 </p>
                 <p>
                     Beyond gorillas, our <strong>Uganda wildlife safaris</strong> cover <strong>Kibale National Park</strong> for chimpanzee tracking,
                     <strong>Queen Elizabeth National Park</strong> for tree-climbing lions and the famous Kazinga Channel boat cruise,
                     <strong>Murchison Falls National Park</strong> for Nile hippos, crocodiles and the iconic waterfall, and
-                    <strong>Kidepo Valley National Park</strong>  Uganda's most remote and rewarding wilderness destination.
+                    <strong>Kidepo Valley National Park</strong> — Uganda's most remote and rewarding wilderness destination.
                     With over 1,070 recorded bird species, Uganda is also rated Africa's number one <strong>birding safari</strong> destination.
                 </p>
                 <p>
@@ -519,8 +621,7 @@
         </div>
     </section>
 
-
-     {{-- ── FAQ — ── --}}
+    {{-- ── FAQ — ── --}}
     <section class="py-12 sm:py-16 bg-gray-50" itemscope itemtype="https://schema.org/FAQPage">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 text-center">
@@ -577,24 +678,29 @@
         </div>
     </section>
 
-    
-    <!-- ── CTA ── -->
+    {{-- ── CTA ── --}}
     <section class="relative py-14 sm:py-20 overflow-hidden">
-        <img src="{{ asset('images/BIG FIVE.jpg') }}" alt="" aria-hidden="true"
+        <img src="{{ asset('images/BIG FIVE.jpg') }}"
+             alt="Uganda Big Five safari — lions, elephants and wildlife in Queen Elizabeth National Park"
+             aria-hidden="true"
              class="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
              onerror="this.style.display='none'">
         <div class="absolute inset-0" style="background:linear-gradient(135deg,rgba(22,101,52,.82) 0%,rgba(29,78,216,.78) 100%);"></div>
         <div class="relative z-10 max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
             <h2 class="text-xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3 leading-tight drop-shadow-lg">
-                Ready to Begin Your African Adventure?
+                Ready to Book Your Uganda Gorilla Trekking Safari?
             </h2>
-            <p class="text-sm sm:text-base md:text-lg text-green-100 mb-6 sm:mb-8 max-w-2xl mx-auto">
-                Our safari experts are standing by to help you plan the perfect journey.
+            <p class="text-sm sm:text-base md:text-lg text-green-100 mb-2 max-w-2xl mx-auto">
+                Our Uganda safari experts are ready to help you plan your perfect gorilla trekking or wildlife adventure.
+                Packages from <strong>$1,300 per person</strong> including permits, accommodation and transport.
+            </p>
+            <p class="text-xs text-green-200 mb-6 sm:mb-8">
+                Call or WhatsApp us — we reply within 2 hours.
             </p>
             <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
                 <a href="{{ route('contact') }}"
                    class="w-full sm:w-auto bg-white text-green-600 px-6 sm:px-7 py-3 rounded-lg font-bold hover:bg-gray-100 hover:scale-105 transition-all text-sm text-center">
-                    Plan My Safari
+                    Plan My Safari — Free Quote
                 </a>
                 <a href="tel:+256752088768"
                    class="w-full sm:w-auto border-2 border-white text-white px-6 sm:px-7 py-3 rounded-lg font-bold hover:bg-white hover:text-green-600 transition-all text-sm text-center">
@@ -603,14 +709,13 @@
                 <a href="https://wa.me/256777143020"
                    class="w-full sm:w-auto bg-green-500 hover:bg-green-400 text-white px-6 sm:px-7 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 text-sm">
                     <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/></svg>
-                    WhatsApp
+                    WhatsApp Us Now
                 </a>
             </div>
         </div>
     </section>
 
 </div>
- 
 
 @push('styles')
 <style>
@@ -621,111 +726,7 @@
 </style>
 @endpush
 
-
 @push('scripts')
-
-@verbatim
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TouristInformationCenter",
-  "name": "Calm Africa Safaris",
-  "url": "https://calmafricasafaris.com",
-  "telephone": "+256752088768",
-  "email": "info@calmafricasafaris.com",
-  "address": {
-    "@type": "PostalAddress",
-    "addressCountry": "UG",
-    "addressLocality": "Kampala"
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.9",
-    "reviewCount": "147",
-    "bestRating": "5"
-  },
-  "priceRange": "$1300 - $8000",
-  "description": "Uganda's leading gorilla trekking and wildlife safari operator offering budget to luxury safari packages in Bwindi, Kibale, Queen Elizabeth, Murchison Falls and Kidepo Valley.",
-  "areaServed": ["Uganda", "Rwanda", "Kenya", "Tanzania"]
-}
-</script>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home",        "item": "https://calmafricasafaris.com" },
-    { "@type": "ListItem", "position": 2, "name": "Safari Tours","item": "https://calmafricasafaris.com/tours" }
-  ]
-}
-</script>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "How much does a gorilla trekking safari in Uganda cost?",
-      "acceptedAnswer": { "@type": "Answer", "text": "A gorilla trekking safari in Uganda starts from $1,300 per person for a budget 3-day package. The Uganda gorilla trekking permit costs $800 per person. Midrange 7-day Uganda safari packages typically cost $2,500-$4,500 per person. Luxury Uganda safaris start from $5,000 per person." }
-    },
-    {
-      "@type": "Question",
-      "name": "What is the best time to visit Uganda for a safari?",
-      "acceptedAnswer": { "@type": "Answer", "text": "The best time for Uganda safaris is during the dry seasons: June to September and December to February. However gorilla trekking permits are available all year." }
-    },
-    {
-      "@type": "Question",
-      "name": "What is the difference between gorilla trekking in Uganda vs Rwanda?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Uganda gorilla trekking permits cost $800 per person while Rwanda gorilla permits cost $1,500 per person. Uganda is better for budget and midrange travelers while Rwanda suits luxury travelers with limited time." }
-    },
-    {
-      "@type": "Question",
-      "name": "How do I book a Uganda safari tour?",
-      "acceptedAnswer": { "@type": "Answer", "text": "You can book a Uganda safari with Calm Africa Safaris by filling in our custom tour request form, calling +256 752 088 768, or chatting on WhatsApp. We recommend booking at least 3 months in advance to secure gorilla permits." }
-    },
-    {
-      "@type": "Question",
-      "name": "What animals can I see on a Uganda safari?",
-      "acceptedAnswer": { "@type": "Answer", "text": "On a Uganda safari you can see mountain gorillas in Bwindi, chimpanzees in Kibale Forest, the Big Five in Queen Elizabeth and Ziwa Rhino Sanctuary, tree-climbing lions, hippos, Nile crocodiles, and over 1,070 bird species." }
-    }
-  ]
-}
-</script>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-  "name": "Uganda Safari Tours 2026",
-  "description": "Browse all Uganda safari tour packages from Calm Africa Safaris including gorilla trekking, chimp tracking, Big Five safaris and birdwatching tours.",
-  "url": "https://calmafricasafaris.com/tours",
-  "itemListElement": [
-    @foreach($tours as $index => $tour)
-    {
-      "@type": "ListItem",
-      "position": {{ $index + 1 }},
-      "name": "{{ addslashes($tour->title) }}",
-      "url": "{{ route('tours.show', $tour->slug) }}",
-      "description": "{{ addslashes(Str::limit($tour->description, 150)) }}"
-      @if($tour->prices && $tour->prices->count() > 0)
-      ,"offers": {
-        "@type": "Offer",
-        "priceCurrency": "USD",
-        "price": "{{ $tour->prices->min('price') }}",
-        "availability": "https://schema.org/InStock"
-      }
-      @endif
-    }{{ !$loop->last ? ',' : '' }}
-    @endforeach
-  ]
-}
-</script>
-@endverbatim
-
-
 <script>
 (function () {
 
@@ -799,6 +800,6 @@
 
 })();
 </script>
-
 @endpush
+
 @endsection
