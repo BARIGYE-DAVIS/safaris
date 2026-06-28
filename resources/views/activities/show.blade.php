@@ -349,7 +349,8 @@ function formatChecklist($text) {
 
                 <!-- Inclusions & Exclusions -->
                 @if($activity->inclusions || $activity->exclusions)
-                <div class="grid md:grid-cols-2 hidden gap-6">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Inclusions -->
                     @if($activity->inclusions)
                     <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-green-500">
                         <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
@@ -385,7 +386,8 @@ function formatChecklist($text) {
 
                 <!-- Equipment & What to Bring -->
                 @if($activity->equipment_provided || $activity->what_to_bring)
-                <div class="grid md:grid-cols-2 hidden gap-6">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Equipment Provided -->
                     @if($activity->equipment_provided)
                     <div class="bg-white rounded-xl shadow-md p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">

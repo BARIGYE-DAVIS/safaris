@@ -1,629 +1,671 @@
 @extends('layouts.app')
 
 @section('title', $destination->meta_title ?? $destination->name)
-@section('meta_description', $destination->meta_description ?? \Illuminate\Support\Str::limit($destination->description ?? '', 160))
-@section('meta_keywords', $destination->meta_keywords ?? $destination->focus_keyword ?? '')
+@section('meta_description', $destination->meta_description ?? \Illuminate\Support\Str::limit($destination->description ?? $destination->detailed_overview, 160))
+@section('meta_keywords', $destination->meta_keywords ?? implode(', ', array_filter([$destination->name, $destination->type, $destination->region])))
+
+@php
+/**
+ * Inline block renderer with proper image positioning.
+ * - Uses $destination->sections_content (ordered blocks).
+ * - Resolves images by block_id from destination_images table
+ * - Images appear exactly where they're placed in the content
+ * - Multiple CONSECUTIVE image blocks are automatically grouped into a slider
+ */
+
+// Load images and index them properly
+$imagesIndex = collect();
+$imagesByBlockId = collect();
+
+if (isset($destination) && $destination) {
+    if ($destination->relationLoaded('destinationImages')) {
+        $imagesIndex = $destination->destinationImages;
+    } else {
+        try {
+            $imagesIndex = \App\Models\DestinationImage::where('destination_id', $destination->id)->get();
+        } catch (\Throwable $e) {
+            $imagesIndex = collect();
+        }
+    }
+    
+    // Create index by block_id for fast lookup
+    $imagesByBlockId = $imagesIndex->keyBy('block_id');
+}
+
+/**
+ * Resolve image path from a block
+ * Priority: block_id match > media_id > storage_path
+ */
+$resolveImagePath = function(array $block) use ($imagesIndex, $imagesByBlockId) {
+    if (!empty($block['id'])) {
+        $img = $imagesByBlockId->get($block['id']);
+        if ($img) return $img->thumbnail_path ?: $img->storage_path;
+    }
+    if (!empty($block['block_id'])) {
+        $img = $imagesByBlockId->get($block['block_id']);
+        if ($img) return $img->thumbnail_path ?: $img->storage_path;
+    }
+    if (!empty($block['media_id'])) {
+        $img = $imagesIndex->firstWhere('id', $block['media_id']);
+        if ($img) return $img->thumbnail_path ?: $img->storage_path;
+    }
+    if (!empty($block['storage_path'])) {
+        return $block['storage_path'];
+    }
+    return null;
+};
+
+/**
+ * Get caption for an image block
+ */
+$getImageCaption = function(array $block) use ($imagesIndex, $imagesByBlockId) {
+    if (!empty($block['caption'])) return $block['caption'];
+    if (!empty($block['id'])) {
+        $img = $imagesByBlockId->get($block['id']);
+        if ($img && $img->caption) return $img->caption;
+    }
+    if (!empty($block['block_id'])) {
+        $img = $imagesByBlockId->get($block['block_id']);
+        if ($img && $img->caption) return $img->caption;
+    }
+    return '';
+};
+
+/**
+ * Render a slider for a group of image blocks.
+ * Called automatically when 2+ consecutive image blocks appear in a section.
+ */
+$renderImageSlider = function(array $imageBlocks, int &$sliderCounter) use ($resolveImagePath, $getImageCaption, $destination): string {
+    $sliderId = 'img-slider-' . $sliderCounter++;
+    $slides   = [];
+
+    foreach ($imageBlocks as $block) {
+        $path = $resolveImagePath($block);
+        if (!$path) continue;
+        $caption  = $getImageCaption($block);
+        $slides[] = [
+            'url'     => asset('storage/' . ltrim($path, '/')),
+            'caption' => $caption,
+            'alt'     => $caption ?: ($destination->name ?? 'Image'),
+        ];
+    }
+
+    if (empty($slides)) return '';
+
+    $count = count($slides);
+    $html  = '<div id="' . e($sliderId) . '" class="section-img-slider relative my-6 rounded-xl overflow-hidden shadow-md bg-black" data-count="' . $count . '" data-current="0">';
+
+    // ── Track ──
+    $html .= '<div class="slider-track flex transition-transform duration-500 ease-in-out">';
+    foreach ($slides as $slide) {
+        $html .= '<figure class="slider-slide min-w-full relative select-none">';
+        // Aspect-ratio wrapper ensures uniform height regardless of source image dimensions.
+        // object-cover fills the frame with no black bars or distortion.
+        $html .= '<div class="relative w-full" style="aspect-ratio:16/9;overflow:hidden;">';
+        $html .= '<img src="' . e($slide['url']) . '" alt="' . e($slide['alt']) . '" loading="lazy" class="absolute inset-0 w-full h-full object-cover pointer-events-none">';
+        if ($slide['caption']) {
+            $html .= '<figcaption class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white text-sm italic px-4 py-3">' . e($slide['caption']) . '</figcaption>';
+        }
+        $html .= '</div>';
+        $html .= '</figure>';
+    }
+    $html .= '</div>';
+
+    // ── Controls (only if more than 1 slide) ──
+    if ($count > 1) {
+        // Prev
+        $html .= '<button type="button" onclick="sliderMove(\'' . e($sliderId) . '\',-1)" aria-label="Previous image"
+            class="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-gray/80 hover:bg-gray text-gray-800 rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-500">';
+        $html .= '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>';
+        $html .= '</button>';
+
+        // Next
+        $html .= '<button type="button" onclick="sliderMove(\'' . e($sliderId) . '\',1)" aria-label="Next image"
+            class="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-gray/80 hover:bg-gray text-gray-800 rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-500">';
+        $html .= '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>';
+        $html .= '</button>';
+
+        // Dot indicators
+        $html .= '<div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">';
+        for ($d = 0; $d < $count; $d++) {
+            $active = $d === 0 ? 'bg-gray w-5' : 'bg-gray/50 w-2.5';
+            $html .= '<button type="button" onclick="sliderGoTo(\'' . e($sliderId) . '\',' . $d . ')" aria-label="Go to slide ' . ($d+1) . '"
+                class="slider-dot h-2.5 rounded-full transition-all duration-300 ' . $active . ' hover:bg-gray focus:outline-none"></button>';
+        }
+        $html .= '</div>';
+
+        // Counter
+        $html .= '<div class="slider-counter absolute top-3 right-3 bg-black/50 text-white text-xs px-2.5 py-1 rounded-full z-10 font-medium tabular-nums">1 / ' . $count . '</div>';
+    }
+
+    $html .= '</div>';
+    return $html;
+};
+
+/** 
+ * Renders blocks array into HTML string (safe to echo with {!! !!}).
+ * Consecutive image blocks are automatically grouped into a slider.
+ */
+$sliderCounter = 0;
+$renderBlocksHtml = function($blocks) use ($resolveImagePath, $getImageCaption, $renderImageSlider, $destination, &$sliderCounter) {
+    $html   = '';
+    if (!is_array($blocks) || empty($blocks)) return $html;
+
+    $blocks = array_values($blocks);
+    $total  = count($blocks);
+    $i      = 0;
+
+    while ($i < $total) {
+        $block = $blocks[$i];
+        $type  = $block['type'] ?? 'text';
+
+        // ── Image: collect consecutive image blocks ──
+        if ($type === 'image') {
+            $group = [];
+            while ($i < $total && ($blocks[$i]['type'] ?? '') === 'image') {
+                $group[] = $blocks[$i];
+                $i++;
+            }
+
+            if (count($group) === 1) {
+                // Single image — plain render
+                $path    = $resolveImagePath($group[0]);
+                $caption = $getImageCaption($group[0]);
+
+                if ($path) {
+                    $url = asset('storage/' . ltrim($path, '/'));
+                    $alt = $caption ?: ($destination->name ?? 'Image');
+                    $html .= '<figure class="my-6">';
+                    $html .= '<img src="' . e($url) . '" alt="' . e($alt) . '" loading="lazy" class="w-full h-auto rounded-lg shadow-md object-cover">';
+                    if ($caption) {
+                        $html .= '<figcaption class="text-sm text-gray-600 italic mt-2 text-center">' . e($caption) . '</figcaption>';
+                    }
+                    $html .= '</figure>';
+                } else {
+                    $blockId = $group[0]['id'] ?? $group[0]['block_id'] ?? 'unknown';
+                    $html .= '<div class="my-6 bg-gray-100 rounded-lg p-6 text-center text-gray-500 border border-dashed border-gray-300">'
+                           . '<p>Image not found (Block ID: ' . e($blockId) . ')</p></div>';
+                }
+            } else {
+                // Multiple consecutive images → slider
+                $html .= $renderImageSlider($group, $sliderCounter);
+            }
+
+            continue; // $i was already advanced inside the while loop
+        }
+
+        // ── Non-image blocks ──
+        switch ($type) {
+            case 'heading':
+                $raw = $block['text'] ?? '';
+                $iconMarker = '###ICON_PLACEHOLDER###';
+                $iconReplacements = [];
+                $withPlaceholders = preg_replace_callback(
+                    '/\[\[icon:([^\]]+)\]\]/',
+                    function ($m) use (&$iconReplacements, $iconMarker) {
+                        $cls = trim($m[1]);
+                        if (preg_match('/^(fas|far|fab|fal|fad)\s+fa-[\w-]+$/i', $cls)) {
+                            $ih  = '<i class="' . e($cls) . ' mr-2 text-green-600"></i>';
+                            $ph  = $iconMarker . count($iconReplacements) . $iconMarker;
+                            $iconReplacements[$ph] = $ih;
+                            return $ph;
+                        }
+                        return '';
+                    }, $raw
+                );
+                $esc = e($withPlaceholders);
+                foreach ($iconReplacements as $ph => $ih) $esc = str_replace(e($ph), $ih, $esc);
+                $html .= "<h2 class=\"text-2xl font-bold mt-6 mb-3 text-green-800\">{$esc}</h2>";
+                break;
+
+            case 'subheading':
+                $raw = $block['text'] ?? '';
+                $iconMarker = '###ICON_PLACEHOLDER###';
+                $iconReplacements = [];
+                $withPlaceholders = preg_replace_callback(
+                    '/\[\[icon:([^\]]+)\]\]/',
+                    function ($m) use (&$iconReplacements, $iconMarker) {
+                        $cls = trim($m[1]);
+                        if (preg_match('/^(fas|far|fab|fal|fad)\s+fa-[\w-]+$/i', $cls)) {
+                            $ih  = '<i class="' . e($cls) . ' mr-2 text-indigo-600"></i>';
+                            $ph  = $iconMarker . count($iconReplacements) . $iconMarker;
+                            $iconReplacements[$ph] = $ih;
+                            return $ph;
+                        }
+                        return '';
+                    }, $raw
+                );
+                $esc = e($withPlaceholders);
+                foreach ($iconReplacements as $ph => $ih) $esc = str_replace(e($ph), $ih, $esc);
+                $html .= "<h3 class=\"text-xl font-semibold mt-4 mb-2 text-green-700\">{$esc}</h3>";
+                break;
+
+            case 'text':
+                $text = $block['text'] ?? '';
+                $text = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $text);
+                $text = preg_replace('/\*(.*?)\*/',     '<em>$1</em>',         $text);
+                $iconMarker = '###ICON_PLACEHOLDER###';
+                $iconReplacements = [];
+                $textWithPlaceholders = preg_replace_callback(
+                    '/\[\[icon:([^\]]+)\]\]/',
+                    function ($m) use (&$iconReplacements, $iconMarker) {
+                        $cls = trim($m[1]);
+                        if (preg_match('/^(fas|far|fab|fal|fad)\s+fa-[\w-]+$/i', $cls)) {
+                            $ih  = '<i class="' . e($cls) . ' mr-2 text-green-600"></i>';
+                            $ph  = $iconMarker . count($iconReplacements) . $iconMarker;
+                            $iconReplacements[$ph] = $ih;
+                            return $ph;
+                        }
+                        return '';
+                    }, $text
+                );
+                $esc = e($textWithPlaceholders);
+                foreach ($iconReplacements as $ph => $ih) $esc = str_replace(e($ph), $ih, $esc);
+                $esc  = nl2br($esc, false);
+                $html .= "<div class=\"prose max-w-none text-gray-700 mb-4\">{$esc}</div>";
+                break;
+
+            default:
+                $text = $block['text'] ?? '';
+                $html .= "<div class=\"prose max-w-none text-gray-700 mb-4\">" . nl2br(e($text)) . "</div>";
+                break;
+        }
+
+        $i++;
+    }
+
+    return $html;
+};
+
+/** 
+ * Utility: get blocks for a named section or fallback to legacy field 
+ */
+$getSectionBlocks = function(string $key) use ($destination) {
+    $sections = $destination->sections_content ?? [];
+    if (!empty($sections[$key]) && is_array($sections[$key])) {
+        return $sections[$key];
+    }
+    $legacyMap = [
+        'overview'      => 'detailed_overview',
+        'activities'    => 'what_to_see_do',
+        'wildlife'      => 'wildlife_highlights',
+        'geography'     => 'geography_landscape',
+        'practical'     => 'practical_information',
+        'accommodation' => 'accommodation_options',
+        'extras'        => 'interesting_facts',
+    ];
+    if (isset($legacyMap[$key]) && !empty($destination->{$legacyMap[$key]})) {
+        return [['id' => 'blk-legacy-' . $key, 'type' => 'text', 'text' => $destination->{$legacyMap[$key]}]];
+    }
+    return [];
+};
+
+$hasSectionContent = function(string $key) use ($getSectionBlocks) {
+    return !empty($getSectionBlocks($key));
+};
+@endphp
+
+@section('page-header')
+<header class="relative h-96 lg:h-[500px] overflow-hidden">
+    @if($destination->featured_image)
+        <img src="{{ asset('storage/' . $destination->featured_image) }}" alt="{{ $destination->name }}" class="w-full h-full object-cover">
+    @elseif($destination->image)
+        <img src="{{ asset('storage/' . $destination->image) }}" alt="{{ $destination->name }}" class="w-full h-full object-cover">
+    @else
+        <div class="w-full h-full bg-gradient-to-br from-green-400 to-blue-500"></div>
+    @endif
+    <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+
+    <div class="absolute bottom-0 left-0 right-0 p-8">
+        <div class="max-w-7xl mx-auto text-white">
+            <div class="flex flex-wrap gap-3 mb-4">
+                @if($destination->type)
+                    <span class="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-semibold">{{ $destination->type }}</span>
+                @endif
+                @if($destination->region)
+                    <span class="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold">{{ $destination->region }}</span>
+                @endif
+            </div>
+            <h1 class="text-3xl lg:text-5xl font-bold text-white mb-4">{{ $destination->name }}</h1>
+            @if($destination->description)
+                <p class="mt-2 max-w-3xl text-sm lg:text-base text-white/90">{{ \Illuminate\Support\Str::limit(strip_tags($destination->description), 220) }}</p>
+            @endif
+        </div>
+    </div>
+</header>
+@endsection
 
 @section('content')
-<div class="bg-gray-50">
-    {{-- Hero Section with Featured Image as Background --}}
-    <section class="relative w-full min-h-screen flex items-center justify-center bg-no-repeat bg-center bg-fixed"
-             style="background-image: url('{{ $destination->featured_image ? asset('storage/' . $destination->featured_image) : ($destination->image ? asset('storage/' . $destination->image) : '') }}'); background-size: cover; background-color: #1a3c34; will-change: transform;">
-        {{-- Overlay --}}
-        <div class="absolute inset-0 bg-black/60"></div>
-        
-        <div class="relative z-10 container mx-auto px-4 text-center text-white py-16">
-            <div class="max-w-4xl mx-auto">
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight animate-fade-in">{{ $destination->name }}</h1>
-
-                {{-- Type & Region Badges --}}
-                <div class="flex flex-wrap justify-center gap-3 mt-4 animate-fade-in-up">
-                    @if($destination->type)
-                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-white/20 backdrop-blur-sm rounded-full text-xs md:text-sm font-semibold text-white border border-white/30">
-                            {{ $destination->type }}
-                        </span>
-                    @endif
-                    @if($destination->region)
-                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-white/20 backdrop-blur-sm rounded-full text-xs md:text-sm font-semibold text-white border border-white/30">
-                            {{ $destination->region }}
-                        </span>
-                    @endif
-                    @if($destination->country)
-                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-white/20 backdrop-blur-sm rounded-full text-xs md:text-sm font-semibold text-white border border-white/30">
-                            {{ $destination->country->name }}
-                        </span>
-                    @endif
-                </div>
-
-                {{-- Breadcrumb --}}
-                <nav class="mt-4 text-sm md:text-base animate-fade-in-up">
-                    <ol class="flex justify-center space-x-2 text-green-200">
-                        <li><a href="{{ route('index') }}" class="hover:text-white transition-colors duration-300 text-green-300">Home</a></li>
-                        <li class="mx-1">/</li>
-                        <li><a href="{{ route('destinations.index') }}" class="hover:text-white transition-colors duration-300 text-green-300">Destinations</a></li>
-                        <li class="mx-1">/</li>
-                        <li class="text-white font-medium">{{ $destination->name }}</li>
-                    </ol>
-                </nav>
-            </div>
+<nav class="bg-gray border-b py-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center space-x-2 text-sm">
+            <a href="{{ route('index') }}" class="text-gray-500 hover:text-green-600">Home</a>
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+            <a href="{{ route('destinations.index') }}" class="text-gray-500 hover:text-green-600">Destinations</a>
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+            <span class="text-gray-900 font-medium">{{ $destination->name }}</span>
         </div>
-    </section>
+    </div>
+</nav>
 
-    {{-- Content Section with smooth scroll effect --}}
-    <section class="relative py-12 md:py-16 bg-white/95 backdrop-blur-sm mt-[-2px] rounded-t-3xl shadow-2xl">
-        <div class="container mx-auto px-4">
-            <div class="max-w-6xl mx-auto">
-                <div class="p-6 md:p-10 lg:p-12">
-                    
-                    {{-- Description / Intro --}}
-                    @if($destination->description)
-                        <div class="text-gray-700 leading-relaxed mb-12 scroll-fade">
-                            <p class="text-lg md:text-xl lg:text-2xl font-light text-gray-600 leading-relaxed border-l-4 border-green-500 pl-6">{{ $destination->description }}</p>
-                        </div>
-                    @endif
-
-                    {{-- Render Content Blocks --}}
-                    @php
-                        // Ensure blocks is always an array
-                        $blocks = $destination->content_blocks ?? [];
-                        
-                        if (is_string($blocks)) {
-                            $blocks = json_decode($blocks, true);
-                        }
-                        
-                        if (!is_array($blocks)) {
-                            $blocks = [];
-                        }
-                        
-                        $images = $destination->destinationImages ?? collect();
-                        $imagesById = $images->keyBy('id');
-                        $imagesByBlockId = $images->filter(function($i) { return !empty($i->block_id); })->keyBy('block_id');
-                    @endphp
-
-                    @forelse($blocks as $block)
-                        @php
-                            $type = $block['type'] ?? 'text';
-                        @endphp
-
-                        {{-- ─── HEADING BLOCK ─────────────────────────────── --}}
-                        @if($type === 'heading')
-                            @php
-                                $level = $block['heading_level'] ?? 'h2';
-                                $headingClasses = [
-                                    'h1' => 'text-3xl md:text-4xl lg:text-5xl font-extrabold text-green-800 mb-6 mt-12 tracking-tight',
-                                    'h2' => 'text-2xl md:text-3xl lg:text-4xl font-bold text-green-800 mb-4 mt-10 tracking-tight',
-                                    'h3' => 'text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-3 mt-8',
-                                    'h4' => 'text-lg md:text-xl lg:text-2xl font-semibold text-gray-800 mb-3 mt-6',
-                                    'h5' => 'text-base md:text-lg lg:text-xl font-semibold text-gray-800 mb-2 mt-5',
-                                    'h6' => 'text-sm md:text-base lg:text-lg font-semibold text-gray-800 mb-2 mt-4',
-                                ];
-                            @endphp
-                            <{{ $level }} class="{{ $headingClasses[$level] ?? $headingClasses['h2'] }} scroll-fade">
-                                {{ $block['content'] ?? '' }}
-                            </{{ $level }}>
-
-                        {{-- ─── TEXT BLOCK ───────────────────────────────── --}}
-                        @elseif($type === 'text')
-                            <div class="prose prose-lg prose-green max-w-none text-gray-700 leading-relaxed mb-8 scroll-fade">
-                                {!! $block['content'] ?? '' !!}
-                            </div>
-
-                        {{-- ─── LIST BLOCK ───────────────────────────────── --}}
-                        @elseif($type === 'list')
-                            @php
-                                $listType = $block['list_type'] ?? 'ul';
-                                $listClasses = 'mb-8 space-y-2 text-gray-700 text-base md:text-lg lg:text-xl scroll-fade';
-                            @endphp
-                            @if($listType === 'ul')
-                                <ul class="list-disc list-inside {{ $listClasses }} space-y-2">
-                                    {!! $block['content'] ?? '' !!}
-                                </ul>
-                            @else
-                                <ol class="list-decimal list-inside {{ $listClasses }} space-y-2">
-                                    {!! $block['content'] ?? '' !!}
-                                </ol>
-                            @endif
-
-                        {{-- ─── IMAGE BLOCK ───────────────────────────────── --}}
-                        @elseif($type === 'image')
-                            @php
-                                // Get images for this block
-                                $blockImages = collect();
-                                
-                                // Check if block has media_id
-                                if (!empty($block['media_id']) && isset($imagesById[$block['media_id']])) {
-                                    $blockImages->push($imagesById[$block['media_id']]);
-                                }
-                                
-                                // Check if block has block_id
-                                if (!empty($block['block_id']) && isset($imagesByBlockId[$block['block_id']])) {
-                                    $blockImages->push($imagesByBlockId[$block['block_id']]);
-                                }
-                                
-                                // Check if there are any images with this block_id in the database
-                                if ($blockImages->isEmpty() && !empty($block['id'])) {
-                                    $dbImages = $images->filter(function($img) use ($block) {
-                                        return $img->block_id === $block['id'];
-                                    });
-                                    $blockImages = $blockImages->merge($dbImages);
-                                }
-                                
-                                // If still empty, try using the block's ID as block_id
-                                if ($blockImages->isEmpty() && !empty($block['id'])) {
-                                    $dbImages = $images->filter(function($img) use ($block) {
-                                        return $img->block_id === $block['id'];
-                                    });
-                                    $blockImages = $blockImages->merge($dbImages);
-                                }
-                                
-                                $count = $blockImages->count();
-                                
-                                if ($count === 0) {
-                                    // Try to find any image with matching block_id
-                                    $blockImages = $images->filter(function($img) use ($block) {
-                                        return $img->block_id === ($block['id'] ?? $block['block_id'] ?? null);
-                                    });
-                                    $count = $blockImages->count();
-                                }
-                                
-                                if ($count === 1) {
-                                    $gridClass = 'grid grid-cols-1';
-                                    $imgHeight = 'h-[50vh] md:h-[60vh]';
-                                } elseif ($count === 2) {
-                                    $gridClass = 'grid grid-cols-1 md:grid-cols-2';
-                                    $imgHeight = 'h-64 md:h-80';
-                                } elseif ($count >= 3) {
-                                    $gridClass = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
-                                    $imgHeight = 'h-56 md:h-64 lg:h-72';
-                                } else {
-                                    $gridClass = 'grid grid-cols-1';
-                                    $imgHeight = 'h-56';
-                                }
-                            @endphp
-                            
-                            @if($blockImages->isNotEmpty())
-                                <div class="{{ $gridClass }} gap-6 mb-10 scroll-fade">
-                                    @foreach($blockImages as $image)
-                                        <div class="relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 group">
-                                            <img src="{{ asset('storage/' . ltrim($image->storage_path, '/')) }}" 
-                                                 alt="{{ $image->alt_text ?? $block['caption'] ?? $destination->name }}" 
-                                                 class="w-full {{ $imgHeight }} object-cover transition-transform duration-700 group-hover:scale-110">
-                                            @if($image->alt_text || $image->caption)
-                                                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white text-xs md:text-sm p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                    {{ $image->caption ?? $image->alt_text }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
-
-                        {{-- ─── TABLE BLOCK ───────────────────────────────── --}}
-                        @elseif($type === 'table')
-                            @php
-                                $tableClasses = 'w-full text-sm md:text-base border-collapse scroll-fade shadow-sm rounded-lg overflow-hidden';
-                                if ($block['striped'] ?? false) $tableClasses .= ' striped';
-                                if ($block['bordered'] ?? true) $tableClasses .= ' bordered';
-                                if ($block['hoverable'] ?? false) $tableClasses .= ' hoverable';
-                                if ($block['small'] ?? false) $tableClasses .= ' small';
-                                
-                                $headerBg = $block['header_bg_color'] ?? '#1a3c34';
-                                $headerText = $block['header_text_color'] ?? '#ffffff';
-                                $rowBg = $block['row_bg_color'] ?? '#ffffff';
-                                $rowAltBg = $block['row_bg_alt_color'] ?? '#f8fafc';
-                                $rowText = $block['row_text_color'] ?? '#1e293b';
-                                $borderColor = $block['border_color'] ?? '#e2e8f0';
-                            @endphp
-                            
-                            <div class="mb-10 overflow-x-auto scroll-fade">
-                                @if(!empty($block['caption']))
-                                    <p class="text-sm text-green-800 mb-3 italic">{{ $block['caption'] }}</p>
-                                @endif
-                                
-                                <table class="min-w-full {{ $tableClasses }}" style="border-color: {{ $borderColor }};">
-                                    @if(!empty($block['headers']) && is_array($block['headers']))
-                                        <thead>
-                                            <tr>
-                                                @foreach($block['headers'] as $header)
-                                                    <th style="background-color: {{ $headerBg }}; color: {{ $headerText }}; border-color: {{ $borderColor }}; padding: 0.75rem 1.25rem; text-align: left; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">
-                                                        {{ $header }}
-                                                    </th>
-                                                @endforeach
-                                            </tr>
-                                        </thead>
-                                    @endif
-                                    
-                                    @if(!empty($block['rows']) && is_array($block['rows']))
-                                        <tbody>
-                                            @foreach($block['rows'] as $rowIndex => $row)
-                                                <tr>
-                                                    @foreach($row as $cellIndex => $cell)
-                                                        @php
-                                                            $isEven = ($rowIndex % 2 === 0);
-                                                            $bgColor = ($block['striped'] ?? false) ? ($isEven ? $rowBg : $rowAltBg) : $rowBg;
-                                                        @endphp
-                                                        <td style="background-color: {{ $bgColor }}; color: {{ $rowText }}; border-color: {{ $borderColor }}; padding: 0.75rem 1.25rem;">
-                                                            {{ $cell }}
-                                                        </td>
-                                                    @endforeach
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    @endif
-                                </table>
-                            </div>
-                            
-                            {{-- Add custom styles for table --}}
-                            @push('styles')
-                            <style>
-                                .striped tbody tr:nth-child(even) {
-                                    background-color: {{ $rowAltBg }};
-                                }
-                                .bordered th,
-                                .bordered td {
-                                    border: 1px solid {{ $borderColor }};
-                                }
-                                .hoverable tbody tr:hover {
-                                    background-color: #f1f5f9 !important;
-                                }
-                                .small th,
-                                .small td {
-                                    padding: 0.5rem 0.75rem !important;
-                                    font-size: 0.75rem !important;
-                                }
-                            </style>
-                            @endpush
-
-                        {{-- ─── BUTTONS BLOCK ─────────────────────────────── --}}
-                        @elseif($type === 'buttons')
-                            @php
-                                $alignment = $block['alignment'] ?? 'left';
-                                $direction = $block['direction'] ?? 'horizontal';
-                                $gap = $block['gap'] ?? 'medium';
-                                
-                                $gapClasses = [
-                                    'small' => 'gap-2',
-                                    'medium' => 'gap-3',
-                                    'large' => 'gap-4'
-                                ];
-                                
-                                $alignmentClasses = [
-                                    'left' => 'justify-start',
-                                    'center' => 'justify-center',
-                                    'right' => 'justify-end',
-                                    'justify' => 'justify-between'
-                                ];
-                                
-                                $directionClasses = [
-                                    'horizontal' => 'flex-row',
-                                    'vertical' => 'flex-col'
-                                ];
-                                
-                                // Larger button sizes
-                                $buttonSizeClasses = [
-                                    'small' => 'px-6 py-3 text-sm',
-                                    'medium' => 'px-8 py-4 text-base',
-                                    'large' => 'px-10 py-5 text-lg'
-                                ];
-                            @endphp
-                            
-                            <div class="flex flex-wrap {{ $directionClasses[$direction] ?? 'flex-row' }} {{ $gapClasses[$gap] ?? 'gap-3' }} {{ $alignmentClasses[$alignment] ?? 'justify-start' }} mb-10 scroll-fade w-full">
-                                @foreach($block['buttons'] ?? [] as $button)
-                                    @php
-                                        // Get the exact colors from the block data
-                                        $bgColor = $button['bg_color'] ?? '#2563eb';
-                                        $textColor = $button['text_color'] ?? '#ffffff';
-                                        $hoverBg = $button['hover_bg_color'] ?? $bgColor;
-                                        $hoverText = $button['hover_text_color'] ?? $textColor;
-                                        $borderRadius = $button['border_radius'] ?? '8px';
-                                        $size = $button['size'] ?? 'medium';
-                                        $url = $button['url'] ?? '#';
-                                        $target = $button['target'] ?? '_self';
-                                        $rel = $button['rel'] ?? '';
-                                        $icon = $button['icon'] ?? null;
-                                    @endphp
-                                    
-                                    <a href="{{ $url }}" 
-                                       target="{{ $target }}" 
-                                       rel="{{ $rel }}"
-                                       class="inline-flex items-center justify-center font-semibold transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-xl {{ $buttonSizeClasses[$size] ?? 'px-8 py-4 text-base' }}"
-                                       style="
-                                           background-color: {{ $bgColor }};
-                                           color: {{ $textColor }};
-                                           border-radius: {{ $borderRadius }};
-                                           border: none;
-                                           min-width: {{ $direction === 'vertical' ? '100%' : '120px' }};
-                                           {{ $direction === 'vertical' ? 'width: 100%;' : '' }}
-                                           {{ $alignment === 'justify' ? 'flex: 1;' : '' }}
-                                       "
-                                       onmouseover="this.style.backgroundColor='{{ $hoverBg }}'; this.style.color='{{ $hoverText }}';"
-                                       onmouseout="this.style.backgroundColor='{{ $bgColor }}'; this.style.color='{{ $textColor }}';">
-                                        
-                                        @if(!empty($icon))
-                                            <i class="{{ $icon }} mr-2" style="color: {{ $textColor }};"></i>
-                                        @endif
-                                        
-                                        {{ $button['text'] ?? 'Button' }}
-                                        <i class="fas fa-arrow-right ml-3 text-sm opacity-75 group-hover:translate-x-1 transition-transform" style="color: {{ $textColor }};"></i>
-                                    </a>
-                                @endforeach
-                            </div>
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <article class="lg:col-span-2 space-y-8">
+            <div class="bg-gray rounded-2xl p-6 shadow-sm border">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">About {{ $destination->name }}</h2>
+                        @if($destination->best_season)
+                            <p class="text-sm text-gray-500 mt-1">Best time to visit: <strong class="text-green-600">{{ $destination->best_season }}</strong></p>
                         @endif
-                    @empty
-                        <div class="text-center py-12 text-gray-500 text-lg">
-                            <p>No content available for this destination.</p>
-                        </div>
-                    @endforelse
-
-                    {{-- Request Quote Button --}}
-                    <div class="mt-12 pt-8 border-t-2 border-gray-200 scroll-fade">
-                        <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-8 md:p-10 text-center shadow-inner hover:shadow-xl transition-shadow duration-500">
-                            <h3 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Ready to Visit {{ $destination->name }}?</h3>
-                            <p class="text-gray-600 text-lg md:text-xl mb-6 max-w-2xl mx-auto">Contact us today and let our expert team help you plan the perfect safari adventure.</p>
-                            <a href="{{ route('contact') }}" 
-                               class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-8 py-4 md:px-10 md:py-5 rounded-xl font-bold text-base md:text-lg transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 hover:-translate-y-1">
-                                Request a Quote
-                            </a>
-                        </div>
+                    </div>
+                    <div class="flex-shrink-0 flex gap-2">
+                        <a href="{{ route('contact.index') }}" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Enquire</a>
                     </div>
                 </div>
+            </div>
+
+            {{-- Overview Section --}}
+            @if($hasSectionContent('overview'))
+                <section id="overview" class="bg-gray rounded-2xl p-6 shadow-sm border">
+                    <h2 class="text-2xl font-bold text-green-700 mb-4">Overview</h2>
+                    <div class="prose max-w-none">
+                        {!! $renderBlocksHtml($getSectionBlocks('overview')) !!}
+                    </div>
+                </section>
+            @endif
+
+            {{-- Activities Section --}}
+            @if($hasSectionContent('activities'))
+                <section id="activities" class="bg-gray rounded-2xl p-6 shadow-sm border">
+                    <h2 class="text-2xl font-bold text-green-700 mb-4">Things to Do</h2>
+                    <div class="prose max-w-none">
+                        {!! $renderBlocksHtml($getSectionBlocks('activities')) !!}
+                    </div>
+                </section>
+            @endif
+
+            {{-- Wildlife Section --}}
+            @if($hasSectionContent('wildlife'))
+                <section id="wildlife" class="bg-gray rounded-2xl p-6 shadow-sm border">
+                    <h2 class="text-2xl font-bold text-green-700 mb-4">Wildlife & Highlights</h2>
+                    <div class="prose max-w-none">
+                        {!! $renderBlocksHtml($getSectionBlocks('wildlife')) !!}
+                    </div>
+                </section>
+            @endif
+
+            {{-- Geography Section --}}
+            @if($hasSectionContent('geography'))
+                <section id="geography" class="bg-gray rounded-2xl p-6 shadow-sm border">
+                    <h2 class="text-2xl font-bold text-green-700 mb-4">Geography & Landscape</h2>
+                    <div class="prose max-w-none">
+                        {!! $renderBlocksHtml($getSectionBlocks('geography')) !!}
+                    </div>
+                </section>
+            @endif
+
+            {{-- Practical Information Section --}}
+            @if($hasSectionContent('practical'))
+                <section id="practical" class=" rounded-2xl p-6 shadow-sm border">
+                    <h2 class="text-2xl font-bold text-green-700 mb-4">Practical Information</h2>
+                    <div class="prose max-w-none">
+                        {!! $renderBlocksHtml($getSectionBlocks('practical')) !!}
+                    </div>
+                </section>
+            @endif
+
+            {{-- Accommodation Section --}}
+            @if($hasSectionContent('accommodation'))
+                <section id="accommodation" class=" rounded-2xl p-6 shadow-sm border">
+                    <h2 class="text-2xl font-bold text-green-700 mb-4">Accommodation</h2>
+                    <div class="prose max-w-none">
+                        {!! $renderBlocksHtml($getSectionBlocks('accommodation')) !!}
+                    </div>
+                </section>
+            @endif
+
+            {{-- Extras/Interesting Facts Section --}}
+            @if($hasSectionContent('extras'))
+                <section id="extras" class=" rounded-2xl p-6 shadow-sm border">
+                    <h2 class="text-2xl font-bold text-green-700 mb-4">Interesting Facts</h2>
+                    <div class="prose max-w-none">
+                        {!! $renderBlocksHtml($getSectionBlocks('extras')) !!}
+                    </div>
+                </section>
+            @endif
+
+            {{-- Photo gallery thumbnails (from gallery_images field) --}}
+            @php
+                $galleryImages = collect();
+                if (is_array($destination->gallery_images) && !empty($destination->gallery_images)) {
+                    $galleryImages = collect($destination->gallery_images)->pluck('image')->filter()->values();
+                }
+            @endphp
+
+            @if($galleryImages->isNotEmpty())
+                <section id="gallery" class=" rounded-2xl p-6 shadow-sm border">
+                    <h2 class="text-2xl font-bold text-green-700 mb-4">Photo Gallery</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        @foreach($galleryImages as $i => $imgPath)
+                            <button type="button" onclick="openGallery({{ $i }})" class="block rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <img src="{{ asset('storage/' . $imgPath) }}" alt="{{ $destination->name }} photo" loading="lazy" class="w-full h-44 object-cover transition-transform duration-300 hover:scale-105">
+                            </button>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+
+            {{-- Related destinations --}}
+            @if(!empty($relatedDestinations) && $relatedDestinations->count())
+                <section class="bg-gray-50 rounded-2xl p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">You might also like</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        @foreach($relatedDestinations as $rel)
+                            <a href="{{ route('destinations.show', $rel->slug) }}" class="block bg-gray rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition">
+                                <div class="h-40 bg-gray-100 overflow-hidden">
+                                    @if($rel->featured_image || $rel->image)
+                                        <img src="{{ asset('storage/' . ($rel->featured_image ?? $rel->image)) }}" alt="{{ $rel->name }}" class="w-full h-full object-cover">
+                                    @else
+                                        <div class="w-full h-full bg-gradient-to-br from-green-300 to-blue-400 flex items-center justify-center text-white font-bold">
+                                            {{ \Illuminate\Support\Str::limit($rel->name, 18) }}
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="font-semibold text-gray-900">{{ $rel->name }}</h4>
+                                    <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ \Illuminate\Support\Str::limit($rel->description ?? '', 100) }}</p>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+        </article>
+
+        {{-- Sidebar --}}
+        <aside class="lg:col-span-1">
+            <div class="sticky top-24 space-y-6">
+                <div class="bg-gray rounded-xl shadow p-6 border">
+                    <h3 class="text-lg font-bold text-gray-900 mb-3">Quick Info</h3>
+                    <div class="text-sm text-gray-700 space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Location</span>
+                            <span>{{ $destination->region ?? ($destination->country->name ?? '—') }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Type</span>
+                            <span>{{ $destination->type ?? '—' }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Area</span>
+                            <span>{{ $destination->area_size ? number_format($destination->area_size) . ' km²' : '—' }}</span>
+                        </div>
+                        @if($destination->latitude && $destination->longitude)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Coordinates</span>
+                                <span class="text-xs">{{ number_format($destination->latitude,4) }}, {{ number_format($destination->longitude,4) }}</span>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="mt-6">
+                        <a href="{{ route ('custom-tour-requests.create') }}" class="block text-center bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition">Plan Your Trip</a>
+                    </div>
+                </div>
+
+                @if($destination->phone || $destination->email || $destination->website)
+                    <div class="bg-gray rounded-xl shadow p-6 border">
+                        <h4 class="text-lg font-semibold mb-3">Contact</h4>
+                        <div class="text-sm text-gray-700 space-y-2">
+                            @if($destination->phone)
+                                <div><strong>Phone:</strong> <a href="tel:{{ $destination->phone }}" class="text-green-600 hover:underline">{{ $destination->phone }}</a></div>
+                            @endif
+                            @if($destination->email)
+                                <div><strong>Email:</strong> <a href="mailto:{{ $destination->email }}" class="text-green-600 hover:underline break-all">{{ $destination->email }}</a></div>
+                            @endif
+                            @if($destination->website)
+                                <div><strong>Website:</strong> <a href="{{ $destination->website }}" target="_blank" rel="noopener" class="text-green-600 hover:underline">{{ parse_url($destination->website, PHP_URL_HOST) }}</a></div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </aside>
+    </div>
+</main>
+
+{{-- Gallery modal --}}
+@if(isset($galleryImages) && $galleryImages->isNotEmpty())
+<div id="galleryModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden items-center justify-center p-4">
+    <div class="relative max-w-5xl w-full max-h-full">
+        <button onclick="closeGallery()" class="absolute -top-2 -right-2 bg-gray rounded-full p-2 shadow hover:bg-gray-100 z-10">
+            <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        <div class="bg-gray rounded-lg overflow-hidden">
+            <img id="galleryImage" src="" alt="Gallery image" class="w-full h-auto max-h-[80vh] object-contain bg-black">
+            <div class="p-3 text-center bg-gray-50">
+                <button id="galleryPrev" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded mr-2 transition">← Prev</button>
+                <button id="galleryNext" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded transition">Next →</button>
             </div>
         </div>
     </section>
 </div>
 @endsection
 
-@push('styles')
-<style>
-    /* Google Font for better typography */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-    
-    * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    
-    /* Smooth scrolling for the entire page */
-    html {
-        scroll-behavior: smooth;
-    }
-    
-    /* Parallax effect - background stays fixed while content scrolls over */
-    .bg-fixed {
-        background-attachment: fixed;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: cover;
-    }
-    
-    /* Fade animations for content */
-    .animate-fade-in {
-        animation: fadeIn 1.2s ease-out forwards;
-    }
-    
-    .animate-fade-in-up {
-        animation: fadeInUp 1.2s ease-out 0.3s forwards;
-        opacity: 0;
-    }
-    
-    .scroll-fade {
-        opacity: 0;
-        transform: translateY(30px);
-        animation: scrollFadeIn 0.8s ease-out forwards;
-    }
-    
-    /* Stagger animation for child elements */
-    .scroll-fade:nth-child(1) { animation-delay: 0.1s; }
-    .scroll-fade:nth-child(2) { animation-delay: 0.2s; }
-    .scroll-fade:nth-child(3) { animation-delay: 0.3s; }
-    .scroll-fade:nth-child(4) { animation-delay: 0.4s; }
-    .scroll-fade:nth-child(5) { animation-delay: 0.5s; }
-    .scroll-fade:nth-child(6) { animation-delay: 0.6s; }
-    .scroll-fade:nth-child(7) { animation-delay: 0.7s; }
-    .scroll-fade:nth-child(8) { animation-delay: 0.8s; }
-    
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: scale(0.95);
+@push('scripts')
+<script>
+/* ═══════════════════════════════════════════
+   Inline Section Image Slider
+   ═══════════════════════════════════════════ */
+function sliderApply(id, index) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const track   = el.querySelector('.slider-track');
+    const dots    = el.querySelectorAll('.slider-dot');
+    const counter = el.querySelector('.slider-counter');
+    const count   = parseInt(el.dataset.count || 1);
+
+    index = ((index % count) + count) % count; // wrap around
+    el.dataset.current = index;
+
+    // Move track
+    track.style.transform = `translateX(-${index * 100}%)`;
+
+    // Update dots: active dot gets wider pill style
+    dots.forEach((dot, i) => {
+        if (i === index) {
+            dot.classList.remove('bg-gray/50', 'w-2.5');
+            dot.classList.add('bg-gray', 'w-5');
+        } else {
+            dot.classList.remove('bg-gray', 'w-5');
+            dot.classList.add('bg-gray/50', 'w-2.5');
         }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
+    });
+
+    // Update counter badge
+    if (counter) counter.textContent = `${index + 1} / ${count}`;
+}
+
+function sliderMove(id, direction) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    sliderApply(id, parseInt(el.dataset.current || 0) + direction);
+}
+
+function sliderGoTo(id, index) {
+    sliderApply(id, index);
+}
+
+/* Touch / swipe support */
+(function () {
+    let startX = 0, startId = null;
+
+    document.addEventListener('touchstart', function (e) {
+        const slider = e.target.closest('.section-img-slider');
+        if (slider) { startX = e.touches[0].clientX; startId = slider.id; }
+    }, { passive: true });
+
+    document.addEventListener('touchend', function (e) {
+        if (!startId) return;
+        const diff = startX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) sliderMove(startId, diff > 0 ? 1 : -1);
+        startId = null;
+    }, { passive: true });
+})();
+
+/* ═══════════════════════════════════════════
+   Gallery Modal
+   ═══════════════════════════════════════════ */
+const galleryImgs = @json($galleryImages->all() ?? []);
+
+function openGallery(index) {
+    if (!galleryImgs.length) return;
+    const modal = document.getElementById('galleryModal');
+    const img   = document.getElementById('galleryImage');
+    index = Math.max(0, Math.min(parseInt(index) || 0, galleryImgs.length - 1));
+    img.dataset.index = index;
+    img.src = '{{ asset("storage/") }}/' + galleryImgs[index];
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeGallery() {
+    const modal = document.getElementById('galleryModal');
+    const img   = document.getElementById('galleryImage');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    if (img) img.src = '';
+}
+
+document.addEventListener('click', function (e) {
+    if (e.target.matches('#galleryPrev') || e.target.closest('#galleryPrev')) {
+        const img = document.getElementById('galleryImage');
+        if (!img) return;
+        let idx = parseInt(img.dataset.index || 0) - 1;
+        if (idx < 0) idx = galleryImgs.length - 1;
+        img.dataset.index = idx;
+        img.src = '{{ asset("storage/") }}/' + galleryImgs[idx];
+    } else if (e.target.matches('#galleryNext') || e.target.closest('#galleryNext')) {
+        const img = document.getElementById('galleryImage');
+        if (!img) return;
+        let idx = parseInt(img.dataset.index || 0) + 1;
+        if (idx >= galleryImgs.length) idx = 0;
+        img.dataset.index = idx;
+        img.src = '{{ asset("storage/") }}/' + galleryImgs[idx];
     }
-    
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    @keyframes scrollFadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Smooth hover transitions */
-    .transition-all {
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 300ms;
-    }
-    
-    /* Parallax scroll effect - content overlay */
-    .rounded-t-3xl {
-        border-top-left-radius: 1.5rem;
-        border-top-right-radius: 1.5rem;
-    }
-    
-    /* ===== INLINE ELEMENTS - KEEP INLINE ===== */
-    /* Links inside text - stay inline, display blue */
-    .prose a,
-    .text-gray-700 a {
-        color: #2563eb !important;
-        text-decoration: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        border-bottom: 2px solid transparent;
-        display: inline !important;
-    }
-    
-    .prose a:hover,
-    .text-gray-700 a:hover {
-        color: #1d4ed8 !important;
-        border-bottom-color: #2563eb;
-    }
-    
-    /* Inline icons - stay inline with text */
-    .prose .inline-icon,
-    .text-gray-700 .inline-icon {
-        display: inline-block !important;
-        margin: 0 2px;
-        font-size: 1.1em;
-        vertical-align: middle;
-    }
-    
-    /* Blockquotes - stay in flow where placed */
-    .prose blockquote,
-    .text-gray-700 blockquote {
-        display: block;
-        border-left: 4px solid #059669;
-        padding: 0.75rem 1.5rem;
-        margin: 1rem 0;
-        font-style: italic;
-        color: #475569;
-        background-color: #f0fdf4;
-        border-radius: 0.5rem;
-    }
-    
-    .prose blockquote p,
-    .text-gray-700 blockquote p {
-        margin: 0;
-        display: inline;
-    }
-    
-    /* Inline blockquotes (if someone wraps inline text) */
-    .prose blockquote.inline,
-    .text-gray-700 blockquote.inline {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        margin: 0 0.25rem;
-        border-left-width: 3px;
-    }
-    
-    /* Lists - keep inline items */
-    .prose ul, .prose ol,
-    .text-gray-700 ul, .text-gray-700 ol {
-        margin: 1rem 0;
-        padding-left: 1.5rem;
-    }
-    .prose li, .text-gray-700 li {
-        margin-bottom: 0.5rem;
-        line-height: 1.8;
-    }
-    .prose li a, .text-gray-700 li a {
-        display: inline !important;
-    }
-    
-    /* ===== PROSE STYLES ===== */
-    .prose {
-        max-width: 100%;
-    }
-    .prose p {
-        margin-bottom: 1.25rem;
-        line-height: 1.8;
-        font-size: 1.125rem;
-    }
-    .prose strong {
-        color: #1e293b;
-        font-weight: 600;
-    }
-    .prose em {
-        color: #475569;
-        font-style: italic;
-    }
-    .prose h2 {
-        margin-top: 2.5rem;
-        margin-bottom: 1rem;
-    }
-    .prose h3 {
-        margin-top: 2rem;
-        margin-bottom: 0.75rem;
-    }
-    .prose img {
-        border-radius: 0.75rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-    
-    /* ===== TABLE STYLES ===== */
-    .table-preview {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .table-preview th {
-        font-weight: 600;
-        text-align: left;
-    }
-    
-    /* ===== BUTTON STYLES ===== */
-    .btn-preview-group a {
-        position: relative;
-        overflow: hidden;
-    }
-    .btn-preview-group a::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.2);
-        transform: translate(-50%, -50%);
-        transition: width 0.6s ease, height 0.6s ease;
-    }
-    .btn-preview-group a:hover::after {
-        width: 300px;
-        height: 300px;
-    }
-    
-    /* Make buttons fill space in justify alignment */
-    .justify-between .btn-preview-group a {
-        flex: 1;
-        text-align: center;
-    }
-    
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 640px) {
-        .btn-preview-group a {
-            min-width: 100% !important;
-            width: 100% !important;
-            justify-content: center;
-        }
-        .flex-wrap {
-            flex-direction: column;
-        }
-    }
-    
-    /* Reduce motion for users who prefer it */
-    @media (prefers-reduced-motion: reduce) {
-        * {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-            scroll-behavior: auto !important;
-        }
-    }
-</style>
+});
+
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape')     closeGallery();
+    if (e.key === 'ArrowLeft')  document.getElementById('galleryPrev')?.click();
+    if (e.key === 'ArrowRight') document.getElementById('galleryNext')?.click();
+});
+</script>
 @endpush
