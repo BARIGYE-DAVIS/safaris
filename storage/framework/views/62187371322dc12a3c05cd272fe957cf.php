@@ -424,7 +424,7 @@
     </div>
 </section>
 
-<?php echo $__env->make('partials.partners', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startPush('styles'); ?>

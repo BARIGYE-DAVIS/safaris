@@ -1,40 +1,23 @@
-<?php $__env->startSection('title', 'Uganda Safari Packages 2026 | Wildlife Tours & Game Drive Safaris | Calm Africa Safaris'); ?>
-<?php $__env->startSection('meta_description', 'Browse 20+ Uganda safari packages from $1,300. Big Five game drives, chimp tracking Kibale, boat cruises Murchison Falls & Queen Elizabeth. Small groups, expert guides, all park fees included.'); ?>
-<?php $__env->startSection('meta_keywords', 'Uganda safari packages, Uganda wildlife safari, Uganda game drive safari, Queen Elizabeth safari packages, Murchison Falls tour packages, Kibale chimp tracking safari, Kidepo Valley safari, budget Uganda safari packages, luxury Uganda safari, Uganda safari 2026, East Africa safari packages, Uganda Big Five safari'); ?>
-<?php $__env->startSection('canonical', 'https://calmafricasafaris.com/tours'); ?>
-
-
-<?php $__env->startSection('og_title', 'Uganda Safari Packages 2026 | Game Drives, Chimp Tracking & Wildlife Tours'); ?>
-<?php $__env->startSection('og_description', 'Compare 20+ Uganda safari packages — Big Five game drives, chimp tracking, boat cruises and more. Budget to luxury from $1,300. Book with Calm Africa Safaris.'); ?>
-<?php $__env->startSection('og_image', asset('images/BIG FIVE.jpg')); ?>
-<?php $__env->startSection('og_type', 'website'); ?>
-
+<?php $__env->startSection('title', 'Safari Tours - Explore Our Amazing Tour Packages'); ?>
+<?php $__env->startSection('meta_description', 'Browse our collection of safari tours including wildlife safaris, cultural experiences, and adventure tours in East Africa.'); ?>
+<?php $__env->startSection('meta_keywords', 'safari tours, wildlife safaris, East Africa tours, Tanzania safaris, Kenya safaris, Uganda safaris'); ?>
 
 <?php $__env->startSection('page-header'); ?>
 <header id="tours-hero" class="relative w-full overflow-hidden" style="height:420px;">
     <img id="hero-img"
          src="<?php echo e($headerImage ?? asset('images/BIG FIVE.jpg')); ?>"
-         alt="Uganda safari packages 2026 — Big Five game drives and wildlife tours across East Africa national parks"
+         alt="Safari Tours"
          class="absolute inset-0 w-full h-full object-cover object-center"
          style="transform:translateY(0); will-change:transform;"
          onerror="this.style.display='none'">
     <div class="absolute inset-0 bg-black/55"></div>
     <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6">
-        <span class="inline-block bg-green-600/90 text-white text-xs font-semibold px-3 py-1 rounded-full mb-3 tracking-wide uppercase">
-            East Africa's Trusted Safari Operator
-        </span>
         <h1 class="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-2 sm:mb-3 drop-shadow-lg leading-tight">
-            Uganda Safari Packages &amp; Wildlife Tours 2026
+            Our Safari Packages
         </h1>
-        <p class="text-sm sm:text-lg text-white/90 max-w-2xl mb-4 px-2">
-            Game drives · Chimp tracking · Boat cruises · Birdwatching · Cultural tours
+        <p class="text-sm sm:text-lg text-white/90 max-w-xl mb-3 px-2">
+            Choose from our carefully crafted safari experiences
         </p>
-        <div class="flex flex-wrap justify-center gap-2 mb-4">
-            <span class="bg-white/20 backdrop-blur text-white text-xs px-3 py-1 rounded-full">From $1,300/person</span>
-            <span class="bg-white/20 backdrop-blur text-white text-xs px-3 py-1 rounded-full">Small Groups</span>
-            <span class="bg-white/20 backdrop-blur text-white text-xs px-3 py-1 rounded-full">Park Fees Included</span>
-            <span class="bg-white/20 backdrop-blur text-white text-xs px-3 py-1 rounded-full">Expert Local Guides</span>
-        </div>
         <nav aria-label="Breadcrumb">
             <ol class="flex items-center gap-2 text-xs sm:text-sm text-green-200" itemscope itemtype="https://schema.org/BreadcrumbList">
                 <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
@@ -44,10 +27,7 @@
                     <meta itemprop="position" content="1">
                 </li>
                 <li class="text-white/50">/</li>
-                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-                    <span itemprop="name" class="text-white font-medium">Safari Packages</span>
-                    <meta itemprop="position" content="2">
-                </li>
+                <li class="text-white font-medium">Tours</li>
             </ol>
         </nav>
     </div>
@@ -57,58 +37,35 @@
 <?php $__env->startSection('content'); ?>
 <div class="w-full overflow-x-hidden">
 
-    <!-- intro -->
+    <!-- ── INTRO ── -->
     <section class="py-10 sm:py-14 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-8 sm:mb-10">
-                <h2 class="text-xl sm:text-3xl md:text-4xl font-bold text-green-900 mb-3 sm:mb-4 leading-tight">
-                    Uganda Safari Packages Bwindi, Queen Elizabeth, Murchison Falls, Kibale &amp; More
+                <h2 class="text-xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
+                    Discover East Africa's Premier Safari Destinations
                 </h2>
                 <p class="text-sm sm:text-base md:text-lg text-gray-700 max-w-4xl mx-auto leading-relaxed">
-                    Choose your perfect <strong>Uganda safari package</strong> with Calm Africa Safaris, East Africa's trusted
-                    wildlife tour operator. We offer <strong>budget, midrange and luxury safari packages</strong> across
-                    <strong><a href="https://calmafricasafaris.com/destinations/queen-elizabeth" class="text-green-600 hover:text-green-700">Queen Elizabeth National Park</a></strong>, <strong><a href="https://calmafricasafaris.com/destinations/murchison-falls" class="text-green-600 hover:text-green-700">Murchison Falls National Park</a></strong>,
-                    <strong><a href="https://calmafricasafaris.com/destinations/kibale" class="text-green-600 hover:text-green-700">Kibale National Park</a></strong>, <strong><a href="https://calmafricasafaris.com/destinations/Bwindi%20Impenetrable%20National%20Park" class="text-green-600 hover:text-green-700">Bwindi Impenetrable Forest</a></strong> and
-                    <strong><a href="https://calmafricasafaris.com/destinations/kidepo-valley-national-park" class="text-green-600 hover:text-green-700">Kidepo Valley National Park</a></strong>. All packages include expert local guides,
-                    <a href="https://calmafricasafaris.com/accommodations" class="text-green-600 hover:text-green-700">accommodation</a>, meals and airport transfers from Entebbe. Safari packages start from
-                    <strong>$1,300 per person</strong>. Looking specifically for gorilla trekking?
-                    <a href="<?php echo e(route('index')); ?>" class="text-green-600 underline">Visit our homepage</a> for dedicated Uganda  <a href="https://calmafricasafaris.com/tours/5-day-gorilla-chimpanzee-trekking-safari" class="text-green-600 hover:text-green-700">gorilla trekking packages</a> in Bwindi and Mgahinga.
+                    Welcome to the ultimate safari experience in East Africa, where breathtaking wildlife encounters
+                    meet unparalleled adventure. Our expertly curated tours take you through the continent's most
+                    iconic destinations, from the vast plains of the Serengeti to the misty mountains of Rwanda.
                 </p>
             </div>
 
-            
-            <div class="flex flex-wrap justify-center gap-2 mb-8 sm:mb-10">
-                <?php $__currentLoopData = [
-                    'Queen Elizabeth Safari',
-                    'Murchison Falls Tours',
-                    'Kibale Chimp Tracking',
-                    'Kidepo Valley Safari',
-                    'Bwindi Forest Tours',
-                    'Uganda Birding Safaris',
-                    'Rwanda Wildlife Tours',
-                ]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dest): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <span class="bg-green-50 border border-green-200 text-green-800 text-xs font-medium px-3 py-1.5 rounded-full">
-                    <?php echo e($dest); ?>
-
-                </span>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </div>
-
-            
+            <!-- Category cards -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-10">
                 <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 text-center hover:shadow-lg transition-shadow">
                     <div class="w-10 h-10 sm:w-14 sm:h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <svg class="w-5 h-5 sm:w-7 sm:h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     </div>
-                    <h3 class="text-xs sm:text-base font-semibold text-gray-900 mb-1">Family Safari Uganda</h3>
-                    <p class="text-gray-500 text-xs hidden sm:block">Child-friendly Uganda safari packages with educational wildlife experiences for all ages.</p>
+                    <h3 class="text-xs sm:text-base font-semibold text-gray-900 mb-1">Family Adventures</h3>
+                    <p class="text-gray-500 text-xs hidden sm:block">Child-friendly safaris with educational experiences for all ages.</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 text-center hover:shadow-lg transition-shadow">
                     <div class="w-10 h-10 sm:w-14 sm:h-14 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <svg class="w-5 h-5 sm:w-7 sm:h-7 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                     </div>
-                    <h3 class="text-xs sm:text-base font-semibold text-gray-900 mb-1">Honeymoon Safari Uganda</h3>
-                    <p class="text-gray-500 text-xs hidden sm:block">Romantic luxury safari packages across Uganda's most scenic national parks.</p>
+                    <h3 class="text-xs sm:text-base font-semibold text-gray-900 mb-1">Romantic Getaways</h3>
+                    <p class="text-gray-500 text-xs hidden sm:block">Intimate safaris perfect for couples, honeymoons and anniversaries.</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 text-center hover:shadow-lg transition-shadow">
                     <div class="w-10 h-10 sm:w-14 sm:h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -128,37 +85,39 @@
 
             
             <div class="bg-white rounded-xl shadow-lg p-5 sm:p-8">
-                <h3 class="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">
-                    Why Book Your Uganda Safari Package With Calm Africa Safaris?
-                </h3>
+                <h3 class="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">Why Choose Our Safari Tours?</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                     <div class="text-center">
                         <div class="w-9 h-9 sm:w-11 sm:h-11 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                             <svg class="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
-                        <h4 class="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Certified Uganda Wildlife Guides</h4>
-                        <p class="text-gray-500 text-xs sm:text-sm">Uganda Wildlife Authority certified guides with decades of game drive and wildlife tracking experience.</p>
+                        <h4 class="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Expert Local Guides</h4>
+                        <p class="text-gray-500 text-xs sm:text-sm">Professional naturalists with decades of experience.</p>
                     </div>
                     <div class="text-center">
                         <div class="w-9 h-9 sm:w-11 sm:h-11 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                             <svg class="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                         </div>
-                        <h4 class="font-semibold text-gray-900 mb-1 text-sm sm:text-base">All Park Fees Included</h4>
-                        <p class="text-gray-500 text-xs sm:text-sm">We handle all national park entrance fees, activity permits and gorilla trekking permits ($800/person) on your behalf.</p>
+                        <h4 class="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Conservation Focus</h4>
+                        <p class="text-gray-500 text-xs sm:text-sm">Responsible tourism supporting wildlife and communities.</p>
                     </div>
                     <div class="text-center">
                         <div class="w-9 h-9 sm:w-11 sm:h-11 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                             <svg class="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
-                        <h4 class="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Tailor-Made Safari Packages</h4>
-                        <p class="text-gray-500 text-xs sm:text-sm">Custom packages built around your budget, travel dates, group size and wildlife interests.</p>
+                        <h4 class="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Flexible Itineraries</h4>
+                        <p class="text-gray-500 text-xs sm:text-sm">Customisable tours adapted to your interests and schedule.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    
+    <!-- ══════════════════════════════════════════════════════════
+         FILTER BAR
+         key fix: sticky top uses --nav-height CSS var so it always
+         sits just below the fixed nav, never hidden underneath it.
+    ══════════════════════════════════════════════════════════ -->
     <section id="tour-filters"
              class="py-4 sm:py-6 bg-white border-b shadow-sm sticky z-40"
              style="top: var(--nav-height, 70px);">
@@ -166,10 +125,13 @@
 
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <div>
-                    <h2 class="text-lg sm:text-2xl font-bold text-gray-900 leading-tight">Browse Uganda Safari Packages 2026</h2>
-                    <p class="text-gray-500 text-xs sm:text-sm mt-0.5"><?php echo e($tours->total()); ?> safari packages available</p>
+                    <h2 class="text-lg sm:text-2xl font-bold text-gray-900 leading-tight">Browse Our Safari Collection</h2>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-0.5"><?php echo e($tours->total()); ?> incredible adventures await</p>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
+                    <a href="<?php echo e(route('tours.budget')); ?>" class="text-xs sm:text-sm text-green-600 hover:text-green-800 font-medium whitespace-nowrap">
+                        View Budget Options →
+                    </a>
                     <button id="mobile-filter-toggle"
                             class="md:hidden flex items-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-lg text-xs font-medium">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -325,7 +287,7 @@
         </div>
     </section>
 
-    
+    <!-- ── TOURS GRID ── -->
     <section id="tours-results" class="py-8 sm:py-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -343,11 +305,8 @@
                          itemscope itemtype="https://schema.org/TouristTrip">
                     <div class="relative h-44 sm:h-52 md:h-64 overflow-hidden shrink-0">
                         <?php if($tour->featured_image): ?>
-                            <img src="<?php echo e(asset('storage/'.$tour->featured_image)); ?>"
-                                 alt="<?php echo e($tour->title); ?> — Uganda safari package in <?php echo e($tour->destinations ?: 'East Africa'); ?>"
-                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                 loading="lazy"
-                                 itemprop="image">
+                            <img src="<?php echo e(asset('storage/'.$tour->featured_image)); ?>" alt="<?php echo e($tour->title); ?>"
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                         <?php else: ?>
                             <div class="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
                                 <svg class="w-12 h-12 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -390,14 +349,14 @@
                                 <?php endif; ?>
                             </div>
                             <div class="flex text-yellow-400 items-center gap-0.5">
+                                <?php for($i=1;$i<=5;$i++): ?><svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><?php endfor; ?>
                                 <span class="text-xs text-gray-500 ml-1">4.9</span>
                             </div>
                         </div>
                         <div class="flex gap-2 mt-auto">
                             <a href="<?php echo e(route('tours.show', $tour->slug)); ?>"
-                               class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors"
-                               itemprop="url">
-                                View Package
+                               class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors">
+                                View Details
                             </a>
                             <button onclick="quickBook('<?php echo e($tour->slug); ?>')"
                                     class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors"
@@ -412,8 +371,8 @@
                     <svg class="w-16 h-16 text-gray-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     <h3 class="text-lg font-bold text-gray-500 mb-2">No Packages Found</h3>
                     <?php if(request()->hasAny(['category','type','destination','duration','price_range','sort'])): ?>
-                        <p class="text-gray-400 mb-4 text-sm">No Uganda safari packages match your current filters. Try broadening your search.</p>
-                        <a href="<?php echo e(route('tours.index')); ?>#tour-filters" class="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 text-sm">View All Packages</a>
+                        <p class="text-gray-400 mb-4 text-sm">No tours match your current filters.</p>
+                        <a href="<?php echo e(route('tours.index')); ?>#tour-filters" class="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 text-sm">View All Tours</a>
                     <?php else: ?>
                         <p class="text-gray-400 text-sm">Check back soon for amazing Uganda safari adventures!</p>
                     <?php endif; ?>
@@ -428,10 +387,7 @@
                     <div class="flex-shrink-0 w-64 snap-start bg-white rounded-xl shadow-lg overflow-hidden">
                         <div class="relative h-36 overflow-hidden">
                             <?php if($tour->featured_image): ?>
-                                <img src="<?php echo e(asset('storage/'.$tour->featured_image)); ?>"
-                                     alt="<?php echo e($tour->title); ?> — Uganda safari package"
-                                     class="w-full h-full object-cover"
-                                     loading="lazy">
+                                <img src="<?php echo e(asset('storage/'.$tour->featured_image)); ?>" alt="<?php echo e($tour->title); ?>" class="w-full h-full object-cover">
                             <?php else: ?>
                                 <div class="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
                                     <svg class="w-10 h-10 text-white opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -459,8 +415,8 @@
                                 </div>
                             </div>
                             <div class="flex gap-2">
-                                <a href="<?php echo e(route('tours.show', $tour->slug)); ?>" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 rounded-lg text-xs font-semibold">View Package</a>
-                                <button onclick="quickBook('<?php echo e($tour->slug); ?>')" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-2 rounded-lg" title="Book <?php echo e($tour->title); ?>">
+                                <a href="<?php echo e(route('tours.show', $tour->slug)); ?>" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 rounded-lg text-xs font-semibold">View Details</a>
+                                <button onclick="quickBook('<?php echo e($tour->slug); ?>')" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-2 rounded-lg">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 </button>
                             </div>
@@ -479,109 +435,9 @@
             </div>
             <?php endif; ?>
         </div>
-
-        <?php echo $__env->make('partials.reviews', [
-            'title'    => 'TripAdvisor Reviews',
-            'subtitle' => 'Real stories from travellers who booked Uganda safari packages with Calm Africa Safaris',
-            'reviews'  => $reviews ?? []
-        ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-
     </section>
 
     
-    <section class="py-12 sm:py-16 bg-white">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-green-900 mb-6 text-center">
-                About Our Uganda Safari Packages
-            </h2>
-            <div class="prose prose-green max-w-none text-gray-700 text-sm sm:text-base leading-relaxed space-y-4">
-                <p>
-                    <strong>Uganda safari packages</strong> from Calm Africa Safaris cover the country's finest national parks
-                    and wildlife reserves, giving you maximum wildlife encounters in minimum travel time.
-                    Our packages are categorised as <strong><a href="https://calmafricasafaris.com/tours/7-Day-Uganda-Budget-Safari" class="text-green-600 hover:text-green-700">budget Uganda safaris</a></strong>, <strong><a href="https://calmafricasafaris.com/tours/10-Day-Mid-Range-Uganda-safari" class="text-green-600 hover:text-green-700">midrange safari packages</a></strong>
-                    and <strong><a href="https://calmafricasafaris.com/tours/14-Day-Luxury-Uganda-Safari" class="text-green-600 hover:text-green-700">luxury Uganda safaris</a></strong> each designed to deliver outstanding value at every price point.
-                </p>
-                <p>
-                    Our most requested <strong><a href="https://calmafricasafaris.com/tours/7-Day-Uganda-Budget-Safari" class="text-green-600 hover:text-green-700">Uganda wildlife safari packages</a></strong> include
-                    <strong><a href="https://calmafricasafaris.com/destinations/queen-elizabeth" class="text-green-600 hover:text-green-700">Queen Elizabeth National Park</a></strong> famous for tree-climbing lions in the Ishasha sector
-                    and the Kazinga Channel boat cruise and <strong><a href="https://calmafricasafaris.com/destinations/murchison-falls" class="text-green-600 hover:text-green-700">Murchison Falls National Park</a></strong>, home to the
-                    world's most powerful waterfall, large elephant herds, Nile hippos and crocodiles.
-                    <strong><a href="https://calmafricasafaris.com/destinations/kibale" class="text-green-600 hover:text-green-700">Kibale National Park</a></strong> packages focus on chimpanzee tracking, while
-                    <strong><a href="https://calmafricasafaris.com/destinations/kidepo" class="text-green-600 hover:text-green-700">Kidepo Valley National Park</a></strong> packages offer Uganda's most remote and rewarding Big Five experience.
-                </p>
-                <p>
-                    All <strong>Uganda safari packages</strong> include return airport transfers from Entebbe International Airport,
-                    comfortable accommodation, all meals on safari, national park entrance fees, and the services of
-                    our Uganda Wildlife Authority certified local guides. For packages that include
-                    <strong><a href="https://calmafricasafaris.com/destinations/bwindi" class="text-green-600 hover:text-green-700">gorilla trekking in Bwindi Impenetrable Forest</a></strong>, the gorilla permit ($800 per person)
-                    is secured by our team in advance and included in the total package price.
-                </p>
-                <p>
-                    We also offer <strong>combined East Africa safari packages</strong> covering Uganda and Rwanda gorilla trekking,
-                    Uganda and Kenya, and multi-country itineraries across Uganda, Rwanda, Kenya and Tanzania.
-                    Every package can be customised to match your travel dates, group size, budget and wildlife priorities.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    
-    <section class="py-12 sm:py-16 bg-gray-50">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 text-center">
-                Frequently Asked Questions About Uganda Safari Packages
-            </h2>
-            <div class="space-y-4">
-
-                <?php
-                $faqs = [
-                    [
-                        'q' => 'What is included in a Uganda safari package?',
-                        'a' => 'All Calm Africa Safaris Uganda packages include return airport transfers from Entebbe, accommodation (lodge or tented camp depending on package level), all meals during the safari, national park entrance fees, a 4WD safari vehicle and a certified guide. Gorilla trekking packages additionally include the $800 gorilla permit. Flights to Uganda are not included.',
-                    ],
-                    [
-                        'q' => 'What is the cheapest Uganda safari package?',
-                        'a' => 'Our most affordable Uganda safari packages start from $1,300 per person for a 3-day budget safari. These packages use comfortable mid-range lodges and tented camps and cover one national park. The price includes accommodation, meals, transport and park fees. Adding gorilla trekking adds the $800 permit to the package cost.',
-                    ],
-                    [
-                        'q' => 'Which Uganda national park is best for a safari package?',
-                        'a' => 'Queen Elizabeth National Park is Uganda\'s most popular safari park, offering the Big Five, tree-climbing lions, chimpanzees and the famous Kazinga Channel boat cruise in a single package. Murchison Falls is best for large elephant and buffalo herds, hippos and the iconic waterfall. Kibale is the top choice for chimp tracking. For a remote wilderness experience, Kidepo Valley is unmatched.',
-                    ],
-                    [
-                        'q' => 'How long should a Uganda safari package be?',
-                        'a' => 'We recommend a minimum of 5 days for a meaningful Uganda wildlife safari covering two national parks. A 7 to 10 day package allows you to combine gorilla trekking in Bwindi, chimp tracking in Kibale and a game drive safari in Queen Elizabeth or Murchison Falls. Shorter 3-day packages are available for those with limited time.',
-                    ],
-                    [
-                        'q' => 'Can I customise a Uganda safari package?',
-                        'a' => 'Yes, all our Uganda safari packages can be fully customised. Contact our team with your travel dates, group size, budget and preferred parks, and we will build a bespoke itinerary. We specialise in private, small-group and family safari packages tailored to your exact requirements.',
-                    ],
-                    [
-                        'q' => 'Do Uganda safari packages include gorilla trekking?',
-                        'a' => 'Many of our Uganda safari packages include gorilla trekking in Bwindi Impenetrable Forest or Mgahinga Gorilla National Park. The gorilla trekking permit costs $800 per person and is secured by our team. We also offer Rwanda gorilla trekking packages for those based in Kigali or travelling on a luxury budget.',
-                    ],
-                ];
-                ?>
-
-                <?php $__currentLoopData = $faqs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $faq): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
-                     itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-                    <button class="faq-toggle w-full text-left px-5 py-4 font-semibold text-gray-900 flex justify-between items-center hover:bg-gray-50 transition-colors text-sm sm:text-base">
-                        <span itemprop="name"><?php echo e($faq['q']); ?></span>
-                        <svg class="faq-icon w-5 h-5 text-green-600 flex-shrink-0 ml-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-                    <div class="faq-answer hidden px-5 pb-4 text-gray-600 text-sm leading-relaxed"
-                         itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                        <p itemprop="text"><?php echo e($faq['a']); ?></p>
-                    </div>
-                </div>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-
-            </div>
-        </div>
-    </section>
-
     <!-- ── CTA ── -->
     <section class="relative py-14 sm:py-20 overflow-hidden">
         <img src="<?php echo e(asset('images/BIG FIVE.jpg')); ?>" alt="" aria-hidden="true"
@@ -615,7 +471,6 @@
 
 </div>
 
-
 <?php $__env->startPush('styles'); ?>
 <style>
     .scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none; }
@@ -627,170 +482,61 @@
 
 
 <?php $__env->startPush('scripts'); ?>
-
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TouristInformationCenter",
-  "name": "Calm Africa Safaris",
-  "url": "https://calmafricasafaris.com",
-  "telephone": "+256752088768",
-  "email": "info@calmafricasafaris.com",
-  "address": {
-    "@type": "PostalAddress",
-    "addressCountry": "UG",
-    "addressLocality": "Kampala"
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.9",
-    "reviewCount": "147",
-    "bestRating": "5"
-  },
-  "priceRange": "$1300 - $8000",
-  "description": "Uganda's leading wildlife safari operator offering budget to luxury safari packages in Queen Elizabeth, Murchison Falls, Kibale, Bwindi and Kidepo Valley national parks.",
-  "areaServed": ["Uganda", "Rwanda", "Kenya", "Tanzania"]
-}
-</script>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home",            "item": "https://calmafricasafaris.com" },
-    { "@type": "ListItem", "position": 2, "name": "Safari Packages", "item": "https://calmafricasafaris.com/tours" }
-  ]
-}
-</script>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "What is included in a Uganda safari package?",
-      "acceptedAnswer": { "@type": "Answer", "text": "All packages include airport transfers, accommodation, meals, park fees, 4WD vehicle and certified guide. Gorilla trekking packages include the $800 gorilla permit." }
-    },
-    {
-      "@type": "Question",
-      "name": "What is the cheapest Uganda safari package?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Budget Uganda safari packages start from $1,300 per person for a 3-day itinerary covering one national park, including accommodation, meals, transport and park fees." }
-    },
-    {
-      "@type": "Question",
-      "name": "Which Uganda national park is best for a safari package?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Queen Elizabeth is best for Big Five and boat cruises. Murchison Falls for elephants and the waterfall. Kibale for chimp tracking. Kidepo for remote wilderness experience." }
-    },
-    {
-      "@type": "Question",
-      "name": "Can I customise a Uganda safari package?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Yes, all packages are fully customisable. Contact us with your dates, group size and budget and we will build a bespoke itinerary." }
-    }
-  ]
-}
-</script>
-
-
-<script type="application/ld+json">
-<?php echo json_encode([
-    '<?php $__contextArgs = [];
-if (context()->has($__contextArgs[0])) :
-if (isset($value)) { $__contextPrevious[] = $value; }
-$value = context()->get($__contextArgs[0]); ?>'        => 'https://schema.org',
-    '@type'           => 'ItemList',
-    'name'            => 'Uganda Safari Packages 2026',
-    'description'     => 'Browse all Uganda safari packages from Calm Africa Safaris including game drives, chimp tracking, boat cruises and wildlife tours.',
-    'url'             => 'https://calmafricasafaris.com/tours',
-    'itemListElement' => $tours->map(function ($tour, $i) {
-        $item = [
-            '@type'       => 'ListItem',
-            'position'    => $i + 1,
-            'name'        => $tour->title,
-            'url'         => route('tours.show', $tour->slug),
-            'description' => Str::limit($tour->description, 150),
-        ];
-        if ($tour->prices && $tour->prices->count() > 0) {
-            $minPrice = $tour->prices->min('price');
-            if ($minPrice !== null && is_numeric($minPrice)) {
-                $item['offers'] = [
-                    '@type'         => 'Offer',
-                    'priceCurrency' => 'USD',
-                    'price'         => (float) $minPrice,
-                    'availability'  => 'https://schema.org/InStock',
-                ];
-            }
-        }
-        return $item;
-    })->values()->all(),
-], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT); ?>
-
-</script>
-
 <script>
 (function () {
-
-    var img  = document.getElementById('hero-img');
-    var hero = document.getElementById('tours-hero');
-    if (img && hero) {
-        window.addEventListener('scroll', function () {
-            if (window.scrollY < hero.offsetTop + hero.offsetHeight + 200) {
-                img.style.transform = 'translateY(' + (window.scrollY * 0.25) + 'px)';
-            }
-        }, { passive: true });
-    }
+    var img = document.getElementById('hero-img');
+    var el  = document.getElementById('tours-hero');
+    if (!img || !el) return;
+    window.addEventListener('scroll', function () {
+        if (window.scrollY < el.offsetTop + el.offsetHeight + 200) {
+            img.style.transform = 'translateY(' + (window.scrollY * 0.25) + 'px)';
+        }
+    }, { passive: true });
+})();
 
     document.addEventListener('DOMContentLoaded', function () {
 
-        if (window.location.hash === '#tour-filters') {
-            setTimeout(function () {
-                var el   = document.getElementById('tour-filters');
-                var navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-height')) || 70;
-                if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - navH, behavior: 'smooth' });
-            }, 100);
-        }
+    /* scroll to filter bar, offset by nav */
+    if (window.location.hash === '#tour-filters') {
+        setTimeout(function () {
+            var el   = document.getElementById('tour-filters');
+            var navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-height')) || 70;
+            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - navH, behavior: 'smooth' });
+        }, 100);
+    }
 
-        var toggle = document.getElementById('mobile-filter-toggle');
-        var wrap   = document.getElementById('filter-form-wrap');
-        if (toggle) toggle.addEventListener('click', function () {
-            wrap.classList.toggle('hidden');
-            wrap.classList.toggle('block');
+    /* mobile filter toggle */
+    var toggle = document.getElementById('mobile-filter-toggle');
+    var wrap   = document.getElementById('filter-form-wrap');
+    if (toggle) toggle.addEventListener('click', function () {
+        wrap.classList.toggle('hidden');
+        wrap.classList.toggle('block');
+    });
+
+    /* desktop auto-submit */
+    document.querySelectorAll('.tour-filter').forEach(function (s) {
+        s.addEventListener('change', function () {
+            if (window.innerWidth >= 768) document.getElementById('filter-form').submit();
         });
+    });
 
-        document.querySelectorAll('.tour-filter').forEach(function (s) {
-            s.addEventListener('change', function () {
-                if (window.innerWidth >= 768) document.getElementById('filter-form').submit();
-            });
+    /* mobile view toggle */
+    var gridBtn  = document.getElementById('grid-view');
+    var slideBtn = document.getElementById('horizontal-view');
+    var gridC    = document.getElementById('grid-container');
+    var slideC   = document.getElementById('horizontal-container');
+    if (gridBtn) {
+        gridBtn.addEventListener('click', function () {
+            gridBtn.classList.add('bg-green-600','text-white'); gridBtn.classList.remove('text-gray-600');
+            slideBtn.classList.remove('bg-green-600','text-white'); slideBtn.classList.add('text-gray-600');
+            gridC.classList.remove('hidden'); slideC.classList.add('hidden');
         });
-
-        var gridBtn  = document.getElementById('grid-view');
-        var slideBtn = document.getElementById('horizontal-view');
-        var gridC    = document.getElementById('grid-container');
-        var slideC   = document.getElementById('horizontal-container');
-        if (gridBtn) {
-            gridBtn.addEventListener('click', function () {
-                gridBtn.classList.add('bg-green-600','text-white'); gridBtn.classList.remove('text-gray-600');
-                slideBtn.classList.remove('bg-green-600','text-white'); slideBtn.classList.add('text-gray-600');
-                gridC.classList.remove('hidden'); slideC.classList.add('hidden');
-            });
-            slideBtn.addEventListener('click', function () {
-                slideBtn.classList.add('bg-green-600','text-white'); slideBtn.classList.remove('text-gray-600');
-                gridBtn.classList.remove('bg-green-600','text-white'); gridBtn.classList.add('text-gray-600');
-                slideC.classList.remove('hidden'); gridC.classList.add('hidden');
-            });
-        }
-
-        document.querySelectorAll('.faq-toggle').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var answer = this.nextElementSibling;
-                var icon   = this.querySelector('.faq-icon');
-                answer.classList.toggle('hidden');
-                icon.style.transform = answer.classList.contains('hidden') ? '' : 'rotate(180deg)';
-            });
+        slideBtn.addEventListener('click', function () {
+            slideBtn.classList.add('bg-green-600','text-white'); slideBtn.classList.remove('text-gray-600');
+            gridBtn.classList.remove('bg-green-600','text-white'); gridBtn.classList.add('text-gray-600');
+            slideC.classList.remove('hidden'); gridC.classList.add('hidden');
         });
+    }
 
         window.quickBook = function (slug) { window.location.href = '/tours/' + slug + '#booking'; };
     });

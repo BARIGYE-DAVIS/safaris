@@ -1,8 +1,88 @@
 @extends('layouts.app')
 
-@section('title', 'Calm Africa Safaris - Premium Safari Tours & Wildlife Adventures in East Africa')
-@section('meta_description', 'Experience unforgettable safari adventures in East Africa with Calm Africa Safaris. Expert guides, luxury accommodations, wildlife tours, cultural experiences. Book your dream African safari today!')
-@section('meta_keywords', 'safari tours, East Africa safari, Tanzania safari, Kenya safari, Uganda safari, wildlife tours, luxury safari, family safari, honeymoon safari, Big Five safari, gorilla trekking, cultural tours, adventure tours, safari packages, African safari, wildlife photography, conservation tours, guided safari, custom safari, safari booking, Serengeti, Ngorongoro, Maasai Mara, Mount Kilimanjaro, safari holidays, eco tourism, responsible travel')
+{{-- ============================================================
+     SEO META
+     ============================================================ --}}
+
+@section('title', 'Gorilla Trekking Uganda 2026 | Bwindi Permits & Packages | Calm Africa Safaris')
+@section('meta_description', 'Uganda gorilla trekking from $1,300. Secure your $800 Bwindi permit, choose your sector and trek wild mountain gorillas. Expert guides, guaranteed departures. Book gorilla trekking Uganda today.')
+@section('meta_keywords', ', , gorilla trekking Bwindi Impenetrable Forest, Uganda gorilla permits, mountain gorilla trekking Uganda, gorilla trekking packages Uganda, gorilla trekking Rwanda, Mgahinga gorilla trekking, best gorilla trekking Africa, gorilla safari Uganda 2026')
+@section('canonical', 'https://calmafricasafaris.com/')
+
+
+    {{-- Twitter Card --}}
+@section('twitter_title', 'Gorilla Trekking Uganda 2026 | Bwindi Permits from $800 | Calm Africa Safaris')
+@section('og_title', 'Gorilla Trekking Uganda 2026 | Bwindi Impenetrable Forest Packages')
+@section('og_description', 'Trek mountain gorillas in Bwindi from $1,300. Permits secured, expert guides, all-inclusive packages. Uganda\'s most trusted gorilla trekking specialist.')
+    
+{{-- Open Graph --}}
+@section('og_title', 'Uganda Safari Tours & Gorilla Trekking 2026 | Calm Africa Safaris')
+@section('og_description', 'Gorilla trekking, chimp tracking, Big Five safaris and more. Budget to luxury packages from $1,300. Book with East Africa\'s trusted safari operator.')
+@section('og_image', asset('images/BIG FIVE.jpg'))
+@section('og_type', 'website')
+
+    
+{{-- ============================================================
+     STRUCTURED DATA
+     ============================================================ --}}
+@push('scripts')
+@verbatim
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TravelAgency",
+  "name": "Calm Africa Safaris",
+  "url": "https://calmafricasafaris.com",
+  "logo": "https://calmafricasafaris.com/images/logo.png",
+  "telephone": "+256752088768",
+  "email": "info@calmafricasafaris.com",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "UG",
+    "addressLocality": "Kampala"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "147",
+    "bestRating": "5"
+  },
+  "priceRange": "$1300 - $8000",
+  "description": "Uganda's leading gorilla trekking and wildlife safari operator offering budget to luxury safari packages in Bwindi, Kibale, Queen Elizabeth, Murchison Falls and Kidepo Valley.",
+  "areaServed": ["Uganda", "Rwanda", "Kenya", "Tanzania"],
+  "sameAs": [
+    "https://www.facebook.com/calmafricasafaris",
+    "https://www.instagram.com/calmafricasafaris",
+    "https://www.tripadvisor.com/calmafricasafaris"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Calm Africa Safaris",
+  "url": "https://calmafricasafaris.com",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://calmafricasafaris.com/tours?destination={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://calmafricasafaris.com" }
+  ]
+}
+</script>
+@endverbatim
+@endpush
 
 @section('page-header')
 <!-- =========================================================
@@ -21,75 +101,105 @@
 
         <!-- Slide 1 — Bwindi -->
         <div class="hero-slide absolute inset-0 w-full h-full opacity-100 transition-opacity duration-1000 ease-in-out"
-             style="background-image:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url('{{ asset('images/BWINDI.jpg') }}');background-size:cover;background-position:center;">
-            <div class="absolute inset-0 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-                <div class="text-center text-white w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
-                    <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
-                        Experience Wild Africa
-                    </h1>
-                    <p class="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 opacity-90 px-2 sm:px-0">
-                        Embark on extraordinary safari adventures across East Africa's most iconic destinations
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                        <a href="{{ route('tours.index') }}"
-                           class="bg-green-600 hover:bg-green-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-300 hover:scale-105 text-center shadow-lg">
-                            Explore Tours
-                        </a>
-                        <a href="#tour-packages"
-                           class="border-2 border-white text-white hover:bg-white hover:text-green-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-300 text-center">
-                            View Packages
-                        </a>
-                    </div>
-                </div>
+             role="img"
+             aria-label="Gorilla trekking in Bwindi Impenetrable Forest Uganda">
+            {{-- Parallax layer: background-attachment:fixed is the key --}}
+            <div class="hero-bg-layer absolute inset-0"
+                 style="background-image:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url('{{ asset('images/BWINDI.jpg') }}');
+                        background-size:cover;
+                        background-position:center;
+                        background-attachment:fixed;">
             </div>
         </div>
 
-        <!-- Slide 2 -->
+        <!-- Slide 2 — Big Five -->
         <div class="hero-slide absolute inset-0 w-full h-full opacity-0 transition-opacity duration-1000 ease-in-out"
-             style="background-image:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url('{{ asset('images/BIG FIVE.jpg') }}');background-size:cover;background-position:center;">
-            <div class="absolute inset-0 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-                <div class="text-center text-white w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
-                    <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
-                        Witness the Big Five
-                    </h1>
-                    <p class="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 opacity-90 px-2 sm:px-0">
-                        Get up close with Africa's most magnificent wildlife in their natural habitat
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                        <a href="{{ route('tours.index') }}"
-                           class="bg-orange-600 hover:bg-orange-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-300 hover:scale-105 text-center shadow-lg">
-                            Wildlife Safaris
-                        </a>
-                        <a href="{{ route('contact') }}"
-                           class="border-2 border-white text-white hover:bg-white hover:text-orange-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-300 text-center">
-                            Plan Custom Safari
-                        </a>
-                    </div>
-                </div>
+             role="img"
+             aria-label="Big Five wildlife safari in Queen Elizabeth National Park Uganda">
+            <div class="hero-bg-layer absolute inset-0"
+                 style="background-image:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url('{{ asset('images/BIG FIVE.jpg') }}');
+                        background-size:cover;
+                        background-position:center;
+                        background-attachment:fixed;">
             </div>
         </div>
 
-        <!-- Slide 3 -->
+        <!-- Slide 3 — Sunset -->
         <div class="hero-slide absolute inset-0 w-full h-full opacity-0 transition-opacity duration-1000 ease-in-out"
-             style="background-image:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url('https://images.unsplash.com/photo-1523805009345-7448845a9e53?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80');background-size:cover;background-position:center;">
-            <div class="absolute inset-0 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-                <div class="text-center text-white w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
-                    <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
-                        Luxury Safari Adventures
-                    </h1>
-                    <p class="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 opacity-90 px-2 sm:px-0">
-                        Indulge in premium safari experiences with world-class accommodations
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                        <a href="{{ route('tours.index') }}"
-                           class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-300 hover:scale-105 text-center shadow-lg">
-                            Luxury Tours
-                        </a>
-                        <a href="{{ route('tours.index') }}"
-                           class="border-2 border-white text-white hover:bg-white hover:text-yellow-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-300 text-center">
-                            Explore Now
-                        </a>
-                    </div>
+             role="img"
+             aria-label="Luxury safari lodges and sunset in East Africa">
+            <div class="hero-bg-layer absolute inset-0"
+                 style="background-image:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url('{{ asset('images/home.jpg') }}');
+                        background-size:cover;
+                        background-position:center;
+                        background-attachment:fixed;">
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Hero text ── --}}
+    <div class="hero-text-wrap absolute inset-0 flex flex-col items-center justify-center pb-32 sm:pb-36 px-4 sm:px-6 lg:px-8 z-10">
+        <div class="text-center text-white w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
+            <h1 class="hero-h1 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight opacity-0">
+                Gorilla Trekking Uganda 2026 Bwindi Permits &amp; Safari Packages
+            </h1>
+            <p class="hero-sub text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-8 opacity-0 px-2 sm:px-0" style="color:rgba(255,255,255,.88)">
+                Embark on extraordinary safari adventures across East Africa's most iconic destinations
+            </p>
+            <div class="hero-btns flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center opacity-0">
+                <a href="{{ route('tours.index') }}"
+                   class="bg-green-600 hover:bg-green-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-300 hover:scale-105 text-center shadow-lg">
+                    Explore Tours
+                </a>
+                <a href=" {{ route('contact') }} "
+                   class="border-2 border-white text-white hover:bg-white hover:text-green-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-300 text-center scroll-to">
+                    Request a Quote
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── OVERLAP CARD ── --}}
+    <div class="overlap-card absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-5xl px-4 sm:px-6 z-20 hidden"
+         style="transform: translate(-50%, 60px);">
+        <div class="bg-white rounded-2xl shadow-2xl px-4 sm:px-8 py-4 sm:py-6 flex flex-wrap justify-center sm:justify-between items-center gap-4 border border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-yellow-50 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 leading-none mb-0.5">TripAdvisor</p>
+                    <p class="text-sm font-bold text-gray-900">4.9 / 5 Rating</p>
+                </div>
+            </div>
+            <div class="hidden sm:block w-px h-10 bg-gray-200"></div>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 leading-none mb-0.5">All Packages</p>
+                    <p class="text-sm font-bold text-gray-900">Gorilla Permits Included</p>
+                </div>
+            </div>
+            <div class="hidden sm:block w-px h-10 bg-gray-200"></div>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 leading-none mb-0.5">Starting From</p>
+                    <p class="text-sm font-bold text-gray-900">$1,300 / person</p>
+                </div>
+            </div>
+            <div class="hidden sm:block w-px h-10 bg-gray-200"></div>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 leading-none mb-0.5">Group Size</p>
+                    <p class="text-sm font-bold text-gray-900">Small &amp; Private Groups</p>
                 </div>
             </div>
         </div>
@@ -116,12 +226,41 @@
 
 @section('content')
 
+<!-- ── TRUST BAR ── -->
+<div class="bg-green-700 text-white py-3 px-4 hidden">
+    <div class="max-w-7xl mx-auto flex flex-wrap justify-center gap-4 sm:gap-8 text-xs sm:text-sm font-medium">
+        <span class="flex items-center gap-1.5">
+            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            4.9/5 TripAdvisor Rating
+        </span>
+        <span class="flex items-center gap-1.5">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Gorilla Permits Included
+        </span>
+        <span class="flex items-center gap-1.5">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Tours From $1,300/person
+        </span>
+    </div>
+</div>
+
 <!-- ── INTRODUCTION ── -->
 <section id="introduction" class="py-10 sm:py-16 lg:py-24 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
        Uganda Gorilla Trekking Packages in  Bwindi Impenetrable Forest &amp; Mgahinga
         </h2>
+        <p class="text-base sm:text-lg text-gray-700 max-w-4xl mx-auto mb-6 leading-relaxed">
+		Calm Africa Safaris is Uganda's most trusted <a href="https://calmafricasafaris.com/tours/uganda-gorilla-trekking-bwindi-bunyonyi-entebbe" class="text-green-600 hover:text-green-700">gorilla trekking</a> specialist,
+		helping travellers from across the world secure <strong>Uganda gorilla trekking permits</strong>
+		($800 per person) and plan unforgettable encounters with mountain gorillas in
+		<strong>Bwindi Impenetrable Forest</strong> and <a href="https://calmafricasafaris.com/destinations/mgahinga-gorilla-national-park" class="text-green-600 hover:text-green-700">Mgahinga Gorilla National Park</a>.
+		We also offer <strong>gorilla trekking in Rwanda's Volcanoes National Park</strong> ($1,500 permit).
+		Gorilla trekking packages start from <strong>$1,300 per person</strong> and include permits,
+		accommodation, meals, expert guides and airport transfers from Entebbe.
+		Browse our <a href="/tours">full range of Uganda safari packages</a> or contact us to
+		plan your gorilla trekking itinerary today.
+        </p>
         @include('partials.about-safari')
     </div>
 </section>
@@ -259,12 +398,15 @@
 <!-- ── CTA ── -->
 <section class="relative py-12 sm:py-16 lg:py-24 overflow-hidden">
     <div class="absolute inset-0">
-        <img src="{{ asset('images/sun.webp') }}" alt="Safari sunset" class="w-full h-full object-cover object-center" loading="lazy">
+        <img src="{{ asset('images/home.jpg') }}"
+             alt="Uganda safari sunset — plan your East Africa adventure with Calm Africa Safaris"
+             class="w-full h-full object-cover object-center"
+             loading="lazy">
         <div class="absolute inset-0 bg-gradient-to-r from-black/65 via-black/45 to-black/55"></div>
     </div>
     <div class="relative max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
         <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6 leading-tight">
-            Ready to Begin Your African Adventure?
+            Ready to Book Your Uganda Safari?
         </h2>
         <p class="text-sm sm:text-base md:text-lg text-gray-100/90 mb-2 max-w-3xl mx-auto leading-relaxed">
             Our safari experts are ready to help you plan the perfect gorilla trekking or wildlife adventure.
@@ -289,7 +431,7 @@
     </div>
 </section>
 
-@include('partials.partners')
+
 @endsection
 
 @push('styles')
