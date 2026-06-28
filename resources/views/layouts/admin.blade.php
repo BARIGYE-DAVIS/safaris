@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>@yield('title', 'Admin Dashboard')</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+  
+    <link rel="stylesheet" href="{{ asset('build/assets/app-lVDNHE2B.css') }}">
+<script type="module" src="{{ asset('build/assets/app-BLNZwArW.js') }}"></script>
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <!-- FontAwesome CDN -->
@@ -71,6 +74,11 @@
                     <i class="fas fa-plus-circle"></i>
                     Create Tour
                 </a>
+                <a href="{{ route('admin.special-tours.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                    <i class="fas fa-star"></i>
+                    Special Tours
+                </a>
+
                 <a href="{{ route('admin.bookings.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
                     <i class="fas fa-calendar-check"></i>
                     Bookings
@@ -106,6 +114,11 @@
                 <a href="{{ route('admin.activities.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
                     <i class="fas fa-hiking"></i>
                     Activities
+                </a>
+
+                <a href="{{ route('admin.activities.options.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                    <i class="fas fa-cogs"></i>
+                    Activity Options
                 </a>
 
                 <div class="sidebar-divider"></div>
@@ -146,6 +159,12 @@
                     <i class="fas fa-blog"></i>
                     Blogs
                 </a>
+
+                 <a href="{{ route('admin.seo-pages.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
+                    <i class="fas fa-globe"></i>
+                    SEO Pages
+                </a>
+
 
                 <a href="{{ route('admin.blog-categories.index') }}" class="block py-3 px-6 hover:bg-indigo-700 flex items-center gap-3 sidebar-link">
                     <i class="fas fa-tags"></i>

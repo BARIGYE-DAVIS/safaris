@@ -1,6 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Plan Your Custom Safari Tour')
+@section('title', 'Plan Your Custom Safari Tour | Calm Africa Safaris')
+
+@section('meta_description', 'Plan your dream safari to East Africa. Tell us your dates, destinations and activities and we\'ll create a personalized itinerary just for you. Free quote!')
+
+@section('meta_keywords', 'custom safari tour, plan safari east africa, uganda safari, personalized safari itinerary, africa tour planner')
+
+@section('og_title', 'Plan Your Custom Safari Tour | Calm Africa Safaris')
+
+@section('og_description', 'Tell us about your dream trip and we\'ll create a personalized safari itinerary just for you. Choose your destinations, activities and budget.')
+    
+    
+    
 
 @section('content')
 <div class="safari-bg py-8 sm:py-12">

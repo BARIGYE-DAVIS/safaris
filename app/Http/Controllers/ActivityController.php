@@ -7,6 +7,7 @@ use App\Models\ActivityCategory;
 use App\Models\ActivityImage;
 use App\Models\Destination;
 use App\Models\Country;
+use App\Models\ActivityOption;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -87,31 +88,55 @@ class ActivityController extends Controller
     /**
      * PUBLIC: Display single activity details
      */
-    public function show($slug)
-    {
-        $activity = Activity::with([
-                'category',
-                'destination.country',
-                'countries',
-                'images' => function($query) {
-                    $query->orderBy('sort_order');
-                },
-                'destinations',
-            ])
-            ->where('slug', $slug)
-            ->where('is_active', true)
-            ->firstOrFail();
+  public function show($slug)
+{
+    $activity = Activity::with([
+            'category',
+            'destination.country',
+            'countries',
+            'images' => function($query) {
+                $query->orderBy('sort_order');
+            },
+            'destinations',
+            'options',
+        ])
+        ->where('slug', $slug)
+        ->where('is_active', true)
+        ->firstOrFail();
 
-        // Get related activities (same category)
-        $relatedActivities = Activity::where('category_id', $activity->category_id)
-                                    ->where('id', '!=', $activity->id)
-                                    ->where('is_active', true)
-                                    ->orderBy('is_popular', 'desc')
-                                    ->limit(4)
-                                    ->get();
+    // Controller-only compatibility layer (no Blade changes needed)
+    $includedFromOptions = $activity->includedOptions()->pluck('activity_options.name')->toArray();
+    $excludedFromOptions = $activity->excludedOptions()->pluck('activity_options.name')->toArray();
+    $bringFromOptions    = $activity->bringOptions()->pluck('activity_options.name')->toArray();
 
-        return view('activities.show', compact('activity', 'relatedActivities'));
+    if (!empty($includedFromOptions)) {
+        $activity->inclusions = $includedFromOptions;
+    } elseif (!is_array($activity->inclusions)) {
+        $activity->inclusions = [];
     }
+
+    if (!empty($excludedFromOptions)) {
+        $activity->exclusions = $excludedFromOptions;
+    } elseif (!is_array($activity->exclusions)) {
+        $activity->exclusions = [];
+    }
+
+    if (!empty($bringFromOptions)) {
+        $activity->what_to_bring = $bringFromOptions;
+    } elseif (!is_array($activity->what_to_bring)) {
+        $activity->what_to_bring = [];
+    }
+
+    // Get related activities (same category)
+    $relatedActivities = Activity::where('category_id', $activity->category_id)
+                                ->where('id', '!=', $activity->id)
+                                ->where('is_active', true)
+                                ->orderBy('is_popular', 'desc')
+                                ->limit(4)
+                                ->get();
+
+    return view('activities.show', compact('activity', 'relatedActivities'));
+}
 
     // ============================================
     // ADMIN METHODS (Dashboard)
@@ -164,7 +189,19 @@ class ActivityController extends Controller
         $destinations = Destination::where('is_active', true)->with('country')->orderBy('name')->get();
         $countries    = Country::where('is_active', true)->orderBy('name')->get();
 
-        return view('admin.activities.create', compact('categories', 'destinations', 'countries'));
+        // Reusable options
+        $bringOptions    = ActivityOption::where('type', 'bring')->where('is_active', true)->orderBy('name')->get();
+        $includedOptions = ActivityOption::where('type', 'included')->where('is_active', true)->orderBy('name')->get();
+        $excludedOptions = ActivityOption::where('type', 'excluded')->where('is_active', true)->orderBy('name')->get();
+
+        return view('admin.activities.create', compact(
+            'categories',
+            'destinations',
+            'countries',
+            'bringOptions',
+            'includedOptions',
+            'excludedOptions'
+        ));
     }
 
     /**
@@ -218,6 +255,14 @@ class ActivityController extends Controller
             'pricing_packages'      => 'nullable|array',
             'faqs'                  => 'nullable|array',
             'booking_info'          => 'nullable|array',
+
+            // Reusable selected options
+            'bring_option_ids'      => 'nullable|array',
+            'bring_option_ids.*'    => 'integer|exists:activity_options,id',
+            'included_option_ids'   => 'nullable|array',
+            'included_option_ids.*' => 'integer|exists:activity_options,id',
+            'excluded_option_ids'   => 'nullable|array',
+            'excluded_option_ids.*' => 'integer|exists:activity_options,id',
         ]);
 
         // Auto-generate slug if not provided
@@ -246,6 +291,13 @@ class ActivityController extends Controller
         $validated['sort_order'] = $validated['sort_order'] ?? 0;
         $validated['currency']   = $validated['currency'] ?? 'USD';
 
+        // Remove non-activities table fields before create
+        unset(
+            $validated['bring_option_ids'],
+            $validated['included_option_ids'],
+            $validated['excluded_option_ids']
+        );
+
         // Create activity
         $activity = Activity::create($validated);
 
@@ -257,6 +309,14 @@ class ActivityController extends Controller
         if ($request->has('countries')) {
             $activity->countries()->sync($request->countries);
         }
+
+        // Sync reusable options
+        $optionIds = array_merge(
+            $request->input('bring_option_ids', []),
+            $request->input('included_option_ids', []),
+            $request->input('excluded_option_ids', [])
+        );
+        $activity->options()->sync(array_values(array_unique($optionIds)));
 
         // Handle gallery images
         if ($request->hasFile('gallery_images')) {
@@ -287,9 +347,31 @@ class ActivityController extends Controller
         $selectedCountries    = $activity->countries()->pluck('countries.id')->toArray();
         $selectedDestinations = $activity->destinations()->pluck('destinations.id')->toArray();
 
+        // Reusable options
+        $bringOptions    = ActivityOption::where('type', 'bring')->where('is_active', true)->orderBy('name')->get();
+        $includedOptions = ActivityOption::where('type', 'included')->where('is_active', true)->orderBy('name')->get();
+        $excludedOptions = ActivityOption::where('type', 'excluded')->where('is_active', true)->orderBy('name')->get();
+
+        $selectedBringOptionIds    = $activity->bringOptions()->pluck('activity_options.id')->toArray();
+        $selectedIncludedOptionIds = $activity->includedOptions()->pluck('activity_options.id')->toArray();
+        $selectedExcludedOptionIds = $activity->excludedOptions()->pluck('activity_options.id')->toArray();
+
         return view(
             'admin.activities.edit',
-            compact('activity', 'categories', 'destinations', 'countries', 'selectedCountries', 'selectedDestinations')
+            compact(
+                'activity',
+                'categories',
+                'destinations',
+                'countries',
+                'selectedCountries',
+                'selectedDestinations',
+                'bringOptions',
+                'includedOptions',
+                'excludedOptions',
+                'selectedBringOptionIds',
+                'selectedIncludedOptionIds',
+                'selectedExcludedOptionIds'
+            )
         );
     }
 
@@ -344,6 +426,14 @@ class ActivityController extends Controller
             'pricing_packages'      => 'nullable|array',
             'faqs'                  => 'nullable|array',
             'booking_info'          => 'nullable|array',
+
+            // Reusable selected options
+            'bring_option_ids'      => 'nullable|array',
+            'bring_option_ids.*'    => 'integer|exists:activity_options,id',
+            'included_option_ids'   => 'nullable|array',
+            'included_option_ids.*' => 'integer|exists:activity_options,id',
+            'excluded_option_ids'   => 'nullable|array',
+            'excluded_option_ids.*' => 'integer|exists:activity_options,id',
         ]);
 
         // Auto-generate slug if not provided
@@ -374,6 +464,13 @@ class ActivityController extends Controller
         $validated['is_active']  = $request->has('is_active');
         $validated['sort_order'] = $validated['sort_order'] ?? $activity->sort_order;
 
+        // Remove non-activities table fields before update
+        unset(
+            $validated['bring_option_ids'],
+            $validated['included_option_ids'],
+            $validated['excluded_option_ids']
+        );
+
         // Update activity
         $activity->update($validated);
 
@@ -387,6 +484,14 @@ class ActivityController extends Controller
         } else {
             $activity->countries()->detach();
         }
+
+        // Sync reusable options
+        $optionIds = array_merge(
+            $request->input('bring_option_ids', []),
+            $request->input('included_option_ids', []),
+            $request->input('excluded_option_ids', [])
+        );
+        $activity->options()->sync(array_values(array_unique($optionIds)));
 
         // Handle gallery images
         if ($request->hasFile('gallery_images')) {
@@ -475,4 +580,106 @@ class ActivityController extends Controller
         $status = $activity->is_popular ? 'marked as popular' : 'unmarked as popular';
         return back()->with('success', "Activity {$status} successfully!");
     }
+
+    /**
+ * ADMIN: Reusable activity options page
+ */
+public function adminOptionsIndex(Request $request)
+{
+    $query = ActivityOption::query()->orderBy('type')->orderBy('name');
+
+    if ($request->filled('type')) {
+        $query->where('type', $request->type);
+    }
+
+    if ($request->filled('search')) {
+        $query->where('name', 'like', '%' . $request->search . '%');
+    }
+
+    $options = $query->paginate(30)->withQueryString();
+
+    return view('admin.activities.activity-options', compact('options'));
+}
+
+/**
+ * ADMIN: Store reusable activity option
+ */
+public function adminOptionsStore(Request $request)
+{
+    $validated = $request->validate([
+        'type'      => 'required|in:bring,included,excluded',
+        'name'      => 'required|string|max:255',
+        'is_active' => 'nullable|boolean',
+    ]);
+
+    $name = trim($validated['name']);
+
+    // Prevent duplicates per type (case-insensitive)
+    $exists = ActivityOption::where('type', $validated['type'])
+        ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+        ->exists();
+
+    if ($exists) {
+        return back()
+            ->withErrors(['name' => 'This option already exists for the selected type.'])
+            ->withInput();
+    }
+
+    ActivityOption::create([
+        'type'      => $validated['type'],
+        'name'      => $name,
+        'is_active' => $request->has('is_active'),
+    ]);
+
+    return redirect()->route('admin.activities.options.index')
+        ->with('success', 'Activity option created successfully.');
+}
+
+/**
+ * ADMIN: Update reusable activity option
+ */
+public function adminOptionsUpdate(Request $request, ActivityOption $option)
+{
+    $validated = $request->validate([
+        'type'      => 'required|in:bring,included,excluded',
+        'name'      => 'required|string|max:255',
+        'is_active' => 'nullable|boolean',
+    ]);
+
+    $name = trim($validated['name']);
+
+    // Prevent duplicates per type (case-insensitive), excluding current row
+    $exists = ActivityOption::where('type', $validated['type'])
+        ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+        ->where('id', '!=', $option->id)
+        ->exists();
+
+    if ($exists) {
+        return back()
+            ->withErrors(['name' => 'Another option with the same text already exists for this type.'])
+            ->withInput();
+    }
+
+    $option->update([
+        'type'      => $validated['type'],
+        'name'      => $name,
+        'is_active' => $request->has('is_active'),
+    ]);
+
+    return redirect()->route('admin.activities.options.index')
+        ->with('success', 'Activity option updated successfully.');
+}
+
+/**
+ * ADMIN: Delete reusable activity option
+ */
+public function adminOptionsDestroy(ActivityOption $option)
+{
+    // Detach from activities first (safe cleanup)
+    $option->activities()->detach();
+    $option->delete();
+
+    return redirect()->route('admin.activities.options.index')
+        ->with('success', 'Activity option deleted successfully.');
+}
 }

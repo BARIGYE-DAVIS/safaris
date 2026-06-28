@@ -1,12 +1,18 @@
 {{-- resources/views/blogs/show.blade.php --}}
 @extends('layouts.app')
 
-@section('title', $blog->meta_title ?: strip_tags($blog->title))
+@php
+    function clean_title($text) {
+        return html_entity_decode(strip_tags($text ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+@endphp
+
+@section('title', $blog->meta_title ?: clean_title($blog->title))
 @section('description', $blog->meta_description ?: strip_tags($blog->excerpt ?: Str::limit(strip_tags($blog->content), 160)))
 @section('keywords', $blog->meta_keywords)
 
 @push('meta')
-    <meta property="og:title"       content="{{ $blog->meta_title ?: strip_tags($blog->title) }}">
+    <meta property="og:title"       content="{{ $blog->meta_title ?: clean_title($blog->title) }}">
     <meta property="og:description" content="{{ $blog->meta_description ?: strip_tags(Str::limit($blog->excerpt ?: $blog->content, 160)) }}">
     <meta property="og:type"        content="article">
     <meta property="og:url"         content="{{ url()->current() }}">
@@ -16,7 +22,7 @@
         <meta property="og:image:height" content="630">
     @endif
     <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:title"       content="{{ $blog->meta_title ?: strip_tags($blog->title) }}">
+    <meta name="twitter:title"       content="{{ $blog->meta_title ?: clean_title($blog->title) }}">
     <meta name="twitter:description" content="{{ $blog->meta_description ?: strip_tags(Str::limit($blog->excerpt ?: $blog->content, 160)) }}">
     @if($blog->featured_image)
         <meta name="twitter:image" content="{{ asset('storage/' . $blog->featured_image) }}">
@@ -57,7 +63,7 @@
                     </a>
                 @endif
                 <span>/</span>
-                <span class="text-slate-500 truncate max-w-[180px]">{{ strip_tags($blog->title) }}</span>
+                <span class="text-slate-500 truncate max-w-[180px]">{{ clean_title($blog->title) }}</span>
             </nav>
 
             {{-- Category pill --}}
@@ -69,10 +75,10 @@
                 </span>
             @endif
 
-            {{-- Title — strip_tags so HTML spans from editor don't leak into the <h1> --}}
+            {{-- Title --}}
             <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white
                         leading-tight tracking-tight mb-6">
-                {{ strip_tags($blog->title) }}
+                {{ clean_title($blog->title) }}
             </h1>
 
             {{-- Meta row --}}
@@ -131,7 +137,7 @@
     @if($blog->featured_image)
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10 mb-10">
             <img src="{{ asset('storage/' . $blog->featured_image) }}"
-                 alt="{{ strip_tags($blog->title) }}"
+                 alt="{{ clean_title($blog->title) }}"
                  class="w-full aspect-video object-cover rounded-2xl shadow-2xl
                         border border-slate-200 dark:border-slate-700">
         </div>
@@ -150,20 +156,12 @@
                     <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
                 </svg>
                 <p class="text-lg text-slate-700 dark:text-slate-300 font-medium italic leading-relaxed">
-                    {{ strip_tags($blog->excerpt) }}
+                    {{ html_entity_decode(strip_tags($blog->excerpt), ENT_QUOTES | ENT_HTML5, 'UTF-8') }}
                 </p>
             </div>
         @endif
 
-        {{-- ═══════════════════════════════════════════════════════════════
-             CONTENT — rendered with prose-like Tailwind utility classes
-             applied via a wrapping div + Tailwind's [&_tag] syntax.
-
-             We use {!! !!} so the HTML from your rich editor (colours,
-             bold, links, images) is preserved, but the surrounding div
-             applies clean Tailwind typography to every child element so
-             raw <p> / <h2> / <ul> tags look great without any custom CSS.
-        ════════════════════════════════════════════════════════════════ --}}
+        {{-- CONTENT --}}
         <div class="
             text-slate-700 dark:text-slate-300
             text-[1.0625rem] leading-[1.85]
@@ -311,7 +309,7 @@
                         </svg>
                     </a>
                     {{-- Twitter / X --}}
-                    <a href="https://twitter.com/intent/tweet?text={{ urlencode(strip_tags($blog->title)) }}&url={{ urlencode(url()->current()) }}"
+                    <a href="https://twitter.com/intent/tweet?text={{ urlencode(clean_title($blog->title)) }}&url={{ urlencode(url()->current()) }}"
                        target="_blank" rel="noopener"
                        class="w-10 h-10 rounded-xl flex items-center justify-center
                               bg-slate-100 dark:bg-slate-700
@@ -324,7 +322,7 @@
                         </svg>
                     </a>
                     {{-- LinkedIn --}}
-                    <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ urlencode(url()->current()) }}&title={{ urlencode(strip_tags($blog->title)) }}"
+                    <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ urlencode(url()->current()) }}&title={{ urlencode(clean_title($blog->title)) }}"
                        target="_blank" rel="noopener"
                        class="w-10 h-10 rounded-xl flex items-center justify-center
                               bg-slate-100 dark:bg-slate-700
@@ -337,7 +335,7 @@
                         </svg>
                     </a>
                     {{-- WhatsApp --}}
-                    <a href="https://wa.me/?text={{ urlencode(strip_tags($blog->title) . ' ' . url()->current()) }}"
+                    <a href="https://wa.me/?text={{ urlencode(clean_title($blog->title) . ' ' . url()->current()) }}"
                        target="_blank" rel="noopener"
                        class="w-10 h-10 rounded-xl flex items-center justify-center
                               bg-slate-100 dark:bg-slate-700
@@ -409,7 +407,7 @@
                             <div class="relative overflow-hidden aspect-video bg-slate-200 dark:bg-slate-700 shrink-0">
                                 @if($related->featured_image)
                                     <img src="{{ asset('storage/' . $related->featured_image) }}"
-                                         alt="{{ strip_tags($related->title) }}"
+                                         alt="{{ clean_title($related->title) }}"
                                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                                 @else
                                     <div class="w-full h-full bg-gradient-to-br from-indigo-500 to-indigo-700
@@ -432,10 +430,10 @@
                                 <h4 class="font-bold text-sm text-slate-900 dark:text-white
                                            leading-snug line-clamp-2 mb-2
                                            group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                    {{ strip_tags($related->title) }}
+                                    {{ clean_title($related->title) }}
                                 </h4>
                                 <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3 flex-1 leading-relaxed">
-                                    {{ strip_tags($related->excerpt ?: Str::limit(strip_tags($related->content), 90)) }}
+                                    {{ html_entity_decode(strip_tags($related->excerpt ?: Str::limit(strip_tags($related->content), 90)), ENT_QUOTES | ENT_HTML5, 'UTF-8') }}
                                 </p>
                                 <div class="flex items-center justify-between text-xs text-slate-400 pt-3
                                             border-t border-slate-100 dark:border-slate-700">

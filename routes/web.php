@@ -72,7 +72,7 @@ Route::get('/cookie-policy', [PageController::class, 'cookiePolicy'])->name('coo
 Route::get('/refund-policy', [PageController::class, 'refundPolicy'])->name('refund-policy');
 
 // Sitemap
-Route::get('/sitemap', [PageController::class, 'sitemap'])->name('sitemap');
+Route::get('/sitemap.xml', [PageController::class, 'sitemap'])->name('sitemap');
 
 /*
 |--------------------------------------------------------------------------

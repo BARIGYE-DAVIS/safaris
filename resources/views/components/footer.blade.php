@@ -211,8 +211,8 @@
                         </svg>
                         <div>
                             <p class="text-gray-300 text-sm font-medium">Email Addresses</p>
-                            <a href="mailto:info@safaritours.com"     class="text-gray-400 hover:text-white transition-colors text-sm block">info@safaritours.com</a>
-                            <a href="mailto:bookings@safaritours.com" class="text-gray-400 hover:text-white transition-colors text-sm block">bookings@safaritours.com</a>
+                            <a href="mailto:info@calmafricasafaris.com"     class="text-gray-400 hover:text-white transition-colors text-sm block">info@calmafricasafaris.com</a>
+                            <a href="mailto:bookings@calmafricasafaris.com" class="text-gray-400 hover:text-white transition-colors text-sm block">bookings@calmafricasafaris.com</a>
                         </div>
                     </div>
                     
@@ -240,10 +240,7 @@
                 </div>
 
                 <div class="space-y-2">
-                    <a href="{{ route('booking.create') }}" 
-                       class="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-2 px-4 rounded-lg font-medium transition-colors duration-300">
-                        Book Safari Now
-                    </a>
+                   
                     <a href="{{ route('contact') }}" 
                        class="block w-full border border-green-600 text-green-400 hover:bg-green-600 hover:text-white text-center py-2 px-4 rounded-lg font-medium transition-all duration-300">
                         Get Free Quote
@@ -372,7 +369,7 @@
                     <div class="text-green-400 text-2xl font-bold">50+</div>
                     <div class="text-gray-400 text-xs">Tour Packages</div>
                 </div>
-                <div>
+                <div class="hidden">
                     <div class="text-green-400 text-2xl font-bold">15+</div>
                     <div class="text-gray-400 text-xs">Years Experience</div>
                 </div>
@@ -394,7 +391,7 @@
                 <div class="flex flex-wrap justify-center lg:justify-end gap-x-6 gap-y-2 text-sm">
                     <a href="{{ route('privacy-policy') }}"    class="text-gray-400 hover:text-white transition-colors duration-300">Privacy Policy</a>
                     <a href="{{ route('terms-of-service') }}"  class="text-gray-400 hover:text-white transition-colors duration-300">Terms of Service</a>
-                    <a href="{{ route('cookie-policy') }}"     class="text-gray-400 hover:text-white transition-colors duration-300">Cookie Policy</a>
+                    <a href="{{ route('cookie-policy') }}"     class="text-gray-400 hover:text-white transition-colors duration-300 hidden">Cookie Policy</a>
                     <a href="{{ route('refund-policy') }}"     class="text-gray-400 hover:text-white transition-colors duration-300">Refund Policy</a>
                     <a href="{{ route('sitemap') }}"           class="text-gray-400 hover:text-white transition-colors duration-300">Sitemap</a>
                 </div>

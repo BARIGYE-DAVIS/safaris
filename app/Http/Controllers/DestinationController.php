@@ -7,11 +7,11 @@ use App\Models\Country;
 use App\Models\DestinationImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\UploadedFile;
 
 class DestinationController extends Controller
 {
@@ -21,33 +21,24 @@ class DestinationController extends Controller
     public function adminIndex(Request $request)
     {
         try {
-            $query = Destination::with('country')->withCount('activities');
+            $query = Destination::with('country');
 
-            // Search
             if ($request->filled('search')) {
-                $query->where(function ($q) use ($request) {
-                    $q->where('name', 'like', "%{$request->search}%")
-                      ->orWhere('description', 'like', "%{$request->search}%")
-                      ->orWhere('region', 'like', "%{$request->search}%");
-                });
+                $query->where('name', 'like', "%{$request->search}%");
             }
 
-            // Filter by country
             if ($request->filled('country_id')) {
                 $query->where('country_id', $request->country_id);
             }
 
-            // Filter by type
             if ($request->filled('type')) {
                 $query->where('type', $request->type);
             }
 
-            // Filter by status
             if ($request->filled('status')) {
                 $query->where('is_active', $request->status === 'active');
             }
 
-            // Filter by popular
             if ($request->filled('popular')) {
                 $query->where('is_popular', $request->popular === 'yes');
             }
@@ -70,9 +61,7 @@ class DestinationController extends Controller
     {
         try {
             $countries = Country::active()->ordered()->get();
-
             return view('admin.destinations.create', compact('countries'));
-
         } catch (Exception $e) {
             Log::error('Error in adminCreate', ['message' => $e->getMessage()]);
             return back()->with('error', 'Error loading create form: ' . $e->getMessage());
@@ -85,46 +74,26 @@ class DestinationController extends Controller
     public function adminStore(Request $request)
     {
         try {
-            Log::info('Creating destination (store)', ['request_data' => $request->except(['image','featured_image'])]);
+            Log::info('Creating destination', ['request_data' => $request->except(['image', 'featured_image'])]);
 
             $validated = $request->validate([
                 'country_id' => 'required|exists:countries,id',
                 'name' => 'required|string|max:255',
                 'slug' => 'nullable|string|max:255|unique:destinations,slug',
-                'region' => 'nullable|string|max:255',
                 'type' => 'nullable|string|max:100',
                 'description' => 'nullable|string',
-                'detailed_overview' => 'nullable|string',
-                'what_to_see_do' => 'nullable|string',
-                'wildlife_highlights' => 'nullable|string',
-                'geography_landscape' => 'nullable|string',
-                'best_time_visit' => 'nullable|string',
-                'how_to_get_there' => 'nullable|string',
-                'accommodation_options' => 'nullable|string',
-                'practical_information' => 'nullable|string',
-                'cultural_significance' => 'nullable|string',
-                'photography_tips' => 'nullable|string',
-                'nearby_attractions' => 'nullable|string',
-                'interesting_facts' => 'nullable|string',
-
-                // top-level images
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-                'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-
-                // geography
+                'focus_keyword' => 'nullable|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp',
+                'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp',
                 'latitude' => 'nullable|numeric|between:-90,90',
                 'longitude' => 'nullable|numeric|between:-180,180',
                 'area_size' => 'nullable|integer|min:0',
                 'altitude_min' => 'nullable|integer',
                 'altitude_max' => 'nullable|integer',
-
-                // pricing
                 'entry_fee_foreign' => 'nullable|numeric|min:0',
                 'entry_fee_resident' => 'nullable|numeric|min:0',
                 'entry_fee_local' => 'nullable|numeric|min:0',
                 'currency' => 'nullable|string|max:10',
-
-                // other
                 'established_year' => 'nullable|digits:4',
                 'annual_visitors' => 'nullable|integer|min:0',
                 'phone' => 'nullable|string|max:50',
@@ -136,129 +105,62 @@ class DestinationController extends Controller
                 'avg_temp_high' => 'nullable|integer',
                 'avg_temp_low' => 'nullable|integer',
                 'rainfall_annual' => 'nullable|integer',
-
                 'is_popular' => 'nullable|boolean',
-                'is_active' => 'nullable|boolean',
                 'sort_order' => 'nullable|integer|min:0',
                 'meta_title' => 'nullable|string|max:255',
-                'meta_description' => 'nullable|string',
+                'meta_description' => 'nullable|string|max:320',
                 'meta_keywords' => 'nullable|string',
+                'status' => 'nullable|in:draft,published',
             ]);
 
-            // Auto-generate slug if not provided
             if (empty($validated['slug'])) {
                 $validated['slug'] = Str::slug($validated['name']);
             }
 
-            // Top-level images
-            if ($request->hasFile('image')) {
-                $validated['image'] = $request->file('image')->store('destinations', 'public');
-                Log::info('Main image uploaded', ['path' => $validated['image']]);
-            }
-            if ($request->hasFile('featured_image')) {
-                $validated['featured_image'] = $request->file('featured_image')->store('destinations/featured', 'public');
-                Log::info('Featured image uploaded', ['path' => $validated['featured_image']]);
-            }
-
-            // Booleans & defaults
-            $validated['is_popular'] = $request->has('is_popular');
-            $validated['is_active'] = $request->has('is_active');
-            $validated['sort_order'] = $validated['sort_order'] ?? 0;
-
-            // Draft handling
-            if ($request->filled('draft')) {
+            if ($request->filled('status') && $request->status === 'published') {
+                $validated['is_active'] = true;
+                $validated['published_at'] = now();
+                $validated['is_draft'] = false;
+            } else {
+                $validated['is_active'] = false;
                 $validated['is_draft'] = true;
                 $validated['draft_user_id'] = Auth::id();
-            } else {
-                $validated['is_draft'] = false;
-                $validated['published_at'] = now();
             }
+
+            $validated['is_popular'] = $request->has('is_popular');
+            $validated['sort_order'] = $validated['sort_order'] ?? 0;
 
             DB::beginTransaction();
 
-            // Create destination first
+            // Create destination
             $destination = Destination::create($validated);
 
-            // Process block-based sections and uploads
-            $sectionsList = ['overview','activities','wildlife','geography','practical','accommodation','extras'];
-            $sectionsContent = [];
-
-            foreach ($sectionsList as $section) {
-                $blocksJson = $request->input("sections.{$section}.content_blocks");
-                if (!$blocksJson) {
-                    continue;
-                }
-                $blocks = json_decode($blocksJson, true) ?: [];
-                $uploads = $request->file("sections.{$section}.uploads") ?: [];
-
-                foreach ($blocks as $bi => $block) {
-                    if (($block['type'] ?? '') === 'image') {
-                        // Ensure block has an ID (should be set by frontend)
-                        if (empty($block['id'])) {
-                            $block['id'] = 'blk-' . Str::uuid();
-                            $blocks[$bi]['id'] = $block['id'];
-                        }
-
-                        // New upload keyed by temp id (tmp-...)
-                        if (!empty($block['temp_media_id']) && isset($uploads[$block['temp_media_id']])) {
-                            $file = $uploads[$block['temp_media_id']];
-                            if ($file && $file->isValid()) {
-                                $path = $file->store("destinations/{$section}", 'public');
-                                
-                                // ✅ CRITICAL: Save with block_id matching the block's id
-                                $image = DestinationImage::create([
-                                    'destination_id' => $destination->id,
-                                    'block_id' => $block['id'], // ✅ This must match!
-                                    'storage_path' => $path,
-                                    'thumbnail_path' => null,
-                                    'caption' => $block['caption'] ?? null,
-                                    'mime_type' => $file->getClientMimeType(),
-                                    'size_bytes' => $file->getSize(),
-                                    'order' => $bi,
-                                    'uploaded_by' => Auth::id(),
-                                ]);
-                                
-                                // Add media_id for reference but KEEP the id field
-                                $blocks[$bi]['media_id'] = $image->id;
-                                // ✅ KEEP block_id for linking
-                                $blocks[$bi]['block_id'] = $block['id'];
-                                unset($blocks[$bi]['temp_media_id']);
-                                
-                                Log::info('Image saved', [
-                                    'block_id' => $block['id'],
-                                    'media_id' => $image->id,
-                                    'path' => $path
-                                ]);
-                            }
-                        }
-                    }
-                }
-
-                $sectionsContent[$section] = $blocks;
+            // Handle featured image
+            if ($request->hasFile('featured_image')) {
+                $path = $this->storeImage($request->file('featured_image'), 'destinations/featured');
+                $destination->update(['featured_image' => $path]);
+                Log::info('Featured image uploaded', ['path' => $path]);
             }
 
-            // Save sections_content if present
-            if (!empty($sectionsContent)) {
-                $destination->sections_content = $sectionsContent;
-                $destination->save();
+            // Handle main image
+            if ($request->hasFile('image')) {
+                $path = $this->storeImage($request->file('image'), 'destinations');
+                $destination->update(['image' => $path]);
+                Log::info('Main image uploaded', ['path' => $path]);
+            }
+
+            // Process blocks - ONLY from blocks array
+            // saveBlocks() creates DestinationImage rows for image blocks AND
+            // returns the cleaned block structure (no raw UploadedFile objects)
+            // so it can be persisted to destinations.content_blocks for rendering.
+            if ($request->has('blocks') && is_array($request->blocks)) {
+                $contentBlocks = $this->saveBlocks($destination->id, $request->blocks);
+                $destination->update(['content_blocks' => $contentBlocks]);
             }
 
             DB::commit();
 
-            // Optional legacy gallery handling
-            if ($request->hasFile('gallery_images')) {
-                $gallery = $this->handleSectionImages($request, 'gallery_images', 'destinations/gallery');
-                if ($gallery) {
-                    $destination->gallery_images = array_merge($destination->gallery_images ?? [], $gallery);
-                    $destination->save();
-                }
-            }
-
             Log::info('Destination created successfully', ['destination_id' => $destination->id]);
-
-            if ($request->filled('draft')) {
-                return response()->json(['success' => true, 'destination_id' => $destination->id], 200);
-            }
 
             return redirect()->route('admin.destinations.index')
                             ->with('success', 'Destination created successfully!');
@@ -285,13 +187,9 @@ class DestinationController extends Controller
     public function adminEdit(Destination $destination)
     {
         try {
-            Log::info('Editing destination', ['destination_id' => $destination->id]);
-
             $countries = Country::active()->ordered()->get();
-            $destination->load('activities', 'country', 'destinationImages');
-
+            $destination->load('destinationImages');
             return view('admin.destinations.edit', compact('destination', 'countries'));
-
         } catch (Exception $e) {
             Log::error('Error in adminEdit', ['message' => $e->getMessage()]);
             return back()->with('error', 'Error loading edit form: ' . $e->getMessage());
@@ -301,286 +199,119 @@ class DestinationController extends Controller
     /**
      * ADMIN: Update the specified destination
      */
-/**
- * ADMIN: Update the specified destination
- */
-public function adminUpdate(Request $request, Destination $destination)
-{
-    try {
-        Log::info('Updating destination', [
-            'destination_id' => $destination->id,
-            'has_content_blocks' => $request->has('sections')
-        ]);
+    public function adminUpdate(Request $request, Destination $destination)
+    {
+        try {
+            Log::info('Updating destination', ['destination_id' => $destination->id]);
 
-        $validated = $request->validate([
-            'country_id' => 'required|exists:countries,id',
-            'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:destinations,slug,' . $destination->id,
-            'region' => 'nullable|string|max:255',
-            'type' => 'nullable|string|max:100',
-            'description' => 'nullable|string',
-            'detailed_overview' => 'nullable|string',
-            'what_to_see_do' => 'nullable|string',
-            'wildlife_highlights' => 'nullable|string',
-            'geography_landscape' => 'nullable|string',
-            'best_time_visit' => 'nullable|string',
-            'how_to_get_there' => 'nullable|string',
-            'accommodation_options' => 'nullable|string',
-            'practical_information' => 'nullable|string',
-            'cultural_significance' => 'nullable|string',
-            'photography_tips' => 'nullable|string',
-            'nearby_attractions' => 'nullable|string',
-            'interesting_facts' => 'nullable|string',
-
-            // top-level images
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-
-            // geography
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
-            'area_size' => 'nullable|integer|min:0',
-            'altitude_min' => 'nullable|integer',
-            'altitude_max' => 'nullable|integer',
-
-            // pricing
-            'entry_fee_foreign' => 'nullable|numeric|min:0',
-            'entry_fee_resident' => 'nullable|numeric|min:0',
-            'entry_fee_local' => 'nullable|numeric|min:0',
-            'currency' => 'nullable|string|max:10',
-
-            // other
-            'established_year' => 'nullable|digits:4',
-            'annual_visitors' => 'nullable|integer|min:0',
-            'phone' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
-            'website' => 'nullable|url|max:255',
-            'opening_hours' => 'nullable|string|max:255',
-            'best_season' => 'nullable|string|max:255',
-            'climate' => 'nullable|string|max:255',
-            'avg_temp_high' => 'nullable|integer',
-            'avg_temp_low' => 'nullable|integer',
-            'rainfall_annual' => 'nullable|integer',
-
-            'is_popular' => 'nullable|boolean',
-            'is_active' => 'nullable|boolean',
-            'sort_order' => 'nullable|integer|min:0',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string',
-            'meta_keywords' => 'nullable|string',
-        ]);
-
-        // Auto-generate slug if not provided
-        if (empty($validated['slug'])) {
-            $validated['slug'] = Str::slug($validated['name']);
-        }
-
-        // Handle top-level image replacements
-        if ($request->hasFile('image')) {
-            if ($destination->image && Storage::disk('public')->exists($destination->image)) {
-                Storage::disk('public')->delete($destination->image);
-            }
-            $validated['image'] = $request->file('image')->store('destinations', 'public');
-        }
-        if ($request->hasFile('featured_image')) {
-            if ($destination->featured_image && Storage::disk('public')->exists($destination->featured_image)) {
-                Storage::disk('public')->delete($destination->featured_image);
-            }
-            $validated['featured_image'] = $request->file('featured_image')->store('destinations/featured', 'public');
-        }
-
-        // Booleans
-        $validated['is_popular'] = $request->has('is_popular');
-        $validated['is_active'] = $request->has('is_active');
-
-        // Draft handling
-        if ($request->filled('draft')) {
-            $validated['is_draft'] = true;
-            $validated['draft_user_id'] = Auth::id();
-        } else {
-            $validated['is_draft'] = false;
-            $validated['published_at'] = now();
-        }
-
-        DB::beginTransaction();
-
-        // Update destination first
-        $destination->update($validated);
-
-        // ✅ CRITICAL FIX: Only process sections if content_blocks are submitted
-        // Check if ANY section has content_blocks data
-        $hasSectionData = false;
-        $sectionsList = ['overview','activities','wildlife','geography','practical','accommodation','extras'];
-        foreach ($sectionsList as $section) {
-            if ($request->has("sections.{$section}.content_blocks")) {
-                $hasSectionData = true;
-                break;
-            }
-        }
-
-        // Only update sections_content if section data was submitted
-        if ($hasSectionData) {
-            // Start with existing sections_content to preserve untouched sections
-            $sectionsContent = $destination->sections_content ?? [];
-
-            foreach ($sectionsList as $section) {
-                $blocksJson = $request->input("sections.{$section}.content_blocks");
-                
-                // ✅ If no blocks for this section, keep existing content
-                if (!$blocksJson) {
-                    // Keep existing section content
-                    Log::info("Preserving existing content for section: {$section}");
-                    continue;
-                }
-                
-                $blocks = json_decode($blocksJson, true) ?: [];
-                $uploads = $request->file("sections.{$section}.uploads") ?: [];
-
-                // Process deletions
-                $toDelete = $request->input("sections.{$section}.delete_media", []);
-                if (!empty($toDelete) && is_array($toDelete)) {
-                    foreach ($toDelete as $mid) {
-                        $m = DestinationImage::find($mid);
-                        if ($m) {
-                            Log::info("Deleting image", ['media_id' => $mid]);
-                            $m->delete();
-                        }
-                    }
-                }
-
-                foreach ($blocks as $bi => $block) {
-                    if (($block['type'] ?? '') === 'image') {
-                        // Ensure block has an ID
-                        if (empty($block['id'])) {
-                            $block['id'] = 'blk-' . Str::uuid();
-                            $blocks[$bi]['id'] = $block['id'];
-                        }
-
-                        // 1) Replacement of existing media
-                        if (!empty($block['media_id']) && isset($uploads['media-' . $block['media_id']])) {
-                            $file = $uploads['media-' . $block['media_id']];
-                            $existing = DestinationImage::find($block['media_id']);
-                            if ($file && $file->isValid()) {
-                                $path = $file->store("destinations/{$section}", 'public');
-                                if ($existing) {
-                                    if ($existing->storage_path && Storage::disk('public')->exists($existing->storage_path)) {
-                                        Storage::disk('public')->delete($existing->storage_path);
-                                    }
-                                    $existing->update([
-                                        'storage_path' => $path,
-                                        'block_id' => $block['id'],
-                                        'thumbnail_path' => null,
-                                        'caption' => $block['caption'] ?? $existing->caption,
-                                        'mime_type' => $file->getClientMimeType(),
-                                        'size_bytes' => $file->getSize(),
-                                        'uploaded_by' => Auth::id(),
-                                    ]);
-                                    Log::info('Replaced existing image', ['media_id' => $existing->id, 'block_id' => $block['id']]);
-                                } else {
-                                    $newImg = DestinationImage::create([
-                                        'destination_id' => $destination->id,
-                                        'block_id' => $block['id'],
-                                        'storage_path' => $path,
-                                        'thumbnail_path' => null,
-                                        'caption' => $block['caption'] ?? null,
-                                        'mime_type' => $file->getClientMimeType(),
-                                        'size_bytes' => $file->getSize(),
-                                        'order' => $bi,
-                                        'uploaded_by' => Auth::id(),
-                                    ]);
-                                    $blocks[$bi]['media_id'] = $newImg->id;
-                                    Log::info('Created new image', ['media_id' => $newImg->id, 'block_id' => $block['id']]);
-                                }
-                                $blocks[$bi]['block_id'] = $block['id'];
-                            }
-                            unset($blocks[$bi]['temp_media_id']);
-                            continue;
-                        }
-
-                        // 2) New upload with temp id
-                        if (!empty($block['temp_media_id']) && isset($uploads[$block['temp_media_id']])) {
-                            $file = $uploads[$block['temp_media_id']];
-                            if ($file && $file->isValid()) {
-                                $path = $file->store("destinations/{$section}", 'public');
-                                $image = DestinationImage::create([
-                                    'destination_id' => $destination->id,
-                                    'block_id' => $block['id'],
-                                    'storage_path' => $path,
-                                    'thumbnail_path' => null,
-                                    'caption' => $block['caption'] ?? null,
-                                    'mime_type' => $file->getClientMimeType(),
-                                    'size_bytes' => $file->getSize(),
-                                    'order' => $bi,
-                                    'uploaded_by' => Auth::id(),
-                                ]);
-                                $blocks[$bi]['media_id'] = $image->id;
-                                $blocks[$bi]['block_id'] = $block['id'];
-                                unset($blocks[$bi]['temp_media_id']);
-                                Log::info('Uploaded new image', ['media_id' => $image->id, 'block_id' => $block['id']]);
-                            }
-                        } else {
-                            // 3) Existing image - just update caption or block_id if needed
-                            if (!empty($block['media_id'])) {
-                                $existing = DestinationImage::find($block['media_id']);
-                                if ($existing) {
-                                    // Update block_id if it changed
-                                    if ($existing->block_id !== $block['id']) {
-                                        $existing->update(['block_id' => $block['id']]);
-                                        Log::info('Updated block_id', ['media_id' => $existing->id, 'new_block_id' => $block['id']]);
-                                    }
-                                    // Update caption if changed
-                                    if (isset($block['caption']) && $existing->caption !== $block['caption']) {
-                                        $existing->update(['caption' => $block['caption']]);
-                                        Log::info('Updated caption', ['media_id' => $existing->id]);
-                                    }
-                                }
-                                $blocks[$bi]['block_id'] = $block['id'];
-                            }
-                        }
-                    }
-                }
-
-                // ✅ Update this section's content
-                $sectionsContent[$section] = $blocks;
-            }
-
-            // ✅ Only save if we actually processed sections
-            $destination->sections_content = $sectionsContent;
-            $destination->save();
-            
-            Log::info('Sections content updated', [
-                'sections_updated' => array_keys($sectionsContent)
+            $validated = $request->validate([
+                'country_id' => 'required|exists:countries,id',
+                'name' => 'required|string|max:255',
+                'slug' => 'nullable|string|max:255|unique:destinations,slug,' . $destination->id,
+                'type' => 'nullable|string|max:100',
+                'description' => 'nullable|string',
+                'focus_keyword' => 'nullable|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp',
+                'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp',
+                'latitude' => 'nullable|numeric|between:-90,90',
+                'longitude' => 'nullable|numeric|between:-180,180',
+                'area_size' => 'nullable|integer|min:0',
+                'altitude_min' => 'nullable|integer',
+                'altitude_max' => 'nullable|integer',
+                'entry_fee_foreign' => 'nullable|numeric|min:0',
+                'entry_fee_resident' => 'nullable|numeric|min:0',
+                'entry_fee_local' => 'nullable|numeric|min:0',
+                'currency' => 'nullable|string|max:10',
+                'established_year' => 'nullable|digits:4',
+                'annual_visitors' => 'nullable|integer|min:0',
+                'phone' => 'nullable|string|max:50',
+                'email' => 'nullable|email|max:255',
+                'website' => 'nullable|url|max:255',
+                'opening_hours' => 'nullable|string|max:255',
+                'best_season' => 'nullable|string|max:255',
+                'climate' => 'nullable|string|max:255',
+                'avg_temp_high' => 'nullable|integer',
+                'avg_temp_low' => 'nullable|integer',
+                'rainfall_annual' => 'nullable|integer',
+                'is_popular' => 'nullable|boolean',
+                'sort_order' => 'nullable|integer|min:0',
+                'meta_title' => 'nullable|string|max:255',
+                'meta_description' => 'nullable|string|max:320',
+                'meta_keywords' => 'nullable|string',
+                'status' => 'nullable|in:draft,published',
             ]);
-        } else {
-            Log::info('No section data submitted, preserving existing sections_content');
+
+            if (empty($validated['slug'])) {
+                $validated['slug'] = Str::slug($validated['name']);
+            }
+
+            if ($request->filled('status') && $request->status === 'published') {
+                $validated['is_active'] = true;
+                $validated['is_draft'] = false;
+                $validated['published_at'] = now();
+            } else {
+                $validated['is_active'] = false;
+                $validated['is_draft'] = true;
+                $validated['draft_user_id'] = Auth::id();
+            }
+
+            $validated['is_popular'] = $request->has('is_popular');
+            $validated['sort_order'] = $validated['sort_order'] ?? 0;
+
+            DB::beginTransaction();
+
+            // Handle featured image
+            if ($request->hasFile('featured_image')) {
+                if ($destination->featured_image) {
+                    $this->deleteImage($destination->featured_image);
+                }
+                $path = $this->storeImage($request->file('featured_image'), 'destinations/featured');
+                $validated['featured_image'] = $path;
+                Log::info('Featured image uploaded', ['path' => $path]);
+            }
+
+            // Handle main image
+            if ($request->hasFile('image')) {
+                if ($destination->image) {
+                    $this->deleteImage($destination->image);
+                }
+                $path = $this->storeImage($request->file('image'), 'destinations');
+                $validated['image'] = $path;
+                Log::info('Main image uploaded', ['path' => $path]);
+            }
+
+            // Update destination
+            $destination->update($validated);
+
+            // Sync blocks - syncBlocks() handles image diffing AND returns the
+            // cleaned block structure to persist to destinations.content_blocks
+            if ($request->has('blocks') && is_array($request->blocks)) {
+                $contentBlocks = $this->syncBlocks($destination, $request->blocks);
+                $destination->update(['content_blocks' => $contentBlocks]);
+            }
+
+            DB::commit();
+
+            Log::info('Destination updated successfully', ['destination_id' => $destination->id]);
+
+            return redirect()->route('admin.destinations.edit', $destination->id)
+                            ->with('success', 'Destination updated successfully!');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            Log::error('Validation error in adminUpdate', ['errors' => $e->errors()]);
+            return back()->withErrors($e->errors())->withInput();
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating destination', [
+                'destination_id' => $destination->id,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Error updating destination: ' . $e->getMessage())->withInput();
         }
-
-        DB::commit();
-
-        Log::info('Destination updated successfully', ['destination_id' => $destination->id]);
-
-        if ($request->filled('draft')) {
-            return response()->json(['success' => true, 'destination_id' => $destination->id], 200);
-        }
-
-        return redirect()->route('admin.destinations.edit', $destination->id)
-                        ->with('success', 'Destination updated successfully!');
-
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        DB::rollBack();
-        Log::error('Validation error in adminUpdate', ['errors' => $e->errors()]);
-        return back()->withErrors($e->errors())->withInput();
-
-    } catch (Exception $e) {
-        DB::rollBack();
-        Log::error('Error updating destination', [
-            'destination_id' => $destination->id,
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        return back()->with('error', 'Error updating destination: ' . $e->getMessage())->withInput();
     }
-}
 
     /**
      * ADMIN: Remove the specified destination
@@ -588,16 +319,15 @@ public function adminUpdate(Request $request, Destination $destination)
     public function adminDestroy(Destination $destination)
     {
         try {
-            Log::info('Deleting destination', ['destination_id' => $destination->id]);
-
-            if ($destination->image && Storage::disk('public')->exists($destination->image)) {
-                Storage::disk('public')->delete($destination->image);
+            if ($destination->featured_image) {
+                $this->deleteImage($destination->featured_image);
             }
-            if ($destination->featured_image && Storage::disk('public')->exists($destination->featured_image)) {
-                Storage::disk('public')->delete($destination->featured_image);
+            if ($destination->image) {
+                $this->deleteImage($destination->image);
             }
 
             foreach ($destination->destinationImages as $img) {
+                $this->deleteImage($img->storage_path);
                 $img->delete();
             }
 
@@ -609,10 +339,7 @@ public function adminUpdate(Request $request, Destination $destination)
                             ->with('success', 'Destination deleted successfully!');
 
         } catch (Exception $e) {
-            Log::error('Error deleting destination', [
-                'destination_id' => $destination->id,
-                'message' => $e->getMessage(),
-            ]);
+            Log::error('Error deleting destination', ['message' => $e->getMessage()]);
             return back()->with('error', 'Error deleting destination: ' . $e->getMessage());
         }
     }
@@ -625,14 +352,7 @@ public function adminUpdate(Request $request, Destination $destination)
         try {
             $destination->update(['is_active' => !$destination->is_active]);
             $status = $destination->is_active ? 'activated' : 'deactivated';
-
-            Log::info('Destination status toggled', [
-                'destination_id' => $destination->id,
-                'new_status' => $destination->is_active
-            ]);
-
             return back()->with('success', "Destination {$status} successfully!");
-
         } catch (Exception $e) {
             Log::error('Error toggling destination status', ['message' => $e->getMessage()]);
             return back()->with('error', 'Error toggling status: ' . $e->getMessage());
@@ -647,9 +367,7 @@ public function adminUpdate(Request $request, Destination $destination)
         try {
             $destination->update(['is_popular' => !$destination->is_popular]);
             $status = $destination->is_popular ? 'marked as popular' : 'unmarked as popular';
-
             return back()->with('success', "Destination {$status} successfully!");
-
         } catch (Exception $e) {
             Log::error('Error toggling popular status', ['message' => $e->getMessage()]);
             return back()->with('error', 'Error toggling popular: ' . $e->getMessage());
@@ -670,17 +388,20 @@ public function adminUpdate(Request $request, Destination $destination)
             $destinations = Destination::whereIn('id', $request->ids)->get();
 
             foreach ($destinations as $destination) {
-                if ($destination->image) Storage::disk('public')->delete($destination->image);
-                if ($destination->featured_image) Storage::disk('public')->delete($destination->featured_image);
+                if ($destination->featured_image) {
+                    $this->deleteImage($destination->featured_image);
+                }
+                if ($destination->image) {
+                    $this->deleteImage($destination->image);
+                }
 
                 foreach ($destination->destinationImages as $img) {
+                    $this->deleteImage($img->storage_path);
                     $img->delete();
                 }
 
                 $destination->delete();
             }
-
-            Log::info('Bulk delete completed', ['count' => count($request->ids)]);
 
             return back()->with('success', 'Selected destinations deleted successfully!');
 
@@ -714,6 +435,343 @@ public function adminUpdate(Request $request, Destination $destination)
         }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // PRIVATE METHODS
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Save blocks.
+     * Creates DestinationImage rows for any image blocks (via syncBlockImages),
+     * and returns the cleaned block structure — safe to JSON-encode and persist
+     * to destinations.content_blocks — which renderContentBlocks() reads later.
+     */
+    private function saveBlocks(int $destinationId, array $blocksData): array
+    {
+        $contentBlocks = [];
+        $sortOrder = 0;
+
+        foreach ($blocksData as $blockData) {
+            $contentBlocks[] = $this->createBlock($destinationId, $blockData, $sortOrder);
+            $sortOrder++;
+        }
+
+        return $contentBlocks;
+    }
+
+
+    /**
+ * Create block.
+ * For image blocks: ensures a stable block_id, saves the uploaded files
+ * to DestinationImage, and returns a clean (JSON-safe) block array.
+ * For other block types: returns the block data as-is.
+ * Updated to support 'table' and 'buttons' block types with colors.
+ */
+private function createBlock(int $destinationId, array $blockData, int $sortOrder): array
+{
+    $type = $blockData['type'] ?? 'text';
+
+    // --- IMAGE BLOCK ---
+    if ($type === 'image') {
+        $blockId = $blockData['id'] ?? 'blk-' . Str::random(8);
+        $blockData['id'] = $blockId;
+
+        $this->syncBlockImages($destinationId, $blockData, $sortOrder);
+
+        return [
+            'type' => 'image',
+            'id' => $blockId,
+            'caption' => $blockData['caption'] ?? null,
+        ];
+    }
+
+    // --- TABLE BLOCK with colors ---
+    if ($type === 'table') {
+        return [
+            'type' => 'table',
+            'id' => $blockData['id'] ?? 'tbl-' . Str::random(8),
+            'headers' => $blockData['headers'] ?? [],
+            'rows' => $blockData['rows'] ?? [],
+            'caption' => $blockData['caption'] ?? null,
+            // Table styling
+            'striped' => isset($blockData['striped']),
+            'bordered' => isset($blockData['bordered']) ? true : false,
+            'hoverable' => isset($blockData['hoverable']),
+            'small' => isset($blockData['small']),
+            // Table colors
+            'header_bg_color' => $blockData['header_bg_color'] ?? '#f3f4f6',  // gray-100 default
+            'header_text_color' => $blockData['header_text_color'] ?? '#111827', // gray-900 default
+            'row_bg_color' => $blockData['row_bg_color'] ?? '#ffffff',
+            'row_bg_alt_color' => $blockData['row_bg_alt_color'] ?? '#f9fafb', // gray-50 default
+            'row_text_color' => $blockData['row_text_color'] ?? '#111827',
+            'border_color' => $blockData['border_color'] ?? '#d1d5db', // gray-300 default
+        ];
+    }
+
+    // --- BUTTONS BLOCK with colors ---
+    if ($type === 'buttons') {
+        // Process each button with its own colors
+        $buttons = [];
+        if (!empty($blockData['buttons']) && is_array($blockData['buttons'])) {
+            foreach ($blockData['buttons'] as $btn) {
+                $buttons[] = [
+                    'text' => $btn['text'] ?? 'Button',
+                    'url' => $btn['url'] ?? '#',
+                    'bg_color' => $btn['bg_color'] ?? '#2563eb', // blue-600 default
+                    'text_color' => $btn['text_color'] ?? '#ffffff',
+                    'hover_bg_color' => $btn['hover_bg_color'] ?? '#1d4ed8', // blue-700 default
+                    'hover_text_color' => $btn['hover_text_color'] ?? '#ffffff',
+                    'border_color' => $btn['border_color'] ?? '#2563eb',
+                    'border_radius' => $btn['border_radius'] ?? '8px',
+                    'size' => $btn['size'] ?? 'medium', // small, medium, large
+                    'type' => $btn['type'] ?? 'primary', // primary, secondary, outline, ghost
+                    'icon' => $btn['icon'] ?? null,
+                    'target' => $btn['target'] ?? '_self',
+                    'rel' => $btn['rel'] ?? '',
+                ];
+            }
+        }
+
+        return [
+            'type' => 'buttons',
+            'id' => $blockData['id'] ?? 'btn-' . Str::random(8),
+            'buttons' => $buttons,
+            'alignment' => $blockData['alignment'] ?? 'left',
+            'gap' => $blockData['gap'] ?? 'medium',
+            'direction' => $blockData['direction'] ?? 'horizontal',
+            // Global button styles (can be overridden per button)
+            'default_bg_color' => $blockData['default_bg_color'] ?? '#2563eb',
+            'default_text_color' => $blockData['default_text_color'] ?? '#ffffff',
+            'default_hover_bg_color' => $blockData['default_hover_bg_color'] ?? '#1d4ed8',
+            'default_hover_text_color' => $blockData['default_hover_text_color'] ?? '#ffffff',
+            'default_border_radius' => $blockData['default_border_radius'] ?? '8px',
+        ];
+    }
+
+    // --- TEXT, HEADING, LIST blocks ---
+    return $blockData;
+}
+
+    /**
+     * Sync block images
+     * NOTE: No getSize() / getClientSize() call anywhere in this method.
+     * No 'size_bytes' is written — if that DB column is NOT NULL, either
+     * make it nullable or drop it (see migration note below).
+     */
+    private function syncBlockImages(int $destinationId, array $blockData, int $sortOrder): void
+    {
+        $newImages = $blockData['images'] ?? [];
+        $altTexts = $blockData['alts'] ?? [];
+        $blockId = $blockData['id'] ?? 'blk-' . Str::random(8);
+
+        if (!empty($newImages) && is_array($newImages)) {
+            foreach ($newImages as $i => $newImage) {
+                if ($newImage && $newImage instanceof UploadedFile && $newImage->isValid()) {
+                    try {
+                        $mime = $newImage->getClientMimeType();
+                        $path = $this->storeImage($newImage, 'destinations/blocks');
+                        $altText = $altTexts[$i] ?? null;
+
+                        DestinationImage::create([
+                            'destination_id' => $destinationId,
+                            'block_id' => $blockId,
+                            'storage_path' => $path,
+                            'thumbnail_path' => null,
+                            'caption' => $blockData['caption'] ?? null,
+                            'alt_text' => $altText,
+                            'mime_type' => $mime,
+                            'order' => $i,
+                            'uploaded_by' => Auth::id(),
+                        ]);
+
+                        Log::info('Image saved successfully', [
+                            'block_id' => $blockId,
+                            'path' => $path,
+                            'destination_id' => $destinationId
+                        ]);
+
+                    } catch (Exception $e) {
+                        Log::error('Error saving image', [
+                            'error' => $e->getMessage(),
+                            'image_index' => $i
+                        ]);
+                        continue;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Sync blocks (update path).
+     * Diffs image blocks against existing DestinationImage rows, and returns
+     * the cleaned block structure to persist to destinations.content_blocks.
+     */
+private function syncBlocks(Destination $destination, array $blocksData): array
+{
+    $existingBlockIds = $destination->destinationImages->pluck('block_id')->unique()->toArray();
+    $processedBlockIds = [];
+    $contentBlocks = [];
+    $sortOrder = 0;
+
+    foreach ($blocksData as $blockData) {
+        $type = $blockData['type'] ?? 'text';
+        $blockId = $blockData['id'] ?? null;
+
+        // --- IMAGE BLOCK ---
+        if ($type === 'image') {
+            $blockId = $blockId ?? 'blk-' . Str::random(8);
+            $blockData['id'] = $blockId;
+
+            // Delete flagged images
+            $deleteIds = array_filter($blockData['delete_images'] ?? []);
+            if (!empty($deleteIds)) {
+                $toDelete = $destination->destinationImages
+                    ->where('block_id', $blockId)
+                    ->whereIn('id', $deleteIds);
+                foreach ($toDelete as $img) {
+                    $this->deleteImage($img->storage_path);
+                    $img->delete();
+                }
+            }
+
+            // Update alt text for existing images
+            $existingAlts = $blockData['existing_alts'] ?? [];
+            foreach ($existingAlts as $imageId => $altText) {
+                DestinationImage::find($imageId)?->update(['alt_text' => $altText]);
+            }
+
+            // Append new images
+            $this->syncBlockImages($destination->id, $blockData, $sortOrder);
+            $processedBlockIds[] = $blockId;
+
+            $contentBlocks[] = [
+                'type'    => 'image',
+                'id'      => $blockId,
+                'caption' => $blockData['caption'] ?? null,
+            ];
+        }
+
+        // --- TABLE BLOCK with colors ---
+        elseif ($type === 'table') {
+            $blockId = $blockId ?? 'tbl-' . Str::random(8);
+            $contentBlocks[] = [
+                'type' => 'table',
+                'id' => $blockId,
+                'headers' => $blockData['headers'] ?? [],
+                'rows' => $blockData['rows'] ?? [],
+                'caption' => $blockData['caption'] ?? null,
+                // Table styling
+                'striped' => isset($blockData['striped']),
+                'bordered' => isset($blockData['bordered']) ? true : false,
+                'hoverable' => isset($blockData['hoverable']),
+                'small' => isset($blockData['small']),
+                // Table colors
+                'header_bg_color' => $blockData['header_bg_color'] ?? '#f3f4f6',
+                'header_text_color' => $blockData['header_text_color'] ?? '#111827',
+                'row_bg_color' => $blockData['row_bg_color'] ?? '#ffffff',
+                'row_bg_alt_color' => $blockData['row_bg_alt_color'] ?? '#f9fafb',
+                'row_text_color' => $blockData['row_text_color'] ?? '#111827',
+                'border_color' => $blockData['border_color'] ?? '#d1d5db',
+            ];
+            $processedBlockIds[] = $blockId;
+        }
+
+        // --- BUTTONS BLOCK with colors ---
+        elseif ($type === 'buttons') {
+            $blockId = $blockId ?? 'btn-' . Str::random(8);
+            
+            // Process buttons with colors
+            $buttons = [];
+            if (!empty($blockData['buttons']) && is_array($blockData['buttons'])) {
+                foreach ($blockData['buttons'] as $btn) {
+                    $buttons[] = [
+                        'text' => $btn['text'] ?? 'Button',
+                        'url' => $btn['url'] ?? '#',
+                        'bg_color' => $btn['bg_color'] ?? '#2563eb',
+                        'text_color' => $btn['text_color'] ?? '#ffffff',
+                        'hover_bg_color' => $btn['hover_bg_color'] ?? '#1d4ed8',
+                        'hover_text_color' => $btn['hover_text_color'] ?? '#ffffff',
+                        'border_color' => $btn['border_color'] ?? '#2563eb',
+                        'border_radius' => $btn['border_radius'] ?? '8px',
+                        'size' => $btn['size'] ?? 'medium',
+                        'type' => $btn['type'] ?? 'primary',
+                        'icon' => $btn['icon'] ?? null,
+                        'target' => $btn['target'] ?? '_self',
+                        'rel' => $btn['rel'] ?? '',
+                    ];
+                }
+            }
+
+            $contentBlocks[] = [
+                'type' => 'buttons',
+                'id' => $blockId,
+                'buttons' => $buttons,
+                'alignment' => $blockData['alignment'] ?? 'left',
+                'gap' => $blockData['gap'] ?? 'medium',
+                'direction' => $blockData['direction'] ?? 'horizontal',
+                'default_bg_color' => $blockData['default_bg_color'] ?? '#2563eb',
+                'default_text_color' => $blockData['default_text_color'] ?? '#ffffff',
+                'default_hover_bg_color' => $blockData['default_hover_bg_color'] ?? '#1d4ed8',
+                'default_hover_text_color' => $blockData['default_hover_text_color'] ?? '#ffffff',
+                'default_border_radius' => $blockData['default_border_radius'] ?? '8px',
+            ];
+            $processedBlockIds[] = $blockId;
+        }
+
+        // --- OTHER BLOCKS (text, heading, list) ---
+        else {
+            $contentBlocks[] = $blockData;
+        }
+
+        $sortOrder++;
+    }
+
+    // Delete image blocks that were entirely removed
+    foreach ($existingBlockIds as $blockId) {
+        if (!in_array($blockId, $processedBlockIds)) {
+            $images = $destination->destinationImages->where('block_id', $blockId);
+            foreach ($images as $image) {
+                $this->deleteImage($image->storage_path);
+                $image->delete();
+            }
+        }
+    }
+
+    return $contentBlocks;
+}
+    /**
+     * Store image
+     */
+    private function storeImage(UploadedFile $file, string $folder): string
+    {
+        $destination = public_path('storage/' . $folder);
+
+        if (!file_exists($destination)) {
+            mkdir($destination, 0755, true);
+        }
+
+        $extension = $file->getClientOriginalExtension() ?: 'jpg';
+        $filename = Str::random(40) . '.' . $extension;
+        $file->move($destination, $filename);
+
+        return $folder . '/' . $filename;
+    }
+
+    /**
+     * Delete image
+     */
+    private function deleteImage(string $relativePath): void
+    {
+        $fullPath = public_path('storage/' . $relativePath);
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // PUBLIC METHODS
+    // ─────────────────────────────────────────────────────────────
+
     /**
      * PUBLIC: Display list of destinations
      */
@@ -733,35 +791,17 @@ public function adminUpdate(Request $request, Destination $destination)
             }
 
             if ($request->filled('search')) {
-                $query->where(function ($q) use ($request) {
-                    $q->where('name', 'like', "%{$request->search}%")
-                      ->orWhere('description', 'like', "%{$request->search}%");
-                });
+                $query->where('name', 'like', "%{$request->search}%");
             }
 
             $destinations = $query->orderBy('sort_order')->orderBy('name')->paginate(12);
             $countries = Country::where('is_active', true)->orderBy('name')->get();
 
-            $ugandaDestinations = Destination::where('is_active', true)
-                ->whereHas('country', function($query) {
-                    $query->where('code', 'UG');
-                })
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->limit(5)
-                ->get();
-
-            $otherPopular = Destination::where('is_active', true)
-                ->where('is_popular', true)
-                ->whereDoesntHave('country', function($query) {
-                    $query->where('code', 'UG');
-                })
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->limit(1)
-                ->get();
-
-            $popularDestinations = $ugandaDestinations->merge($otherPopular);
+            $popularDestinations = Destination::where('is_active', true)
+                                              ->where('is_popular', true)
+                                              ->orderBy('sort_order')
+                                              ->limit(6)
+                                              ->get();
 
             return view('destinations.index', compact('destinations', 'countries', 'popularDestinations'));
 
@@ -778,13 +818,13 @@ public function adminUpdate(Request $request, Destination $destination)
     {
         try {
             $destination = Destination::where('slug', $slug)
-                                      ->with('country', 'activities', 'destinationImages')
-                                      ->active()
+                                      ->with('country', 'destinationImages')
+                                      ->where('is_active', true)
                                       ->firstOrFail();
 
             $relatedDestinations = Destination::where('country_id', $destination->country_id)
                                              ->where('id', '!=', $destination->id)
-                                             ->active()
+                                             ->where('is_active', true)
                                              ->ordered()
                                              ->limit(3)
                                              ->get();
@@ -804,7 +844,7 @@ public function adminUpdate(Request $request, Destination $destination)
     {
         try {
             $destinations = Destination::where('country_id', $countryId)
-                                       ->active()
+                                       ->where('is_active', true)
                                        ->ordered()
                                        ->get();
             return response()->json($destinations);
@@ -821,8 +861,8 @@ public function adminUpdate(Request $request, Destination $destination)
     public function getPopular()
     {
         try {
-            $destinations = Destination::active()
-                                       ->popular()
+            $destinations = Destination::where('is_active', true)
+                                       ->where('is_popular', true)
                                        ->ordered()
                                        ->limit(6)
                                        ->get();
@@ -831,48 +871,6 @@ public function adminUpdate(Request $request, Destination $destination)
         } catch (Exception $e) {
             Log::error('Error getting popular destinations', ['message' => $e->getMessage()]);
             return response()->json(['error' => 'Error loading destinations'], 500);
-        }
-    }
-
-    /**
-     * Helper: Handle section images upload (legacy)
-     */
-    private function handleSectionImages($request, $fieldName, $storagePath)
-    {
-        if (!$request->hasFile($fieldName)) {
-            return null;
-        }
-
-        $images = [];
-        $files = $request->file($fieldName);
-        $sections = $request->input("{$fieldName}_sections", []);
-        $captions = $request->input("{$fieldName}_captions", []);
-
-        foreach ($files as $index => $file) {
-            if ($file && $file->isValid()) {
-                $path = $file->store($storagePath, 'public');
-                $images[] = [
-                    'image' => $path,
-                    'section' => $sections[$index] ?? '',
-                    'caption' => $captions[$index] ?? '',
-                ];
-            }
-        }
-
-        return $images;
-    }
-
-    /**
-     * Helper: Delete section images (legacy)
-     */
-    private function deleteSectionImages($images)
-    {
-        if (empty($images)) return;
-
-        foreach ($images as $imageData) {
-            if (isset($imageData['image']) && Storage::disk('public')->exists($imageData['image'])) {
-                Storage::disk('public')->delete($imageData['image']);
-            }
         }
     }
 }

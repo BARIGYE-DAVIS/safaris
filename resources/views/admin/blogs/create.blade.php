@@ -683,4 +683,6 @@
     });
   });
 </script>
+    
+<script src="{{ asset('js/blog-import.js') }}"></script>
 @endpush

@@ -28,14 +28,14 @@ class AdminDashboardController extends Controller
             Carbon::now()->subMonths(2),
             Carbon::now()->subMonth()
         ])->count();
-        
+
         $bookingsThisMonth = Booking::whereBetween('created_at', [
             Carbon::now()->subMonth(),
             Carbon::now()
         ])->count();
 
-        $bookingsChange = $bookingsLastMonth > 0 
-            ? (($bookingsThisMonth - $bookingsLastMonth) / $bookingsLastMonth) * 100 
+        $bookingsChange = $bookingsLastMonth > 0
+            ? (($bookingsThisMonth - $bookingsLastMonth) / $bookingsLastMonth) * 100
             : 0;
 
         // 2. REVENUE CHART DATA (Last 12 months)
@@ -70,7 +70,7 @@ class AdminDashboardController extends Controller
                 $revenue = Booking::where('tour_id', $tour->id)
                     ->where('status', Booking::STATUS_CONFIRMED)
                     ->sum('total_cost') ?? 0;
-                
+
                 $tour->total_revenue = $revenue;
                 return $tour;
             });
@@ -121,10 +121,10 @@ class AdminDashboardController extends Controller
         // 11. NOTIFICATIONS/ALERTS
         $notifications = $this->getAdminNotifications();
 
-        // 12. SYSTEM STATUS
+        // 12. SYSTEM STATUS — safe version for shared hosting
         $systemStatus = [
             'database' => $this->checkDatabaseStatus(),
-            'storage' => $this->getStorageUsage(),
+            'storage'  => $this->getStorageUsage(),
             'last_backup' => $this->getLastBackupTime(),
         ];
 
@@ -155,21 +155,21 @@ class AdminDashboardController extends Controller
     private function getRevenueChartData()
     {
         $monthlyData = [];
-        
+
         for ($i = 11; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
-            
+
             $revenue = Booking::whereYear('created_at', $date->year)
                 ->whereMonth('created_at', $date->month)
                 ->where('status', Booking::STATUS_CONFIRMED)
                 ->sum('total_cost') ?? 0;
-            
+
             $monthlyData[] = [
-                'month' => $date->format('M Y'),
-                'revenue' => $revenue
+                'month'   => $date->format('M Y'),
+                'revenue' => (float) $revenue,
             ];
         }
-        
+
         return $monthlyData;
     }
 
@@ -184,10 +184,10 @@ class AdminDashboardController extends Controller
         $newBookingsToday = Booking::whereDate('created_at', Carbon::today())->count();
         if ($newBookingsToday > 0) {
             $notifications[] = [
-                'type' => 'success',
-                'icon' => 'bell',
+                'type'    => 'success',
+                'icon'    => 'bell',
                 'message' => "{$newBookingsToday} new booking(s) received today",
-                'time' => 'Today'
+                'time'    => 'Today',
             ];
         }
 
@@ -195,10 +195,10 @@ class AdminDashboardController extends Controller
         $pendingCount = Booking::where('status', Booking::STATUS_PENDING)->count();
         if ($pendingCount > 0) {
             $notifications[] = [
-                'type' => 'warning',
-                'icon' => 'alert-circle',
+                'type'    => 'warning',
+                'icon'    => 'alert-circle',
                 'message' => "{$pendingCount} booking(s) awaiting approval",
-                'time' => 'Now'
+                'time'    => 'Now',
             ];
         }
 
@@ -207,13 +207,13 @@ class AdminDashboardController extends Controller
             ->where('travel_date', '<=', Carbon::today()->addDays(7))
             ->where('status', Booking::STATUS_CONFIRMED)
             ->count();
-        
+
         if ($upcomingCount > 0) {
             $notifications[] = [
-                'type' => 'info',
-                'icon' => 'calendar',
+                'type'    => 'info',
+                'icon'    => 'calendar',
                 'message' => "{$upcomingCount} safari(s) starting in the next 7 days",
-                'time' => 'This week'
+                'time'    => 'This week',
             ];
         }
 
@@ -221,13 +221,13 @@ class AdminDashboardController extends Controller
         $toursWithoutImages = Tour::doesntHave('images')
             ->where('status', 'published')
             ->count();
-        
+
         if ($toursWithoutImages > 0) {
             $notifications[] = [
-                'type' => 'warning',
-                'icon' => 'image',
+                'type'    => 'warning',
+                'icon'    => 'image',
                 'message' => "{$toursWithoutImages} published tour(s) missing images",
-                'time' => 'Action needed'
+                'time'    => 'Action needed',
             ];
         }
 
@@ -235,12 +235,12 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Check database connectivity
+     * Check database connectivity — safe for shared hosting
      */
     private function checkDatabaseStatus()
     {
         try {
-            DB::connection()->getPdo();
+            DB::select('SELECT 1');
             return 'Connected';
         } catch (\Exception $e) {
             return 'Error';
@@ -248,25 +248,18 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Get storage usage percentage
+     * Get storage usage — safe version for shared/InfinityFree hosting.
+     * disk_total_space() and disk_free_space() are disabled on most shared hosts.
      */
     private function getStorageUsage()
     {
-        try {
-            $storagePath = storage_path('app');
-            $totalSpace = disk_total_space($storagePath);
-            $freeSpace = disk_free_space($storagePath);
-            $usedSpace = $totalSpace - $freeSpace;
-            $usagePercent = ($usedSpace / $totalSpace) * 100;
-            
-            return round($usagePercent, 2) . '%';
-        } catch (\Exception $e) {
-            return 'Unknown';
-        }
+        // disk_total_space() and disk_free_space() are disabled on InfinityFree
+        // and most shared hosting environments — return N/A to avoid fatal errors
+        return 'N/A';
     }
 
     /**
-     * Get last backup time (placeholder - implement based on your backup strategy)
+     * Get last backup time (placeholder)
      */
     private function getLastBackupTime()
     {
@@ -278,8 +271,8 @@ class AdminDashboardController extends Controller
      */
     public function getBookingsByDateRange(Request $request)
     {
-        $startDate = $request->input('start_date', Carbon::now()->subDays(30));
-        $endDate = $request->input('end_date', Carbon::now());
+        $startDate = $request->input('start_date', Carbon::now()->subDays(30)->toDateString());
+        $endDate   = $request->input('end_date', Carbon::now()->toDateString());
 
         $bookings = Booking::whereBetween('created_at', [$startDate, $endDate])
             ->with('tour')
@@ -287,7 +280,7 @@ class AdminDashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $bookings
+            'data'    => $bookings,
         ]);
     }
 
@@ -298,8 +291,6 @@ class AdminDashboardController extends Controller
     {
         $period = $request->input('period', 'month'); // day, week, month, year
 
-        $revenueData = [];
-        
         switch ($period) {
             case 'day':
                 $revenueData = $this->getDailyRevenue();
@@ -316,7 +307,7 @@ class AdminDashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $revenueData
+            'data'    => $revenueData,
         ]);
     }
 
@@ -328,21 +319,22 @@ class AdminDashboardController extends Controller
             )
             ->where('status', Booking::STATUS_CONFIRMED)
             ->where('created_at', '>=', Carbon::now()->subDays(30))
-            ->groupBy('date')
-            ->orderBy('date')
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy(DB::raw('DATE(created_at)'))
             ->get();
     }
 
     private function getWeeklyRevenue()
     {
+        // Use YEARWEEK() — supported on MySQL 5.x used by InfinityFree
         return Booking::select(
-                DB::raw('YEARWEEK(created_at) as week'),
+                DB::raw('YEARWEEK(created_at, 1) as week'),
                 DB::raw('SUM(total_cost) as revenue')
             )
             ->where('status', Booking::STATUS_CONFIRMED)
             ->where('created_at', '>=', Carbon::now()->subWeeks(12))
-            ->groupBy('week')
-            ->orderBy('week')
+            ->groupBy(DB::raw('YEARWEEK(created_at, 1)'))
+            ->orderBy(DB::raw('YEARWEEK(created_at, 1)'))
             ->get();
     }
 
@@ -354,8 +346,8 @@ class AdminDashboardController extends Controller
             )
             ->where('status', Booking::STATUS_CONFIRMED)
             ->where('created_at', '>=', Carbon::now()->subMonths(12))
-            ->groupBy('month')
-            ->orderBy('month')
+            ->groupBy(DB::raw('DATE_FORMAT(created_at, "%Y-%m")'))
+            ->orderBy(DB::raw('DATE_FORMAT(created_at, "%Y-%m")'))
             ->get();
     }
 
@@ -366,8 +358,8 @@ class AdminDashboardController extends Controller
                 DB::raw('SUM(total_cost) as revenue')
             )
             ->where('status', Booking::STATUS_CONFIRMED)
-            ->groupBy('year')
-            ->orderBy('year')
+            ->groupBy(DB::raw('YEAR(created_at)'))
+            ->orderBy(DB::raw('YEAR(created_at)'))
             ->get();
     }
 
@@ -376,7 +368,7 @@ class AdminDashboardController extends Controller
      */
     public function exportData(Request $request)
     {
-        $type = $request->input('type', 'bookings'); // bookings, revenue, customers
+        $type = $request->input('type', 'bookings');
 
         switch ($type) {
             case 'revenue':
@@ -390,22 +382,16 @@ class AdminDashboardController extends Controller
 
     private function exportBookings()
     {
-        return response()->json([
-            'message' => 'Bookings export - to be implemented'
-        ]);
+        return response()->json(['message' => 'Bookings export - to be implemented']);
     }
 
     private function exportRevenue()
     {
-        return response()->json([
-            'message' => 'Revenue export - to be implemented'
-        ]);
+        return response()->json(['message' => 'Revenue export - to be implemented']);
     }
 
     private function exportCustomers()
     {
-        return response()->json([
-            'message' => 'Customers export - to be implemented'
-        ]);
+        return response()->json(['message' => 'Customers export - to be implemented']);
     }
 }

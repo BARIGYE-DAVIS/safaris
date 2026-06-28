@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminAuthenticate;
+use App\Http\Controllers\AdminSpecialToursController;
 use App\Http\Controllers\SubscribersController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\AdminDashboardController;
@@ -12,6 +13,8 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminTourController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\SeoPageController;
+use App\Http\Controllers\SeoPageImportController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\ActivityCategoryController;
@@ -33,7 +36,6 @@ $ADMIN_PREFIX = 'me';
 // ADMIN AUTHENTICATION (PUBLIC)
 // ========================
 
-// /me should open the login page
 Route::get($ADMIN_PREFIX, function () use ($ADMIN_PREFIX) {
     return redirect("/{$ADMIN_PREFIX}/login");
 })->name('admin.entry');
@@ -45,7 +47,6 @@ Route::get("{$ADMIN_PREFIX}/verify", [AdminAuthController::class, 'showTwoFactor
 Route::post("{$ADMIN_PREFIX}/verify", [AdminAuthController::class, 'verifyTwoFactorCode'])->name('admin.2fa.verify');
 Route::post("{$ADMIN_PREFIX}/verify/resend", [AdminAuthController::class, 'resendTwoFactorCode'])->name('admin.2fa.resend');
 
-// Logout should be protected
 Route::post("{$ADMIN_PREFIX}/logout", [AdminAuthController::class, 'logout'])
     ->middleware(AdminAuthenticate::class)
     ->name('admin.logout');
@@ -85,6 +86,7 @@ Route::middleware(AdminAuthenticate::class)
         Route::get('/', [ContactController::class, 'admin'])->name('index');
         Route::get('/{id}', [ContactController::class, 'show'])->name('show');
         Route::put('/{id}/read-status', [ContactController::class, 'updateReadStatus'])->name('read-status');
+        Route::put('/{id}/status', [ContactController::class, 'updateStatus'])->name('status');
         Route::delete('/{id}', [ContactController::class, 'destroy'])->name('destroy');
         Route::post('/bulk-update', [ContactController::class, 'bulkUpdate'])->name('bulk');
         Route::get('/export/csv', [ContactController::class, 'export'])->name('export');
@@ -184,6 +186,16 @@ Route::middleware(AdminAuthenticate::class)
         Route::delete('bulk-delete', [ActivityController::class, 'bulkDelete'])->name('bulk-delete');
         Route::post('{activity}/images/reorder', [ActivityImageController::class, 'reorder'])->name('images.reorder');
         Route::post('{activity}/images/upload', [ActivityImageController::class, 'upload'])->name('images.upload');
+
+        // ========================
+        // ACTIVITY OPTIONS MANAGEMENT
+        // ========================
+        Route::prefix('options')->name('options.')->group(function () {
+            Route::get('/', [ActivityController::class, 'adminOptionsIndex'])->name('index');
+            Route::post('/', [ActivityController::class, 'adminOptionsStore'])->name('store');
+            Route::put('/{option}', [ActivityController::class, 'adminOptionsUpdate'])->name('update');
+            Route::delete('/{option}', [ActivityController::class, 'adminOptionsDestroy'])->name('destroy');
+        });
     });
 
     Route::delete('activity-images/{activityImage}', [ActivityImageController::class, 'destroy'])->name('activity-images.destroy');
@@ -236,7 +248,9 @@ Route::middleware(AdminAuthenticate::class)
         Route::get('/export/csv', [CustomTourRequestController::class, 'adminExport'])->name('export');
     });
 
-    // BLOG routes
+    // ========================
+    // BLOG MANAGEMENT
+    // ========================
     Route::get('blogs', [BlogController::class, 'adminIndex'])->name('blogs.index');
     Route::get('blogs/create', [BlogController::class, 'create'])->name('blogs.create');
     Route::post('blogs', [BlogController::class, 'store'])->name('blogs.store');
@@ -252,7 +266,9 @@ Route::middleware(AdminAuthenticate::class)
     Route::post('blog-categories/reorder', [BlogCategoryController::class, 'reorder'])->name('blog-categories.reorder');
     Route::get('blog-categories/api', [BlogCategoryController::class, 'apiList'])->name('blog-categories.api');
 
-    // Accommodations
+    // ========================
+    // ACCOMMODATIONS MANAGEMENT
+    // ========================
     Route::get('accommodations', [AccommodationController::class, 'adminIndex'])->name('accommodations.index');
     Route::get('accommodations/create', [AccommodationController::class, 'adminCreate'])->name('accommodations.create');
     Route::post('accommodations', [AccommodationController::class, 'adminStore'])->name('accommodations.store');
@@ -264,7 +280,87 @@ Route::middleware(AdminAuthenticate::class)
     Route::get('api/accommodations/search', [AccommodationController::class, 'apiSearch'])->name('api.accommodations.search');
     Route::get('api/accommodations/{id}', [AccommodationController::class, 'apiGetById'])->name('api.accommodations.getById');
 
-    // Email routes (keep fully qualified to avoid import errors)
+    // ========================
+    // EMAIL MANAGEMENT
+    // ========================
     Route::get('emails/compose', [\App\Http\Controllers\AdminEmailController::class, 'compose'])->name('emails.compose');
     Route::post('emails/send', [\App\Http\Controllers\AdminEmailController::class, 'send'])->name('emails.send');
+
+    // ========================
+    // SPECIAL TOURS MANAGEMENT
+    // ========================
+    Route::prefix('special-tours')->name('special-tours.')->group(function () {
+        Route::get('/', [AdminSpecialToursController::class, 'index'])->name('index');
+        Route::get('/create', [AdminSpecialToursController::class, 'create'])->name('create');
+        Route::post('/', [AdminSpecialToursController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [AdminSpecialToursController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [AdminSpecialToursController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AdminSpecialToursController::class, 'destroy'])->name('destroy');
+        Route::patch('/{id}/activate', [AdminSpecialToursController::class, 'activate'])->name('activate');
+        Route::patch('/{id}/deactivate', [AdminSpecialToursController::class, 'deactivate'])->name('deactivate');
+        Route::delete('/images/{imageId}', [AdminSpecialToursController::class, 'destroyImage'])->name('images.destroy');
+        Route::post('/{tourId}/images/reorder', [AdminSpecialToursController::class, 'updateImageOrder'])->name('images.reorder');
+    });
+
+    // ========================
+    // SEO PAGES MANAGEMENT
+    // ========================
+    Route::prefix('seo-pages')->name('seo-pages.')->group(function () {
+        // IMPORT ROUTES - MUST COME FIRST
+        Route::get('/import', [SeoPageImportController::class, 'showImportForm'])->name('import');
+        Route::post('/import', [SeoPageImportController::class, 'import'])->name('import.store');
+        
+        // CRUD ROUTES
+        Route::get('/', [SeoPageController::class, 'index'])->name('index');
+        Route::get('/create', [SeoPageController::class, 'create'])->name('create');
+        Route::post('/', [SeoPageController::class, 'store'])->name('store');
+        Route::get('/{seoPage}/edit', [SeoPageController::class, 'edit'])->name('edit');
+        Route::put('/{seoPage}', [SeoPageController::class, 'update'])->name('update');
+        Route::delete('/{seoPage}', [SeoPageController::class, 'destroy'])->name('destroy');
+        Route::patch('/{seoPage}/toggle-status', [SeoPageController::class, 'toggleStatus'])->name('toggle-status');
+        
+        // AUTO-SAVE & UPLOAD
+        Route::post('/auto-save', [SeoPageController::class, 'autoSave'])->name('auto-save');
+        Route::post('/upload-image', [SeoPageController::class, 'uploadImage'])->name('upload-image');
+        
+        // PREVIEW & DUPLICATE
+        Route::post('/preview', [SeoPageController::class, 'preview'])->name('preview');
+        Route::post('/{seoPage}/duplicate', [SeoPageController::class, 'duplicate'])->name('duplicate');
+        
+        // BULK ACTIONS & EXPORT
+        Route::post('/bulk-actions', [SeoPageController::class, 'bulkActions'])->name('bulk-actions');
+        Route::get('/{seoPage}/export/{format}', [SeoPageController::class, 'export'])->name('export');
+        
+        // REVISIONS
+        Route::get('/{seoPage}/revisions', [SeoPageController::class, 'revisions'])->name('revisions');
+        Route::post('/{seoPage}/revisions/{revision}/restore', [SeoPageController::class, 'restoreRevision'])->name('revisions.restore');
+        
+        // SEO ANALYSIS
+        Route::post('/analyze-seo', [SeoPageController::class, 'analyzeSEO'])->name('analyze-seo');
+        
+        // SEARCH & DATA
+        Route::get('/search', [SeoPageController::class, 'searchPages'])->name('search');
+        Route::get('/{seoPage}/data', [SeoPageController::class, 'getPageData'])->name('get-data');
+        Route::post('/update-block-order', [SeoPageController::class, 'updateBlockOrder'])->name('update-block-order');
+        
+        // API ENDPOINTS
+        Route::get('/api/all', [SeoPageController::class, 'apiIndex'])->name('api.index');
+        Route::get('/api/{slug}', [SeoPageController::class, 'apiShow'])->name('api.show');
+        
+        // SHOW ROUTE - MUST BE LAST (catches any slug)
+        Route::get('/{slug}', [SeoPageController::class, 'show'])->name('show');
+    });
 });
+
+// Admin Profile Routes
+Route::prefix('profile')->group(function () {
+    Route::get('/', [App\Http\Controllers\ProfileController::class, 'edit'])->name('admin.profile.edit');
+    Route::put('/', [App\Http\Controllers\ProfileController::class, 'update'])->name('admin.profile.update');
+});
+
+// Public SEO Page Routes
+Route::get('/explore/{slug}', [SeoPageController::class, 'show'])->name('seo-pages.show');
+
+// Booking Status Update
+Route::put('/admin/bookings/{booking}/status', [BookingController::class, 'updateStatus'])
+    ->name('admin.bookings.updateStatus');

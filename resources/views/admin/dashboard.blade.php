@@ -402,7 +402,7 @@
 
     <!-- Quick Actions Toolbar (Floating) -->
     <div class="fixed bottom-6 right-6 space-y-3">
-     >
+     
         <button onclick="window.location.href='{{ route('admin.tours.create') }}'" 
                 class="flex items-center justify-center w-14 h-14 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 transition transform hover:scale-110"
                 title="Add New Tour">

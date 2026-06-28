@@ -1,0 +1,257 @@
+
+
+<?php $__env->startSection('title', 'Safari Photo Gallery - Stunning Wildlife & Landscape Photography'); ?>
+<?php $__env->startSection('meta_description', 'Explore our breathtaking safari photo gallery featuring stunning wildlife photography, African landscapes, and unforgettable safari moments.'); ?>
+
+<?php $__env->startSection('content'); ?>
+<!-- Hero Section -->
+<div class="relative bg-gradient-to-r from-green-800 via-green-700 to-green-600">
+    <div class="absolute inset-0">
+        <img src="<?php echo e(asset('images/home.jpg')); ?>"
+             alt="Uganda safari sunset — plan your East Africa adventure with Calm Africa Safaris"
+             class="w-full h-full object-cover object-center"
+             loading="lazy">
+        <div class="absolute inset-0 bg-gradient-to-r from-black/65 via-black/45 to-black/55"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">
+            Safari Photo Gallery
+        </h1>
+        <p class="text-xl md:text-2xl text-green-100 mb-8 max-w-3xl mx-auto">
+            Experience the breathtaking beauty of African wildlife through our stunning photography collection.
+        </p>
+
+        <!-- Search Bar -->
+        <div class="max-w-md mx-auto">
+            <form method="GET" action="<?php echo e(route('gallery.index')); ?>" class="flex">
+                <input type="text"
+                       name="search"
+                       value="<?php echo e(request('search')); ?>"
+                       placeholder="Search images..."
+                       class="flex-1 px-4 py-3 rounded-l-lg border-0 focus:ring-2 focus:ring-white">
+                <button type="submit"
+                        class="bg-green-900 hover:bg-green-800 text-white px-6 py-3 rounded-r-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Category Filter -->
+<div class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between py-4 overflow-x-auto">
+            <div class="flex items-center space-x-4">
+                <span class="text-sm font-medium text-gray-700 whitespace-nowrap">Filter by:</span>
+                <div class="flex flex-nowrap gap-2">
+                    <a href="<?php echo e(route('gallery.index')); ?>"
+                       class="px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap <?php echo e(!request('category') ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'); ?>">
+                        All Photos
+                    </a>
+                    <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <a href="<?php echo e(route('gallery.index', ['category' => $cat])); ?>"
+                           class="px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap <?php echo e(request('category') == $cat ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'); ?>">
+                            <?php echo e(ucfirst(str_replace('_', ' ', $cat))); ?>
+
+                        </a>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+            </div>
+
+            <div class="text-sm text-gray-600 whitespace-nowrap ml-4">
+                <?php echo e($images->total()); ?> images
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gallery Grid -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <?php if($images->count() > 0): ?>
+        <!-- Active Filters -->
+        <?php if(request('search') || request('category')): ?>
+            <div class="mb-8">
+                <div class="flex items-center flex-wrap gap-2">
+                    <?php if(request('search')): ?>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            Search: "<?php echo e(request('search')); ?>"
+                            <a href="<?php echo e(route('gallery.index', ['category' => request('category')])); ?>" class="ml-2 text-blue-600 hover:text-blue-800">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </a>
+                        </span>
+                    <?php endif; ?>
+
+                    <?php if(request('category')): ?>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            Category: <?php echo e(ucfirst(str_replace('_', ' ', request('category')))); ?>
+
+                            <a href="<?php echo e(route('gallery.index', ['search' => request('search')])); ?>" class="ml-2 text-green-600 hover:text-green-800">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </a>
+                        </span>
+                    <?php endif; ?>
+
+                    <?php if(request('search') || request('category')): ?>
+                        <a href="<?php echo e(route('gallery.index')); ?>" class="text-sm text-gray-600 hover:text-gray-800 underline">
+                            Clear all filters
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <!-- Image Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+            <?php $__currentLoopData = $images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <article class="group relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                    <!-- Image Container -->
+                    <div class="relative overflow-hidden h-64">
+                        <img src="<?php echo e($image->image_url); ?>"
+                             alt="<?php echo e($image->alt_text); ?>"
+                             title="<?php echo e($image->title); ?>"
+                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                             loading="lazy">
+
+                        <!-- Overlay -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                        <!-- View Button -->
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <a href="<?php echo e(route('gallery.show', $image->slug)); ?>"
+                               class="bg-white/90 backdrop-blur-sm text-gray-900 px-4 py-2 rounded-full font-medium hover:bg-white transition-colors">
+                                View Details
+                            </a>
+                        </div>
+
+                        <!-- Category Badge -->
+                        <div class="absolute top-3 left-3">
+                            <span class="inline-block bg-green-600/90 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-full">
+                                <?php echo e(ucfirst(str_replace('_', ' ', $image->category))); ?>
+
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Image Info -->
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">
+                            <a href="<?php echo e(route('gallery.show', $image->slug)); ?>" class="line-clamp-2">
+                                <?php echo e($image->title); ?>
+
+                            </a>
+                        </h3>
+
+                        <?php if($image->caption): ?>
+                            <p class="text-gray-600 text-sm mb-3 line-clamp-2">
+                                <?php echo e($image->caption); ?>
+
+                            </p>
+                        <?php endif; ?>
+
+                        <!-- Tags -->
+                        <?php if($image->formatted_tags && count($image->formatted_tags) > 0): ?>
+                            <div class="flex flex-wrap gap-1 mb-3">
+                                <?php $__currentLoopData = array_slice($image->formatted_tags, 0, 3); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tag): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <span class="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
+                                        <?php echo e($tag); ?>
+
+                                    </span>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                <?php if(count($image->formatted_tags) > 3): ?>
+                                    <span class="text-xs text-gray-400">+<?php echo e(count($image->formatted_tags) - 3); ?></span>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Date -->
+                        <p class="text-xs text-gray-500">
+                            <time datetime="<?php echo e($image->created_at->toISOString()); ?>">
+                                <?php echo e($image->created_at->format('F j, Y')); ?>
+
+                            </time>
+                        </p>
+                    </div>
+                </article>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-8">
+            <?php echo e($images->links()); ?>
+
+        </div>
+    <?php else: ?>
+        <!-- Empty State -->
+        <div class="text-center py-16">
+            <svg class="mx-auto h-16 w-16 text-gray-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+
+            <h3 class="text-xl font-medium text-gray-900 mb-2">No images found</h3>
+            <p class="text-gray-600 mb-6">
+                <?php if(request('search') || request('category')): ?>
+                    Try adjusting your filters or search terms.
+                <?php else: ?>
+                    Our photo gallery is currently being updated. Check back soon!
+                <?php endif; ?>
+            </p>
+
+            <?php if(request('search') || request('category')): ?>
+                <a href="<?php echo e(route('gallery.index')); ?>"
+                   class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    View All Images
+                </a>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+</div>
+
+<!-- Call to Action Section -->
+<div class="bg-gradient-to-r from-green-600 to-green-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
+            Ready to Create Your Own Safari Memories?
+        </h2>
+        <p class="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
+            Join us on an unforgettable safari adventure and capture moments like these yourself.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="<?php echo e(route('tours.index')); ?>"
+               class="inline-flex items-center px-8 py-4 bg-white text-green-700 font-semibold rounded-lg hover:bg-green-50 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                View Safari Tours
+            </a>
+            <a href="<?php echo e(route('contact')); ?>"
+               class="inline-flex items-center px-8 py-4 bg-green-800 text-white font-semibold rounded-lg hover:bg-green-900 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+                Plan Custom Safari
+            </a>
+        </div>
+    </div>
+</div>
+
+<?php $__env->startPush('styles'); ?>
+<style>
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+<?php $__env->stopPush(); ?>
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\safaris\resources\views/gallery/index.blade.php ENDPATH**/ ?>

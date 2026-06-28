@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
+    <meta name="robots" content="index, follow">
     <title>@yield('title', 'Safari Tours - Adventure Awaits')</title>
 
     <!-- SEO Meta Tags -->
@@ -12,12 +12,21 @@
     <meta name="keywords" content="@yield('meta_keywords', 'safari, tours, wildlife, Africa, adventure, travel, booking')">
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
 
+    <link rel="canonical" href="@yield('canonical', url()->current())" />
+    <meta name="robots" content="index, follow">
+    <link rel="alternate" hreflang="en" href="@yield('canonical', url()->current())" />
+
     <!-- Open Graph Tags -->
     <meta property="og:title" content="@yield('og_title', 'Safari Tours - Adventure Awaits')">
     <meta property="og:description" content="@yield('og_description', 'Discover amazing safari adventures in East Africa.')">
     <meta property="og:image" content="@yield('og_image', asset('images/safari-og.jpg'))">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:type" content="website">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('twitter_title', 'Calm Africa Safaris')">
+    <meta name="twitter:description" content="@yield('twitter_description')">
+    <meta name="twitter:image" content="@yield('twitter_image', asset('images/safari-og.jpg'))">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -27,7 +36,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <!-- Styles -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="{{ asset('build/assets/app-lVDNHE2B.css') }}">
+    <script type="module" src="{{ asset('build/assets/app-BLNZwArW.js') }}"></script>
 
     <!-- Additional Styles -->
     @stack('styles')
@@ -88,9 +98,11 @@
 <body class="bg-gray-50 font-sans antialiased">
 
     <!-- ============================================================
-         CONTENT PROTECTION OVERLAY (single instance, reused)
+         CONTENT PROTECTION OVERLAY
+         hidden attribute keeps it out of Google's index entirely.
+         JavaScript removes it before showing — works exactly as before.
     ============================================================ -->
-    <div id="__cp_overlay" role="alertdialog" aria-modal="true" aria-labelledby="__cp_title">
+    <div id="__cp_overlay" role="alertdialog" aria-modal="true" aria-labelledby="__cp_title" hidden>
         <div id="__cp_box">
             <div style="font-size:3rem; margin-bottom:0.75rem;"><i class="fas fa-lock text-red-500"></i></div>
             <h2 id="__cp_title" style="font-size:1.35rem; font-weight:700; color:#111; margin:0 0 0.5rem;">
@@ -139,10 +151,11 @@
         const closeBtn = document.getElementById('__cp_close');
         let _dismissTimer = null;
 
-        /* Show the overlay, auto-dismiss after 5 s */
+        /* Show the overlay — removes hidden first, then activates */
         function showAlert() {
             if (!overlay) return;
-            overlay.classList.add('active');
+            overlay.removeAttribute('hidden'); // makes it available to CSS
+            overlay.classList.add('active');   // triggers display:flex
             clearTimeout(_dismissTimer);
             _dismissTimer = setTimeout(hideAlert, 5000);
         }

@@ -5,9 +5,6 @@
 @section('meta_keywords', $tour->meta_keywords ?? 'safari tour, ' . $tour->category . ', ' . $tour->type . ', ' . $tour->destinations)
 
 @section('page-header')
-<!-- ══════════════════════════════════════════════════════
-     HERO SECTION — full-bleed with overlay text
-══════════════════════════════════════════════════════ -->
 <header class="relative h-64 sm:h-80 md:h-96 lg:h-[520px] overflow-hidden">
     @if($tour->featured_image)
         <img src="{{ asset('storage/' . $tour->featured_image) }}"
@@ -20,7 +17,6 @@
 
     <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-10">
         <div class="max-w-7xl mx-auto">
-            <!-- Badges -->
             <div class="flex flex-wrap gap-2 mb-3">
                 <span class="bg-green-600 text-white px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
                     {{ $tour->category }}
@@ -95,7 +91,7 @@
                     </div>
                 </div>
 
-                <div id="itineraryAccordion" class="space-y-4" aria-live="polite">
+                <div id="itineraryAccordion" class="space-y-3" aria-live="polite">
                     @foreach($tour->itineraries->sortBy('day_number') as $day)
                     @php
                         $panelId   = 'day-panel-' . ($day->id ?? $loop->index);
@@ -105,42 +101,57 @@
                         $dayImages = $day->images ?? collect();
                     @endphp
 
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
 
                         <!-- Accordion header -->
                         <button id="{{ $buttonId }}"
-                                class="accordion-toggle w-full bg-gradient-to-r from-gray-600 to-gray-700 px-4 sm:px-6 py-4 text-left hover:from-green-700 hover:to-green-800 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                class="accordion-toggle w-full px-4 sm:px-6 py-4 text-left bg-white hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-green-500"
                                 aria-expanded="false"
                                 aria-controls="{{ $panelId }}"
                                 type="button">
-                            <div class="flex items-center justify-between gap-3">
-                                <div class="flex items-center flex-1 min-w-0 gap-3">
-                                    <div class="bg-white/20 rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0">
-                                        <span class="text-white font-bold text-base sm:text-lg">{{ $day->day_number }}</span>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <h3 class="text-base sm:text-xl font-bold text-white leading-snug">
-                                            Day {{ $day->day_number }}@if($day->day_title): {{ $day->day_title }}@endif
-                                        </h3>
-                                        @if($day->activity)
-                                            <p class="text-gray-200 text-xs sm:text-sm mt-0.5 line-clamp-2">{{ Str::limit(strip_tags($day->activity), 90) }}</p>
-                                        @endif
-                                    </div>
+                            <div class="flex items-center gap-4">
+
+                                <!-- Day circle -->
+                                <div class="flex-shrink-0 w-11 h-11 rounded-full bg-green-600 flex items-center justify-center">
+                                    <span class="text-white font-bold text-sm">{{ $day->day_number }}</span>
                                 </div>
-                                <div class="flex-shrink-0">
-                                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center">
-                                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white transform transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                        </svg>
-                                    </div>
+
+                                <!-- Title & preview -->
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-sm sm:text-base font-bold text-gray-900 leading-snug">
+                                        Day {{ $day->day_number }}@if($day->day_title) — {{ $day->day_title }}@endif
+                                    </h3>
+                                    @if($day->activity)
+                                        <p class="text-gray-500 text-xs sm:text-sm mt-0.5 line-clamp-1">
+                                            {{ Str::limit(strip_tags($day->activity), 80) }}
+                                        </p>
+                                    @endif
                                 </div>
+
+                                <!-- Plus / Minus icon -->
+                                {{--
+                                    CLOSED state  → shows + (both horizontal bar AND vertical bar visible)
+                                    OPEN   state  → shows − (only horizontal bar visible; vertical bar scales to 0)
+                                --}}
+                                <div class="acc-icon flex-shrink-0 w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center relative transition-colors duration-300">
+                                    <!-- Horizontal bar — always visible -->
+                                    <span class="acc-h absolute w-3.5 h-0.5 bg-gray-500 rounded transition-colors duration-300"></span>
+                                    <!-- Vertical bar — visible when CLOSED (+), hidden when OPEN (−) -->
+                                    <span class="acc-v absolute w-0.5 h-3.5 bg-gray-500 rounded transition-all duration-300 origin-center"></span>
+                                </div>
+
                             </div>
                         </button>
 
                         <!-- Accordion panel -->
-                        <div id="{{ $panelId }}" role="region" aria-labelledby="{{ $buttonId }}"
-                             class="hidden bg-gray-50" data-day-number="{{ $day->day_number }}">
-                            <div class="p-4 sm:p-6 space-y-6">
+                        <div id="{{ $panelId }}"
+                             role="region"
+                             aria-labelledby="{{ $buttonId }}"
+                             class="accordion-panel"
+                             data-day-number="{{ $day->day_number }}"
+                             style="max-height:0;overflow:hidden;opacity:0;transition:max-height 0.45s cubic-bezier(0.4,0,0.2,1),opacity 0.35s ease;">
+
+                            <div class="border-t border-gray-100 p-4 sm:p-6 space-y-6">
 
                                 <!-- Activity text -->
                                 <div class="prose prose-sm max-w-none text-gray-700">
@@ -151,7 +162,6 @@
                                 @if($dayImages->count() > 0)
                                 @php $sliderId = 'day-slider-' . ($day->id ?? $loop->index); @endphp
                                 <div class="relative" id="{{ $sliderId }}-wrap">
-                                    <!-- Track -->
                                     <div class="overflow-hidden rounded-xl">
                                         <div class="slider-track flex transition-transform duration-500 ease-in-out"
                                              id="{{ $sliderId }}-track"
@@ -167,9 +177,7 @@
                                             @endforeach
                                         </div>
                                     </div>
-
                                     @if($dayImages->count() > 1)
-                                    <!-- Prev / Next -->
                                     <button onclick="sliderMove('{{ $sliderId }}', -1)"
                                             class="slider-btn absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center transition z-10">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -178,7 +186,6 @@
                                             class="slider-btn absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center transition z-10">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                     </button>
-                                    <!-- Dots -->
                                     <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10" id="{{ $sliderId }}-dots">
                                         @foreach($dayImages as $img)
                                         <button onclick="sliderGoto('{{ $sliderId }}', {{ $loop->index }})"
@@ -186,7 +193,6 @@
                                                 aria-label="Go to image {{ $loop->iteration }}"></button>
                                         @endforeach
                                     </div>
-                                    <!-- Counter -->
                                     <div class="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full z-10" id="{{ $sliderId }}-counter">
                                         1 / {{ $dayImages->count() }}
                                     </div>
@@ -198,7 +204,7 @@
                                 @if($day->accommodation || $day->meals || $acc)
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-gray-200">
                                     @if($acc || $day->accommodation)
-                                    <div class="flex items-start text-sm text-gray-600 bg-white rounded-lg p-3">
+                                    <div class="flex items-start text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
                                         <svg class="w-4 h-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2z"/>
                                         </svg>
@@ -216,7 +222,7 @@
                                     </div>
                                     @endif
                                     @if($day->meals)
-                                    <div class="flex items-center text-sm text-gray-600 bg-white rounded-lg p-3">
+                                    <div class="flex items-center text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
                                         <svg class="w-4 h-4 text-green-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
                                         </svg>
@@ -239,7 +245,6 @@
                                             <span class="text-xs font-normal text-gray-400 ml-1">({{ $accImages->count() }})</span>
                                         </h4>
                                     </div>
-
                                     <div class="relative" id="{{ $accSliderId }}-wrap">
                                         <div class="overflow-hidden rounded-xl">
                                             <div class="slider-track flex transition-transform duration-500 ease-in-out"
@@ -261,7 +266,6 @@
                                                 @endforeach
                                             </div>
                                         </div>
-
                                         @if($accImages->count() > 1)
                                         <button onclick="sliderMove('{{ $accSliderId }}', -1)"
                                                 class="slider-btn absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center transition z-10">
@@ -322,7 +326,6 @@
                         </ul>
                     </div>
                     @endif
-
                     @if($tour->excluded)
                     <div class="bg-red-50 border border-red-100 rounded-xl p-5">
                         <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -352,8 +355,6 @@
             @if($tour->images && $tour->images->count() > 0)
             <section>
                 <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-5">Photo Gallery</h2>
-
-                <!-- Main full slider -->
                 <div class="relative" id="tour-gallery-wrap">
                     <div class="overflow-hidden rounded-xl shadow-lg">
                         <div class="slider-track flex transition-transform duration-500 ease-in-out"
@@ -370,7 +371,6 @@
                             @endforeach
                         </div>
                     </div>
-
                     @if($tour->images->count() > 1)
                     <button onclick="sliderMove('tour-gallery', -1)"
                             class="slider-btn absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center transition z-10">
@@ -392,8 +392,6 @@
                     </div>
                     @endif
                 </div>
-
-                <!-- Thumbnail strip -->
                 @if($tour->images->count() > 1)
                 <div class="flex gap-2 mt-3 overflow-x-auto pb-1 snap-x" id="tour-gallery-thumbs">
                     @foreach($tour->images as $image)
@@ -419,7 +417,6 @@
         <div class="lg:col-span-1">
             <div class="lg:sticky lg:top-24 space-y-6">
 
-                <!-- Mobile CTA (visible only on small screens, above sidebar) -->
                 <div class="block lg:hidden">
                     <button onclick="scrollToBooking()"
                             class="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-xl font-semibold text-base transition-colors duration-300 shadow-md">
@@ -427,7 +424,6 @@
                     </button>
                 </div>
 
-                <!-- Pricing Card -->
                 @if($tour->prices && $tour->prices->count() > 0)
                 <div class="bg-white rounded-xl shadow-lg p-5 sm:p-6 border border-gray-200">
                     <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-5">Tour Pricing</h3>
@@ -453,7 +449,6 @@
                 </div>
                 @endif
 
-                <!-- Quick Info -->
                 <div class="bg-white rounded-xl shadow-lg p-5 sm:p-6 border border-gray-200">
                     <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-5">Quick Info</h3>
                     <div class="space-y-3 text-sm sm:text-base">
@@ -488,7 +483,6 @@
                     </div>
                 </div>
 
-                <!-- Contact Card -->
                 <div class="bg-gradient-to-br from-green-600 to-blue-600 rounded-xl shadow-lg p-5 sm:p-6 text-white">
                     <h3 class="text-lg sm:text-xl font-bold mb-3">Need Help?</h3>
                     <p class="text-green-100 mb-5 text-sm sm:text-base">Our travel experts are here to help you plan the perfect safari.</p>
@@ -530,86 +524,80 @@
             <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">You Might Also Like</h2>
             <p class="text-base sm:text-lg text-gray-600">Discover more amazing safari experiences similar to {{ $tour->title }}</p>
         </div>
-
-        <!-- Related tours SLIDER on mobile, grid on md+ -->
-        <div class="relative" id="related-slider-wrap">
-            <!-- Mobile: horizontal scroll slider -->
-            <div class="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:overflow-visible sm:gap-6 sm:snap-none"
-                 id="related-track">
-                @foreach($relatedTours as $relatedTour)
-                <div class="flex-none w-72 sm:w-auto snap-start bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group">
-                    <div class="relative h-44 sm:h-48 overflow-hidden">
-                        @if($relatedTour->featured_image)
-                            <img src="{{ asset('storage/' . $relatedTour->featured_image) }}"
-                                 alt="{{ $relatedTour->title }}"
-                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        @else
-                            <div class="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                                <svg class="w-12 h-12 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                            </div>
-                        @endif
-                        <div class="absolute top-3 left-3">
-                            <span class="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-semibold">{{ $relatedTour->category ?? 'Safari' }}</span>
-                        </div>
-                        <div class="absolute top-3 right-3">
-                            <span class="bg-white/90 backdrop-blur text-gray-800 px-2 py-1 rounded-full text-xs font-semibold">
-                                {{ $relatedTour->itineraries->count() ?: 'Multi' }} {{ $relatedTour->itineraries->count() == 1 ? 'Day' : 'Days' }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="p-4">
-                        <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-2 line-clamp-2">{{ $relatedTour->title }}</h3>
-                        <p class="text-gray-600 mb-3 text-xs sm:text-sm line-clamp-2">{{ Str::limit($relatedTour->description, 100) }}</p>
-                        <div class="flex items-center mb-3 text-xs sm:text-sm text-gray-500">
-                            <svg class="w-4 h-4 text-green-600 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        <div class="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:overflow-visible sm:gap-6 sm:snap-none"
+             id="related-track">
+            @foreach($relatedTours as $relatedTour)
+            <div class="flex-none w-72 sm:w-auto snap-start bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group">
+                <div class="relative h-44 sm:h-48 overflow-hidden">
+                    @if($relatedTour->featured_image)
+                        <img src="{{ asset('storage/' . $relatedTour->featured_image) }}"
+                             alt="{{ $relatedTour->title }}"
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    @else
+                        <div class="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                            <svg class="w-12 h-12 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
-                            <span class="line-clamp-1">{{ $relatedTour->destinations ?: 'East Africa' }}</span>
                         </div>
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                @if($relatedTour->prices && $relatedTour->prices->count() > 0)
-                                    @php $minPrice = $relatedTour->prices->min('price'); @endphp
-                                    <div class="flex items-baseline gap-1">
-                                        <span class="text-lg sm:text-xl font-bold text-green-600">${{ number_format($minPrice) }}</span>
-                                        <span class="text-gray-500 text-xs">/ person</span>
-                                    </div>
-                                    <p class="text-xs text-gray-400">Starting from</p>
-                                @else
-                                    <span class="text-green-600 font-semibold text-sm">Contact for Pricing</span>
-                                @endif
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <div class="flex text-yellow-400">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                        </svg>
-                                    @endfor
-                                </div>
-                                <span class="text-xs text-gray-600">4.9</span>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <a href="{{ route('tours.show', $relatedTour->slug) }}"
-                               class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-300">
-                                View Details
-                            </a>
-                            <button onclick="quickBook('{{ $relatedTour->slug }}')"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors duration-300">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                            </button>
-                        </div>
+                    @endif
+                    <div class="absolute top-3 left-3">
+                        <span class="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-semibold">{{ $relatedTour->category ?? 'Safari' }}</span>
+                    </div>
+                    <div class="absolute top-3 right-3">
+                        <span class="bg-white/90 backdrop-blur text-gray-800 px-2 py-1 rounded-full text-xs font-semibold">
+                            {{ $relatedTour->itineraries->count() ?: 'Multi' }} {{ $relatedTour->itineraries->count() == 1 ? 'Day' : 'Days' }}
+                        </span>
                     </div>
                 </div>
-                @endforeach
+                <div class="p-4">
+                    <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-2 line-clamp-2">{{ $relatedTour->title }}</h3>
+                    <p class="text-gray-600 mb-3 text-xs sm:text-sm line-clamp-2">{{ Str::limit($relatedTour->description, 100) }}</p>
+                    <div class="flex items-center mb-3 text-xs sm:text-sm text-gray-500">
+                        <svg class="w-4 h-4 text-green-600 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span class="line-clamp-1">{{ $relatedTour->destinations ?: 'East Africa' }}</span>
+                    </div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            @if($relatedTour->prices && $relatedTour->prices->count() > 0)
+                                @php $minPrice = $relatedTour->prices->min('price'); @endphp
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-lg sm:text-xl font-bold text-green-600">${{ number_format($minPrice) }}</span>
+                                    <span class="text-gray-500 text-xs">/ person</span>
+                                </div>
+                                <p class="text-xs text-gray-400">Starting from</p>
+                            @else
+                                <span class="text-green-600 font-semibold text-sm">Contact for Pricing</span>
+                            @endif
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <div class="flex text-yellow-400">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                @endfor
+                            </div>
+                            <span class="text-xs text-gray-600">4.9</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="{{ route('tours.show', $relatedTour->slug) }}"
+                           class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-300">
+                            View Details
+                        </a>
+                        <button onclick="quickBook('{{ $relatedTour->slug }}')"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors duration-300">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             </div>
+            @endforeach
         </div>
-
         <div class="text-center mt-8 sm:mt-12">
             <a href="{{ route('tours.index') }}"
                class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold transition-colors duration-300 text-sm sm:text-base">
@@ -715,9 +703,8 @@
 </section>
 
 <!-- ══════════════════════════════════════════════════════
-     LIGHTBOXES
+     GALLERY LIGHTBOX
 ══════════════════════════════════════════════════════ -->
-<!-- Tour gallery lightbox -->
 @if($tour->images && $tour->images->count() > 0)
 <div id="galleryModal" class="fixed inset-0 bg-black/95 z-[100] hidden items-center justify-center" role="dialog" aria-modal="true" aria-label="Image lightbox">
     <button onclick="closeGallery()" class="absolute top-4 right-4 text-white hover:text-gray-300 z-10 bg-black/30 rounded-full p-2">
@@ -740,25 +727,60 @@
 
 @push('styles')
 <style>
-    /* ── Utility ── */
     .line-clamp-1 { display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden; }
     .line-clamp-2 { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
     html { scroll-behavior: smooth; }
 
-    /* ── Accordion chevron rotation ── */
-    .accordion-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+    /* ══════════════════════════════════════
+       PLUS / MINUS ICON
+       ══════════════════════════════════════
+       Default (closed) state  → acc-v is fully visible  → shows  +
+       Open state              → acc-v scales to 0        → shows  −
+    ══════════════════════════════════════ */
+    .acc-icon {
+        position: relative;
+        flex-shrink: 0;
+    }
+    .acc-h, .acc-v {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 9999px;
+        transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.25s ease;
+    }
 
-    /* ── Slider ── */
+    /* Vertical bar: visible by default (+ sign), disappears on open (- sign) */
+    .acc-v {
+        width: 2px;
+        height: 14px;
+        /* scaleY(1) = fully visible + sign when closed */
+        transform: translate(-50%, -50%) scaleY(1);
+        opacity: 1;
+    }
+    .accordion-toggle[aria-expanded="true"] .acc-v {
+        /* scaleY(0) = collapses to a line, turning + into − */
+        transform: translate(-50%, -50%) scaleY(0);
+        opacity: 0;
+    }
+
+    /* Ring + bars turn green when open */
+    .accordion-toggle[aria-expanded="true"] .acc-icon {
+        border-color: #16a34a;
+    }
+    .accordion-toggle[aria-expanded="true"] .acc-h,
+    .accordion-toggle[aria-expanded="true"] .acc-v {
+        background-color: #16a34a;
+    }
+
+    /* ── Smooth panel open/close ── */
+    .accordion-panel { will-change: max-height, opacity; }
+
+    /* ── Sliders ── */
     .slider-track { will-change: transform; }
-    .slider-slide { min-width: 100%; }
+    .slider-slide  { min-width: 100%; }
 
-    /* ── Touch swipe support ── */
-    .overflow-hidden { -webkit-overflow-scrolling: touch; }
-
-    /* ── Thumbnail active state ── */
-    .gallery-thumb.active { ring-color: #16a34a; ring-width: 2px; }
-
-    /* ── Thin scrollbar for related tours on mobile ── */
+    /* ── Hide scrollbar on related tours ── */
     #related-track { scrollbar-width: none; }
     #related-track::-webkit-scrollbar { display: none; }
 </style>
@@ -768,45 +790,34 @@
 <script>
 /* ══════════════════════════════════════════════════════════════
    UNIVERSAL SLIDER ENGINE
-   sliderMove(id, dir)  — move by dir (+1 / -1)
-   sliderGoto(id, idx)  — jump to index
 ══════════════════════════════════════════════════════════════ */
 function _sliderUpdate(id, newIdx) {
     const track = document.getElementById(id + '-track');
     if (!track) return;
     const total = parseInt(track.dataset.total) || 0;
     if (total === 0) return;
-    newIdx = ((newIdx % total) + total) % total; // wrap
+    newIdx = ((newIdx % total) + total) % total;
     track.dataset.current = newIdx;
     track.style.transform = `translateX(-${newIdx * 100}%)`;
-
-    // dots
     const dots = document.getElementById(id + '-dots');
     if (dots) {
         dots.querySelectorAll('.slider-dot').forEach((d, i) => {
-            d.classList.toggle('bg-white', i === newIdx);
-            d.classList.toggle('scale-125', i === newIdx);
-            d.classList.toggle('bg-white/60', i !== newIdx);
+            d.classList.toggle('bg-white',     i === newIdx);
+            d.classList.toggle('scale-125',    i === newIdx);
+            d.classList.toggle('bg-white/60',  i !== newIdx);
         });
     }
-
-    // counter
     const counter = document.getElementById(id + '-counter');
     if (counter) counter.textContent = `${newIdx + 1} / ${total}`;
-
-    // gallery thumbnails
     const thumbs = document.getElementById(id + '-thumbs');
     if (thumbs) {
         thumbs.querySelectorAll('.gallery-thumb').forEach((t, i) => {
-            t.classList.toggle('ring-green-500', i === newIdx);
+            t.classList.toggle('ring-green-500',  i === newIdx);
             t.classList.toggle('ring-transparent', i !== newIdx);
         });
-        // scroll thumb into view
-        const activeThumb = thumbs.querySelectorAll('.gallery-thumb')[newIdx];
-        if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        const at = thumbs.querySelectorAll('.gallery-thumb')[newIdx];
+        if (at) at.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
-
-    // lazy-load current slide images
     const slide = track.querySelectorAll('.slider-slide')[newIdx];
     if (slide) {
         slide.querySelectorAll('img[data-src]').forEach(img => {
@@ -814,33 +825,26 @@ function _sliderUpdate(id, newIdx) {
         });
     }
 }
-
 function sliderMove(id, dir) {
-    const track = document.getElementById(id + '-track');
-    if (!track) return;
-    _sliderUpdate(id, parseInt(track.dataset.current || 0) + dir);
+    const t = document.getElementById(id + '-track');
+    if (t) _sliderUpdate(id, parseInt(t.dataset.current || 0) + dir);
 }
-
 function sliderGoto(id, idx) { _sliderUpdate(id, idx); }
 
-/* Touch / swipe support for all sliders */
-(function() {
-    let startX = 0, startY = 0, target = null;
+/* Touch swipe */
+(function () {
+    let sx = 0, sy = 0, tgt = null;
     document.addEventListener('touchstart', e => {
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        // find closest slider-track parent
-        target = e.target.closest('[id$="-track"]');
+        sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+        tgt = e.target.closest('[id$="-track"]');
     }, { passive: true });
     document.addEventListener('touchend', e => {
-        if (!target) return;
-        const dx = e.changedTouches[0].clientX - startX;
-        const dy = e.changedTouches[0].clientY - startY;
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
-            const id = target.id.replace('-track', '');
-            sliderMove(id, dx < 0 ? 1 : -1);
-        }
-        target = null;
+        if (!tgt) return;
+        const dx = e.changedTouches[0].clientX - sx;
+        const dy = e.changedTouches[0].clientY - sy;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40)
+            sliderMove(tgt.id.replace('-track', ''), dx < 0 ? 1 : -1);
+        tgt = null;
     }, { passive: true });
 })();
 
@@ -856,52 +860,52 @@ function sliderGoto(id, idx) { _sliderUpdate(id, idx); }
         const panel = document.getElementById(btn.getAttribute('aria-controls'));
         if (!panel) return;
         btn.setAttribute('aria-expanded', 'true');
-        panel.classList.remove('hidden');
-        // lazy load first slide of every slider inside
+        panel.style.maxHeight = panel.scrollHeight + 'px';
+        panel.style.opacity   = '1';
+        panel.addEventListener('transitionend', function handler(e) {
+            if (e.propertyName !== 'max-height') return;
+            panel.removeEventListener('transitionend', handler);
+            if (btn.getAttribute('aria-expanded') === 'true') panel.style.maxHeight = 'none';
+        });
+        /* lazy-load images */
         panel.querySelectorAll('.slider-track').forEach(track => {
-            const slide = track.querySelectorAll('.slider-slide')[0];
-            if (slide) {
-                slide.querySelectorAll('img[data-src]').forEach(img => {
-                    img.src = img.dataset.src; delete img.dataset.src;
-                });
-            }
+            const first = track.querySelector('.slider-slide');
+            if (first) first.querySelectorAll('img[data-src]').forEach(img => { img.src = img.dataset.src; delete img.dataset.src; });
         });
-        // also load plain lazy images
-        panel.querySelectorAll('img.lazy-day-image[data-src]').forEach(img => {
-            img.src = img.dataset.src; delete img.dataset.src;
-        });
+        panel.querySelectorAll('img.lazy-day-image[data-src]').forEach(img => { img.src = img.dataset.src; delete img.dataset.src; });
     }
 
     function closePanel(btn) {
         const panel = document.getElementById(btn.getAttribute('aria-controls'));
         if (!panel) return;
+        panel.style.maxHeight = panel.scrollHeight + 'px';
+        panel.getBoundingClientRect(); /* reflow */
         btn.setAttribute('aria-expanded', 'false');
-        panel.classList.add('hidden');
+        panel.style.maxHeight = '0';
+        panel.style.opacity   = '0';
     }
 
     toggles.forEach(btn => {
         btn.addEventListener('click', function () {
-            const expanded = this.getAttribute('aria-expanded') === 'true';
-            if (expanded) {
+            const isOpen = this.getAttribute('aria-expanded') === 'true';
+            if (isOpen) {
                 closePanel(this);
             } else {
+                /* Close any other open panel, then open this one.
+                   No scrollTo — content expands naturally downward. */
                 toggles.forEach(o => { if (o !== this) closePanel(o); });
                 openPanel(this);
-                setTimeout(() => {
-                    const panel = document.getElementById(this.getAttribute('aria-controls'));
-                    if (panel) window.scrollTo({ top: panel.getBoundingClientRect().top + scrollY - 100, behavior: 'smooth' });
-                }, 100);
             }
         });
 
         btn.addEventListener('keydown', function (e) {
-            const list = Array.from(toggles), idx = list.indexOf(this);
-            if (e.key === 'ArrowDown') { e.preventDefault(); (list[idx+1] || list[0]).focus(); }
-            if (e.key === 'ArrowUp')   { e.preventDefault(); (list[idx-1] || list[list.length-1]).focus(); }
+            const list = Array.from(toggles), i = list.indexOf(this);
+            if (e.key === 'ArrowDown') { e.preventDefault(); (list[i + 1] || list[0]).focus(); }
+            if (e.key === 'ArrowUp')   { e.preventDefault(); (list[i - 1] || list[list.length - 1]).focus(); }
         });
     });
 
-    document.getElementById('expandAll')?.addEventListener('click', () => toggles.forEach(openPanel));
+    document.getElementById('expandAll')?.addEventListener('click',   () => toggles.forEach(openPanel));
     document.getElementById('collapseAll')?.addEventListener('click', () => {
         toggles.forEach(closePanel);
         window.scrollTo({ top: accordion.getBoundingClientRect().top + scrollY - 80, behavior: 'smooth' });
@@ -909,41 +913,25 @@ function sliderGoto(id, idx) { _sliderUpdate(id, idx); }
 })();
 
 /* ══════════════════════════════════════════════════════════════
-   TOUR GALLERY LIGHTBOX (uses the main slider index)
+   GALLERY LIGHTBOX
 ══════════════════════════════════════════════════════════════ */
 @if($tour->images && $tour->images->count() > 0)
-const _galleryImages = @json($tour->images->pluck('image_path'));
-let _galleryIdx = 0;
-
-function openGallery(i) {
-    _galleryIdx = i;
-    _renderGalleryLightbox();
-    const modal = document.getElementById('galleryModal');
-    modal.classList.remove('hidden'); modal.classList.add('flex');
-    document.body.style.overflow = 'hidden';
-}
-function closeGallery() {
-    const modal = document.getElementById('galleryModal');
-    modal.classList.add('hidden'); modal.classList.remove('flex');
-    document.body.style.overflow = '';
-}
-function galleryLightboxPrev() { _galleryIdx = ((_galleryIdx - 1) + _galleryImages.length) % _galleryImages.length; _renderGalleryLightbox(); }
-function galleryLightboxNext() { _galleryIdx = (_galleryIdx + 1) % _galleryImages.length; _renderGalleryLightbox(); }
-function _renderGalleryLightbox() {
-    document.getElementById('galleryImage').src = '{{ asset("storage") }}/' + _galleryImages[_galleryIdx];
-    const ctr = document.getElementById('galleryCounter');
-    if (ctr) ctr.textContent = `${_galleryIdx + 1} / ${_galleryImages.length}`;
-    // keep main slider in sync
-    sliderGoto('tour-gallery', _galleryIdx);
+const _gi = @json($tour->images->pluck('image_path'));
+let _gIdx = 0;
+function openGallery(i)  { _gIdx = i; _renderGL(); document.getElementById('galleryModal').classList.remove('hidden'); document.getElementById('galleryModal').classList.add('flex'); document.body.style.overflow = 'hidden'; }
+function closeGallery()  { document.getElementById('galleryModal').classList.add('hidden'); document.getElementById('galleryModal').classList.remove('flex'); document.body.style.overflow = ''; }
+function galleryLightboxPrev() { _gIdx = ((_gIdx - 1) + _gi.length) % _gi.length; _renderGL(); }
+function galleryLightboxNext() { _gIdx = (_gIdx + 1) % _gi.length; _renderGL(); }
+function _renderGL() {
+    document.getElementById('galleryImage').src = '{{ asset("storage") }}/' + _gi[_gIdx];
+    const c = document.getElementById('galleryCounter'); if (c) c.textContent = `${_gIdx + 1} / ${_gi.length}`;
+    sliderGoto('tour-gallery', _gIdx);
 }
 @endif
 
-/* ══════════════════════════════════════════════════════════════
-   KEYBOARD NAVIGATION FOR LIGHTBOXES
-══════════════════════════════════════════════════════════════ */
-document.addEventListener('keydown', function (e) {
-    const galleryOpen = !document.getElementById('galleryModal')?.classList.contains('hidden');
-    if (galleryOpen) {
+document.addEventListener('keydown', e => {
+    const open = !document.getElementById('galleryModal')?.classList.contains('hidden');
+    if (open) {
         if (e.key === 'ArrowRight') galleryLightboxNext?.();
         if (e.key === 'ArrowLeft')  galleryLightboxPrev?.();
         if (e.key === 'Escape')     closeGallery?.();
@@ -951,61 +939,43 @@ document.addEventListener('keydown', function (e) {
 });
 
 /* ══════════════════════════════════════════════════════════════
-   BOOKING HELPERS
+   BOOKING
 ══════════════════════════════════════════════════════════════ */
 function scrollToBooking() {
     const el = document.getElementById('booking');
-    if (!el) return;
-    window.scrollTo({ behavior: 'smooth', top: el.getBoundingClientRect().top + scrollY - 80 });
+    if (el) window.scrollTo({ behavior: 'smooth', top: el.getBoundingClientRect().top + scrollY - 80 });
 }
-
 function calculateTotal() {
     const sel = document.getElementById('group_size');
     const opt = sel?.options[sel.selectedIndex];
     const div = document.getElementById('totalCost');
     if (opt?.dataset.price) {
-        const total = parseFloat(opt.dataset.price) * (parseInt(opt.value) || 1);
-        document.getElementById('totalAmount').textContent = '$' + total.toLocaleString();
+        document.getElementById('totalAmount').textContent = '$' + (parseFloat(opt.dataset.price) * (parseInt(opt.value) || 1)).toLocaleString();
         div?.classList.remove('hidden');
-    } else {
-        div?.classList.add('hidden');
-    }
+    } else { div?.classList.add('hidden'); }
 }
-
-document.querySelectorAll('.price-option').forEach(opt => {
-    opt.addEventListener('click', function () {
+document.querySelectorAll('.price-option').forEach(o => {
+    o.addEventListener('click', function () {
         const sel = document.getElementById('group_size');
         if (!sel) return;
-        for (const o of sel.options) { if (o.value === this.dataset.groupSize) { o.selected = true; break; } }
-        calculateTotal();
-        scrollToBooking();
+        for (const op of sel.options) { if (op.value === this.dataset.groupSize) { op.selected = true; break; } }
+        calculateTotal(); scrollToBooking();
     });
 });
-
 function quickBook(slug) { window.location.href = `/tours/${slug}#booking`; }
 
-/* Booking form submission */
 const bookingForm = document.getElementById('bookingForm');
 if (bookingForm) {
     bookingForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-        const btn = this.querySelector('button[type="submit"]');
-        const orig = btn.innerHTML;
+        const btn = this.querySelector('button[type="submit"]'), orig = btn.innerHTML;
         btn.innerHTML = '<svg class="w-5 h-5 mr-2 inline animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Sending...';
         btn.disabled = true;
         try {
-            const res = await fetch('{{ route("booking.store") }}', {
-                method: 'POST',
-                body: new FormData(this),
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            });
+            const res  = await fetch('{{ route("booking.store") }}', { method:'POST', body: new FormData(this), headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'X-Requested-With':'XMLHttpRequest', 'Accept':'application/json' } });
             const data = await res.json();
             if (res.ok && data.success) { window.location.href = '{{ route("booking.success") }}'; return; }
-            if (data.errors) { alert('Please fix:\n\n' + Object.values(data.errors).map(e => '• ' + e[0]).join('\n')); }
+            if (data.errors) alert('Please fix:\n\n' + Object.values(data.errors).map(e => '• ' + e[0]).join('\n'));
             else alert(data.message || 'Something went wrong. Please try again.');
         } catch { alert('⚠️ Network error. Please check your connection.'); }
         finally { btn.innerHTML = orig; btn.disabled = false; }

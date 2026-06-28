@@ -40,7 +40,8 @@
                                 @endif
 
                                 @php
-                                    $desc = $destination->short_description
+                                    $desc = $destination->meta_description
+                                            ?? $destination->short_description
                                             ?? $destination->excerpt
                                             ?? $destination->summary
                                             ?? $destination->overview

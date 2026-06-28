@@ -8,6 +8,14 @@
 <!-- Contact Page Header -->
 <header class="relative bg-gradient-to-r from-green-600 to-blue-600 py-16 md:py-24">
     <div class="absolute inset-0 bg-black opacity-30"></div>
+
+        <div class="absolute inset-0">
+        <img src="{{ asset('images/home.jpg') }}"
+             alt="Uganda safari sunset — plan your East Africa adventure with Calm Africa Safaris"
+             class="w-full h-full object-cover object-center"
+             loading="lazy">
+        <div class="absolute inset-0 bg-gradient-to-r from-black/65 via-black/45 to-black/55"></div>
+    </div>
     <div class="relative z-10 container mx-auto px-4 text-center text-white">
         <div class="max-w-4xl mx-auto">
             <h1 class="text-4xl md:text-6xl font-bold mb-6">Contact Us</h1>
@@ -34,7 +42,7 @@
                         </svg>
                         <span class="font-semibold">Email Us</span>
                     </div>
-                    <p class="text-green-200">calmafricasafaris@gmail.com</p>
+                    <p class="text-green-200">booking@calmafricasafaris.com</p>
                 </div>
                 
                 <div class="bg-white/10 backdrop-blur rounded-lg p-4">

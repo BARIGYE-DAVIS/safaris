@@ -1,11 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Safari Activities in East Africa | Wildlife Tours & Adventures')
-@section('meta_description', 'Discover exciting safari activities across East Africa. From gorilla trekking to wildlife safaris, game drives, and cultural experiences in Uganda, Kenya, Tanzania & Rwanda.')
-@section('meta_keywords', 'safari activities, gorilla trekking, wildlife safari, game drives, east africa tours, uganda activities, kenya wildlife, adventure tours')
-@section('og_title', 'Explore Safari Activities & Adventures in East Africa')
-@section('og_description', 'Experience thrilling safari activities across Uganda, Kenya, Tanzania, and Rwanda. Wildlife encounters, adventure tours, and unforgettable experiences await.')
-@section('og_image', asset('images/activities-hero.jpg'))
+@section('title', 'Safari Activities in Uganda & East Africa 2026 | Chimp Tracking, Game Drives & More')
+@section('meta_description', 'Discover 30+ wildlife activities across Uganda and East Africa — chimp tracking Kibale, game drives Queen Elizabeth, boat cruises Murchison Falls, birding, cultural tours and adventure sports. Browse and book today.')
+@section('meta_keywords', 'safari activities Uganda, wildlife activities East Africa, chimp tracking Kibale, game drives Uganda, boat cruise Kazinga Channel, Murchison Falls boat trip, birding Uganda, cultural tours Uganda, white water rafting Nile, Rwenzori mountain trekking, Ziwa rhino tracking, Uganda adventure activities, East Africa wildlife experiences 2026')
+@section('og_title', 'Uganda & East Africa Safari Activities 2026 | Chimp Tracking, Game Drives & Adventure')
+@section('og_description', 'Browse 30+ safari activities in Uganda and East Africa. Chimp tracking, game drives, boat cruises, birding and adventure sports. Book with Calm Africa Safaris.')
 
 @section('content')
 <div class="bg-gray-50 min-h-screen">
@@ -451,7 +450,7 @@
                 Let us create a customized safari experience tailored to your interests and preferences
             </p>
             <div class="flex justify-center gap-3 md:gap-4 flex-wrap">
-                <a href="{{ route('contact') }}" class="bg-white text-green-600 px-6 md:px-8 py-3 md:py-4 rounded-lg font-bold hover:bg-gray-100 transition shadow-lg text-sm md:text-base">
+                <a href="{{ route('custom-tour-requests.create') }}" class="bg-white text-green-600 px-6 md:px-8 py-3 md:py-4 rounded-lg font-bold hover:bg-gray-100 transition shadow-lg text-sm md:text-base">
                     <i class="fas fa-paper-plane mr-2"></i> Plan Your Safari
                 </a>
                 <a href="{{ route('tours.index') }}" class="bg-transparent border-2 border-white text-white px-6 md:px-8 py-3 md:py-4 rounded-lg font-bold hover:bg-white hover:text-green-600 transition text-sm md:text-base">
