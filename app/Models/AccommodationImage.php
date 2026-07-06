@@ -11,6 +11,7 @@ class AccommodationImage extends Model
 
     protected $fillable = [
         'accommodation_id',
+        'block_id',
         'path',
         'caption',
         'alt_text',
@@ -20,6 +21,7 @@ class AccommodationImage extends Model
 
     protected $casts = [
         'is_featured' => 'boolean',
+        'sort_order' => 'integer',
     ];
 
     public function accommodation()

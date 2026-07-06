@@ -7,8 +7,8 @@ use App\Models\Accommodation;
  * Accommodations carousel partial
  * - Loads all active accommodations if $accommodations is not provided to the view.
  * - Expects Accommodation model with fields: name, slug, featured_image, type, category,
- *   price_from, price_to, currency, short_description, full_description, is_active,
- *   is_featured, location, sort_order + relations: country, destination, images.
+ *   price_from, price_to, currency, short_description, full_description, meta_description,
+ *   is_active, is_featured, location, sort_order + relations: country, destination, images.
  * - Resolves featured image robustly and falls back to asset('images/default-accommodation.jpg').
  * - Seamless infinite auto-looping carousel with prev/next, indicators, touch swipe & mouse drag.
  */
@@ -102,8 +102,9 @@ $count = $accommodations->count();
                                 $link = url('/accommodations/' . ($accommodation->slug ?? $accommodation->id));
                             }
 
-                            // ── Short description fallback ────────────────────────────
-                            $desc = $accommodation->short_description
+                            // ── Description: USE META_DESCRIPTION FIRST, then fallback ──
+                            $desc = $accommodation->meta_description
+                                    ?? $accommodation->short_description
                                     ?? $accommodation->full_description
                                     ?? '';
 
@@ -178,8 +179,8 @@ $count = $accommodations->count();
 
                                 
                                 <?php if(!empty($desc)): ?>
-                                    <p class="text-xs text-gray-600 mt-2 leading-relaxed">
-                                        <?php echo e(Str::limit(strip_tags($desc), 90)); ?>
+                                    <p class="text-xs text-gray-600 mt-2 leading-relaxed line-clamp-2">
+                                        <?php echo e(Str::limit(strip_tags($desc), 100)); ?>
 
                                     </p>
                                 <?php else: ?>
@@ -219,7 +220,7 @@ $count = $accommodations->count();
     <style>
         #accommodations-container {
             overflow: hidden;
-            scroll-behavior: auto; /* must be auto — seamless JS reset won't work with smooth */
+            scroll-behavior: auto;
             cursor: grab;
             user-select: none;
             -webkit-user-select: none;
@@ -227,19 +228,24 @@ $count = $accommodations->count();
         #accommodations-container:active {
             cursor: grabbing;
         }
-        /* Prevent images/links from interfering with drag */
         #accommodations-track a {
             -webkit-user-drag: none;
             user-drag: none;
         }
         #accommodations-track img {
             display: block;
-            pointer-events: none; /* stops browser native image-drag ghost on desktop */
+            pointer-events: none;
         }
         .accom-indicator[aria-selected="true"] {
             background-color: #4f46e5;
             width: 10px;
             height: 10px;
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
     </style>
 
@@ -254,12 +260,10 @@ $count = $accommodations->count();
 
             if (!container || !track) return;
 
-            // Capture original items BEFORE cloning
             const originalItems = Array.from(track.children);
             const n = originalItems.length;
             if (n === 0) return;
 
-            // Single-item guard
             if (n === 1) {
                 track.classList.add('justify-center');
                 if (indicators[0]) {
@@ -269,24 +273,21 @@ $count = $accommodations->count();
                 return;
             }
 
-            // Clone all items → creates a seamless double-length track
             originalItems.forEach(node => track.appendChild(node.cloneNode(true)));
 
             let originalWidth    = 0;
             let cardAdvance      = 0;
-            const speed          = 0.6; // px per frame — increase to scroll faster
+            const speed          = 0.6;
             let paused           = false;
             let rafId            = null;
             let manualPauseTimer = null;
             let initialized      = false;
 
-            // ─── Drag state ───────────────────────────────────────────────────────────
             let isDragging          = false;
             let dragStartX          = 0;
             let dragStartScrollLeft = 0;
-            let dragMoved           = false; // tracks if pointer actually moved (blocks accidental link clicks)
+            let dragMoved           = false;
 
-            // ── Size calculation ──────────────────────────────────────────────────────
             function recalcSizes() {
                 setTimeout(() => {
                     originalWidth = track.scrollWidth / 2;
@@ -302,7 +303,6 @@ $count = $accommodations->count();
                 }, 150);
             }
 
-            // ─── Wrap scroll position to [0, originalWidth) ──────────────────────────
             function wrapScroll() {
                 if (!originalWidth) return;
                 if (container.scrollLeft >= originalWidth) {
@@ -312,7 +312,6 @@ $count = $accommodations->count();
                 }
             }
 
-            // ── Animation loop ────────────────────────────────────────────────────────
             function step() {
                 if (!paused && initialized) {
                     container.scrollLeft += speed;
@@ -322,7 +321,6 @@ $count = $accommodations->count();
                 rafId = requestAnimationFrame(step);
             }
 
-            // ── Indicator sync ────────────────────────────────────────────────────────
             function updateIndicators() {
                 if (!indicators.length || !cardAdvance || !originalWidth) return;
                 const pos   = ((container.scrollLeft % originalWidth) + originalWidth) % originalWidth;
@@ -335,14 +333,12 @@ $count = $accommodations->count();
                 });
             }
 
-            // ── Manual pause helper ───────────────────────────────────────────────────
             function pauseBriefly(duration = 2200) {
                 paused = true;
                 clearTimeout(manualPauseTimer);
                 manualPauseTimer = setTimeout(() => { paused = false; }, duration);
             }
 
-            // ── Next button ───────────────────────────────────────────────────────────
             nextBtn.addEventListener('click', () => {
                 container.style.scrollBehavior = 'smooth';
                 container.scrollBy({ left: cardAdvance * 2 });
@@ -350,7 +346,6 @@ $count = $accommodations->count();
                 pauseBriefly();
             });
 
-            // ── Prev button ───────────────────────────────────────────────────────────
             prevBtn.addEventListener('click', () => {
                 container.style.scrollBehavior = 'smooth';
                 let newLeft = container.scrollLeft - (cardAdvance * 2);
@@ -363,7 +358,6 @@ $count = $accommodations->count();
                 pauseBriefly();
             });
 
-            // ── Indicator click ───────────────────────────────────────────────────────
             indicators.forEach((dot) => {
                 dot.addEventListener('click', () => {
                     const idx       = parseInt(dot.getAttribute('data-index'), 10);
@@ -379,22 +373,21 @@ $count = $accommodations->count();
                 });
             });
 
-            // ─── MOUSE DRAG (desktop) ─────────────────────────────────────────────────
             container.addEventListener('mousedown', (e) => {
-                if (e.button !== 0) return; // left button only
+                if (e.button !== 0) return;
                 isDragging = true;
                 dragMoved = false;
                 dragStartX = e.pageX;
                 dragStartScrollLeft = container.scrollLeft;
                 container.style.cursor = 'grabbing';
                 paused = true;
-                e.preventDefault(); // prevent text selection during drag
+                e.preventDefault();
             });
 
             window.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
                 const delta = dragStartX - e.pageX;
-                if (Math.abs(delta) > 3) dragMoved = true; // threshold to distinguish click vs drag
+                if (Math.abs(delta) > 3) dragMoved = true;
                 container.scrollLeft = dragStartScrollLeft + delta;
                 wrapScroll();
                 updateIndicators();
@@ -407,15 +400,13 @@ $count = $accommodations->count();
                 pauseBriefly(1500);
             });
 
-            // Block card link navigation if user actually dragged (not just clicked)
             track.addEventListener('click', (e) => {
                 if (dragMoved) {
                     e.preventDefault();
                     dragMoved = false;
                 }
-            }, true); // capture phase fires before the <a> click
+            }, true);
 
-            // ─── TOUCH DRAG (mobile / tablet) ────────────────────────────────────────
             let touchStartX          = 0;
             let touchStartScrollLeft = 0;
             let touchMoved           = false;
@@ -439,7 +430,6 @@ $count = $accommodations->count();
                 pauseBriefly(1500);
             });
 
-            // Block link tap if user swiped instead of tapping
             track.addEventListener('click', (e) => {
                 if (touchMoved) {
                     e.preventDefault();
@@ -447,24 +437,20 @@ $count = $accommodations->count();
                 }
             }, true);
 
-            // ── Hover pause (desktop only — don't interfere with touch) ───────────────
             container.addEventListener('mouseenter', () => { if (!isDragging) paused = true; });
             container.addEventListener('mouseleave', () => { if (!isDragging) paused = false; });
             container.addEventListener('focusin',    () => paused = true);
             container.addEventListener('focusout',   () => paused = false);
 
-            // ── Recalc on resize + image load ─────────────────────────────────────────
             window.addEventListener('resize', recalcSizes);
             track.querySelectorAll('img').forEach(img => {
                 if (img.complete) return;
                 img.addEventListener('load', recalcSizes);
             });
 
-            // ── Boot ──────────────────────────────────────────────────────────────────
             recalcSizes();
             rafId = requestAnimationFrame(step);
 
-            // Cleanup
             window.addEventListener('beforeunload', () => cancelAnimationFrame(rafId));
         });
     </script>

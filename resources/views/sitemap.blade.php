@@ -16,7 +16,6 @@
          MAIN CATEGORY PAGES
          ======================================== --}}
     
-    {{-- Tours Main --}}
     <url>
         <loc>{{ route('tours.index') }}</loc>
         <lastmod>{{ now()->toAtomString() }}</lastmod>
@@ -24,7 +23,6 @@
         <priority>0.9</priority>
     </url>
 
-    {{-- Budget Safaris --}}
     <url>
         <loc>{{ route('budget-tours.index') }}</loc>
         <lastmod>{{ now()->toAtomString() }}</lastmod>
@@ -32,7 +30,6 @@
         <priority>0.9</priority>
     </url>
 
-    {{-- Tours by Budget Category --}}
     <url>
         <loc>{{ route('tours.budget') }}</loc>
         <lastmod>{{ now()->toAtomString() }}</lastmod>
@@ -54,7 +51,6 @@
         <priority>0.9</priority>
     </url>
 
-    {{-- Blogs Index --}}
     <url>
         <loc>{{ route('blogs.index') }}</loc>
         <lastmod>{{ now()->toAtomString() }}</lastmod>
@@ -62,7 +58,6 @@
         <priority>0.9</priority>
     </url>
 
-    {{-- Gallery --}}
     <url>
         <loc>{{ route('gallery.index') }}</loc>
         <lastmod>{{ now()->toAtomString() }}</lastmod>
@@ -70,7 +65,6 @@
         <priority>0.8</priority>
     </url>
 
-    {{-- Countries --}}
     <url>
         <loc>{{ route('countries.index') }}</loc>
         <lastmod>{{ now()->toAtomString() }}</lastmod>
@@ -78,7 +72,6 @@
         <priority>0.8</priority>
     </url>
 
-    {{-- Activities --}}
     <url>
         <loc>{{ route('activities.index') }}</loc>
         <lastmod>{{ now()->toAtomString() }}</lastmod>
@@ -86,7 +79,6 @@
         <priority>0.8</priority>
     </url>
 
-    {{-- Destinations --}}
     <url>
         <loc>{{ route('destinations.index') }}</loc>
         <lastmod>{{ now()->toAtomString() }}</lastmod>
@@ -246,6 +238,29 @@
             <image:caption><![CDATA[{{ Str::limit($gallery->caption ?? '', 100) }}]]></image:caption>
             @endif
         </image:image>
+    </url>
+    @endforeach
+
+    {{-- ======================================== 
+         SEO LANDING PAGES (e.g. bwindi-impenetrable-national-park)
+         Served by SeoPageController@show via /{slug}
+         ======================================== --}}
+    
+    @foreach($seoPages as $page)
+    <url>
+        <loc>{{ route('seo-pages.show', $page->slug) }}</loc>
+        <lastmod>{{ $page->updated_at->toAtomString() }}</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+        @if($page->featured_image)
+        <image:image>
+            <image:loc>{{ asset('storage/' . $page->featured_image) }}</image:loc>
+            <image:title><![CDATA[{{ $page->title }}]]></image:title>
+            @if($page->meta_description)
+            <image:caption><![CDATA[{{ Str::limit(strip_tags($page->meta_description ?? ''), 100) }}]]></image:caption>
+            @endif
+        </image:image>
+        @endif
     </url>
     @endforeach
 

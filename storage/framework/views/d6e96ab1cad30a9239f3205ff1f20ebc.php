@@ -12,7 +12,6 @@
 
     
     
-    
     <url>
         <loc><?php echo e(route('tours.index')); ?></loc>
         <lastmod><?php echo e(now()->toAtomString()); ?></lastmod>
@@ -20,7 +19,6 @@
         <priority>0.9</priority>
     </url>
 
-    
     <url>
         <loc><?php echo e(route('budget-tours.index')); ?></loc>
         <lastmod><?php echo e(now()->toAtomString()); ?></lastmod>
@@ -28,7 +26,6 @@
         <priority>0.9</priority>
     </url>
 
-    
     <url>
         <loc><?php echo e(route('tours.budget')); ?></loc>
         <lastmod><?php echo e(now()->toAtomString()); ?></lastmod>
@@ -50,7 +47,6 @@
         <priority>0.9</priority>
     </url>
 
-    
     <url>
         <loc><?php echo e(route('blogs.index')); ?></loc>
         <lastmod><?php echo e(now()->toAtomString()); ?></lastmod>
@@ -58,7 +54,6 @@
         <priority>0.9</priority>
     </url>
 
-    
     <url>
         <loc><?php echo e(route('gallery.index')); ?></loc>
         <lastmod><?php echo e(now()->toAtomString()); ?></lastmod>
@@ -66,7 +61,6 @@
         <priority>0.8</priority>
     </url>
 
-    
     <url>
         <loc><?php echo e(route('countries.index')); ?></loc>
         <lastmod><?php echo e(now()->toAtomString()); ?></lastmod>
@@ -74,7 +68,6 @@
         <priority>0.8</priority>
     </url>
 
-    
     <url>
         <loc><?php echo e(route('activities.index')); ?></loc>
         <lastmod><?php echo e(now()->toAtomString()); ?></lastmod>
@@ -82,7 +75,6 @@
         <priority>0.8</priority>
     </url>
 
-    
     <url>
         <loc><?php echo e(route('destinations.index')); ?></loc>
         <lastmod><?php echo e(now()->toAtomString()); ?></lastmod>
@@ -226,6 +218,26 @@
             <image:caption><![CDATA[<?php echo e(Str::limit($gallery->caption ?? '', 100)); ?>]]></image:caption>
             <?php endif; ?>
         </image:image>
+    </url>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+    
+    
+    <?php $__currentLoopData = $seoPages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $page): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+    <url>
+        <loc><?php echo e(route('seo-pages.show', $page->slug)); ?></loc>
+        <lastmod><?php echo e($page->updated_at->toAtomString()); ?></lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+        <?php if($page->featured_image): ?>
+        <image:image>
+            <image:loc><?php echo e(asset('storage/' . $page->featured_image)); ?></image:loc>
+            <image:title><![CDATA[<?php echo e($page->title); ?>]]></image:title>
+            <?php if($page->meta_description): ?>
+            <image:caption><![CDATA[<?php echo e(Str::limit(strip_tags($page->meta_description ?? ''), 100)); ?>]]></image:caption>
+            <?php endif; ?>
+        </image:image>
+        <?php endif; ?>
     </url>
     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 

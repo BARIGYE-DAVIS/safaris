@@ -1,37 +1,30 @@
-<?php $__env->startSection('title', 'Edit Destination'); ?>
+<?php $__env->startSection('title', 'Edit Accommodation'); ?>
 
 <?php $__env->startSection('content'); ?>
 <div class="max-w-7xl mx-auto px-4 py-6 pb-28">
 
     
     <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Edit Destination</h1>
-        <a href="<?php echo e(route('admin.destinations.index')); ?>"
-           class="text-sm text-gray-500 hover:text-gray-800">
-            &larr; Back to Destinations
+        <h1 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-hotel mr-2"></i>Edit Accommodation
+        </h1>
+        <a href="<?php echo e(route('admin.accommodations.index')); ?>"
+           class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300">
+            <i class="fas fa-arrow-left mr-2"></i> Back to list
         </a>
     </div>
 
-    
     <?php if(session('success')): ?>
-        <div class="bg-green-50 border border-green-200 text-green-700 rounded-lg p-4 mb-6">
+        <div class="mb-4 bg-green-50 border-l-4 border-green-400 p-4 text-green-700 text-sm">
             <?php echo e(session('success')); ?>
 
         </div>
     <?php endif; ?>
 
-    
-    <?php if(session('error')): ?>
-        <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mb-6">
-            <?php echo e(session('error')); ?>
-
-        </div>
-    <?php endif; ?>
-
-    
     <?php if($errors->any()): ?>
-        <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mb-6">
-            <ul class="list-disc list-inside text-sm space-y-1">
+        <div class="mb-4 bg-red-50 border-l-4 border-red-400 p-4 text-red-700 text-sm">
+            <p class="font-bold mb-1">There were some problems with your input:</p>
+            <ul class="list-disc list-inside">
                 <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <li><?php echo e($error); ?></li>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -39,749 +32,839 @@
         </div>
     <?php endif; ?>
 
-    <form action="<?php echo e(route('admin.destinations.update', $destination->id)); ?>"
-          method="POST"
+    <form action="<?php echo e(route('admin.accommodations.update', $accommodation->id)); ?>" 
+          method="POST" 
           enctype="multipart/form-data"
-          id="destination-form">
+          class="space-y-6" 
+          id="accommodation-form">
         <?php echo csrf_field(); ?>
         <?php echo method_field('PUT'); ?>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            
-            <div class="lg:col-span-2 space-y-6">
-
-                
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div class="px-5 py-4 border-b border-gray-100">
-                        <h2 class="font-semibold text-gray-700">Basic Information</h2>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-gray-700">Featured Image</h2>
+            </div>
+            <div class="p-5">
+                <?php if($accommodation->featured_image): ?>
+                    <div id="featured-preview" class="mb-3">
+                        <img id="featured-preview-img"
+                             src="<?php echo e(asset('storage/' . $accommodation->featured_image)); ?>"
+                             class="w-full rounded-lg object-cover border border-gray-200"
+                             style="max-height:180px;">
+                        <button type="button" onclick="removeFeaturedImage()"
+                                class="mt-2 text-xs text-red-500 hover:text-red-700">Remove image</button>
                     </div>
-                    <div class="p-5 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Country <span class="text-red-500">*</span>
-                            </label>
-                            <select name="country_id" id="country_id" required
-                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="">Select Country</option>
-                                <?php $__currentLoopData = $countries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $country): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <option value="<?php echo e($country->id); ?>" <?php echo e(old('country_id', $destination->country_id) == $country->id ? 'selected' : ''); ?>>
-                                        <?php echo $country->flag_icon ?? ''; ?> <?php echo e($country->name); ?>
-
-                                    </option>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Destination Name <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" name="name" id="name-input"
-                                   value="<?php echo e(old('name', $destination->name)); ?>"
-                                   placeholder="e.g., Murchison Falls National Park"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                   required>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
-                            <div class="flex rounded-lg border border-gray-300 overflow-hidden focus-within:ring-2 focus:ring-blue-500">
-                                <span class="bg-gray-100 px-3 py-2 text-sm text-gray-500 border-r border-gray-300 whitespace-nowrap">/destinations/</span>
-                                <input type="text" name="slug" id="slug-input"
-                                       value="<?php echo e(old('slug', $destination->slug)); ?>"
-                                       placeholder="auto-generated from name"
-                                       class="flex-1 px-3 py-2 text-sm focus:outline-none">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Destination Type</label>
-                            <select name="type" id="type"
-                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="">Select Type</option>
-                                <?php $__currentLoopData = ['National Park','Wildlife Reserve','Forest Reserve','Game Reserve','Conservation Area','Wildlife Sanctuary','City','Lake','Mountain','Island']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $t): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <option value="<?php echo e($t); ?>" <?php echo e(old('type', $destination->type) == $t ? 'selected' : ''); ?>><?php echo e($t); ?></option>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                            </select>
-                        </div>
+                <?php endif; ?>
+                <label id="featured-drop-zone"
+                       class="block w-full border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition">
+                    <input type="file" name="featured_image" id="featured-image-input"
+                           class="hidden" accept="image/*"
+                           onchange="previewFeaturedImage(this)">
+                    <div id="featured-upload-prompt" class="<?php echo e($accommodation->featured_image ? 'hidden' : ''); ?>">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-700 text-sm font-medium">Click to upload featured image</p>
+                        <p class="text-gray-400 text-xs mt-1">JPG, PNG, WEBP (Max 4MB)</p>
                     </div>
-                </div>
+                </label>
+            </div>
+        </div>
 
-                
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div class="px-5 py-4 border-b border-gray-100">
-                        <h2 class="font-semibold text-gray-700">SEO Information</h2>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-gray-700">Basic Information</h2>
+            </div>
+            <div class="p-5 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">
+                            Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="name" id="name-input" value="<?php echo e(old('name', $accommodation->name)); ?>" required
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> border-red-500 <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
                     </div>
-                    <div class="p-5 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">SEO Title</label>
-                            <input type="text" name="meta_title"
-                                   value="<?php echo e(old('meta_title', $destination->meta_title)); ?>"
-                                   placeholder="e.g., Murchison Falls National Park - Uganda Safari Guide"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
-                            <textarea name="meta_description" rows="2" maxlength="320"
-                                      placeholder="160–320 characters shown in Google search results"
-                                      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"><?php echo e(old('meta_description', $destination->meta_description)); ?></textarea>
-                        </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Type</label>
+                        <select name="type" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                            <option value="">Select Type</option>
+                            <option value="Lodge"       <?php echo e(old('type', $accommodation->type) == 'Lodge' ? 'selected' : ''); ?>>Lodge</option>
+                            <option value="Tented Camp" <?php echo e(old('type', $accommodation->type) == 'Tented Camp' ? 'selected' : ''); ?>>Tented Camp</option>
+                            <option value="Hotel"       <?php echo e(old('type', $accommodation->type) == 'Hotel' ? 'selected' : ''); ?>>Hotel</option>
+                            <option value="Guesthouse"  <?php echo e(old('type', $accommodation->type) == 'Guesthouse' ? 'selected' : ''); ?>>Guesthouse</option>
+                            <option value="City Hotel"  <?php echo e(old('type', $accommodation->type) == 'City Hotel' ? 'selected' : ''); ?>>City Hotel</option>
+                        </select>
+                    </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Focus Keyword</label>
-                            <input type="text" name="focus_keyword"
-                                   value="<?php echo e(old('focus_keyword', $destination->focus_keyword)); ?>"
-                                   placeholder="e.g., Murchison Falls National Park"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">
+                            Category <span class="text-red-500">*</span>
+                        </label>
+                        <select name="category" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500" required>
+                            <option value="">Select Category</option>
+                            <option value="budget"    <?php echo e(old('category', $accommodation->category) == 'budget' ? 'selected' : ''); ?>>Budget</option>
+                            <option value="mid-range" <?php echo e(old('category', $accommodation->category) == 'mid-range' ? 'selected' : ''); ?>>Mid-range</option>
+                            <option value="high-end"  <?php echo e(old('category', $accommodation->category) == 'high-end' ? 'selected' : ''); ?>>High-end / Luxury</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">
+                            Location (short text)
+                        </label>
+                        <input type="text" name="location" value="<?php echo e(old('location', $accommodation->location)); ?>"
+                               placeholder="e.g. Inside Park A, near main gate"
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
                     </div>
                 </div>
 
-                
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div class="px-5 py-4 border-b border-gray-100">
-                        <h2 class="font-semibold text-gray-700">Page Content</h2>
-                        <p class="text-xs text-gray-400 mt-0.5">
-                            <strong>Right-click</strong> on any icon, quote, or link to remove it. 
-                            Or use <strong>Delete/Backspace</strong> key to remove selected elements.
-                            <span class="inline-flex items-center gap-1 ml-2">
-                                <span class="text-xs bg-yellow-100 px-2 py-0.5 rounded-full">💬 Quote</span>
-                                <span class="text-xs bg-blue-100 px-2 py-0.5 rounded-full">🔗 Link</span>
-                                <span class="text-xs bg-pink-100 px-2 py-0.5 rounded-full"><i class="fas fa-icons"></i> Icon</span>
-                            </span>
-                        </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Country</label>
+                        <select name="country_id" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                            <option value="">Select Country</option>
+                            <?php $__currentLoopData = $countries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $country): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($country->id); ?>" <?php echo e(old('country_id', $accommodation->country_id) == $country->id ? 'selected' : ''); ?>>
+                                    <?php echo e($country->name); ?>
+
+                                </option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </select>
                     </div>
-                    <div class="p-5">
-                        <div id="blocks-container">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Destination (optional)</label>
+                        <select name="destination_id" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                            <option value="">Select Destination</option>
+                            <?php $__currentLoopData = $destinations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $destination): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($destination->id); ?>" <?php echo e(old('destination_id', $accommodation->destination_id) == $destination->id ? 'selected' : ''); ?>>
+                                    <?php echo e($destination->name); ?>
+
+                                </option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-gray-700">Pricing</h2>
+            </div>
+            <div class="p-5">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Currency</label>
+                        <input type="text" name="currency" value="<?php echo e(old('currency', $accommodation->currency ?? 'USD')); ?>"
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Price From (per person/night)</label>
+                        <input type="number" step="0.01" min="0" name="price_from" value="<?php echo e(old('price_from', $accommodation->price_from)); ?>"
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Price To (per person/night)</label>
+                        <input type="number" step="0.01" min="0" name="price_to" value="<?php echo e(old('price_to', $accommodation->price_to)); ?>"
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-gray-700">SEO Information</h2>
+            </div>
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">SEO Title</label>
+                    <input type="text" name="meta_title"
+                           value="<?php echo e(old('meta_title', $accommodation->meta_title)); ?>"
+                           placeholder="e.g., Luxury Safari Lodge in Bwindi - Uganda"
+                           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+                    <textarea name="meta_description" rows="2" maxlength="320"
+                              placeholder="160–320 characters shown in Google search results"
+                              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"><?php echo e(old('meta_description', $accommodation->meta_description)); ?></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Focus Keyword</label>
+                    <input type="text" name="focus_keyword"
+                           value="<?php echo e(old('focus_keyword', $accommodation->focus_keyword)); ?>"
+                           placeholder="e.g., luxury safari lodge Bwindi"
+                           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-gray-700">Page Content</h2>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    <strong>Right-click</strong> on any icon, quote, or link to remove it. 
+                    Or use <strong>Delete/Backspace</strong> key to remove selected elements.
+                    <span class="inline-flex items-center gap-1 ml-2">
+                        <span class="text-xs bg-yellow-100 px-2 py-0.5 rounded-full">💬 Quote</span>
+                        <span class="text-xs bg-blue-100 px-2 py-0.5 rounded-full">🔗 Link</span>
+                        <span class="text-xs bg-pink-100 px-2 py-0.5 rounded-full"><i class="fas fa-icons"></i> Icon</span>
+                    </span>
+                </p>
+            </div>
+            <div class="p-5">
+                <div id="blocks-container">
+                    <?php
+                        $existingBlocks = $accommodation->content_blocks ?? [];
+                        if (is_string($existingBlocks)) {
+                            $existingBlocks = json_decode($existingBlocks, true);
+                        }
+                        if (!is_array($existingBlocks)) {
+                            $existingBlocks = [];
+                        }
+                    ?>
+
+                    <?php if(count($existingBlocks) === 0): ?>
+                        <div id="blocks-empty-msg"
+                             class="text-center py-10 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+                            <p class="text-sm">Your page is empty.</p>
+                            <p class="text-xs mt-1">Use the toolbar at the bottom to add content blocks.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php $__currentLoopData = $existingBlocks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $block): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php
-                                $existingBlocks = collect($destination->content_blocks ?? []);
-                                $imagesByBlockId = $destination->destinationImages
-                                    ->filter(fn($i) => !empty($i->block_id))
-                                    ->groupBy('block_id');
+                                $type = $block['type'] ?? 'text';
+                                $blockId = $block['id'] ?? 'blk-' . Str::random(8);
                             ?>
+                            <div class="block-item border border-gray-200 rounded-xl p-4 mb-3 bg-gray-50"
+                                 data-block-id="<?php echo e($blockId); ?>"
+                                 data-index="<?php echo e($index); ?>">
+                                <input type="hidden" name="blocks[<?php echo e($index); ?>][id]" value="<?php echo e($blockId); ?>">
+                                <input type="hidden" name="blocks[<?php echo e($index); ?>][type]" value="<?php echo e($type); ?>">
 
-                            <?php if($existingBlocks->count() === 0): ?>
-                                <div id="blocks-empty-msg"
-                                     class="text-center py-10 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
-                                    <p class="text-sm">Your page is empty.</p>
-                                    <p class="text-xs mt-1">Use the toolbar at the bottom to add content blocks.</p>
-                                </div>
-                            <?php else: ?>
-                                <?php $__currentLoopData = $existingBlocks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $block): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <?php
-                                        $type = $block['type'] ?? 'text';
-                                        $blockId = $block['id'] ?? null;
-                                        $blockImages = $blockId && $imagesByBlockId->has($blockId)
-                                            ? $imagesByBlockId->get($blockId)
-                                            : collect();
-                                    ?>
-                                    <div class="block-item border border-gray-200 rounded-xl p-4 mb-3 bg-gray-50"
-                                         data-block-id="<?php echo e($blockId); ?>"
-                                         data-index="<?php echo e($index); ?>">
-                                        <input type="hidden" name="blocks[<?php echo e($index); ?>][id]" value="<?php echo e($blockId); ?>">
-                                        <input type="hidden" name="blocks[<?php echo e($index); ?>][type]" value="<?php echo e($type); ?>">
+                                
+                                <?php if($type === 'heading'): ?>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Heading</span>
+                                        <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
+                                    </div>
+                                    <div class="flex gap-3 mb-3">
+                                        <div class="w-36">
+                                            <label class="block text-xs text-gray-500 mb-1">Level</label>
+                                            <select name="blocks[<?php echo e($index); ?>][heading_level]" onchange="updateHeadingPreview(this)"
+                                                    class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm">
+                                                <?php $__currentLoopData = ['h1','h2','h3','h4','h5','h6']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hl): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <option value="<?php echo e($hl); ?>" <?php echo e(($block['heading_level'] ?? 'h2') === $hl ? 'selected' : ''); ?>>
+                                                        <?php echo e(strtoupper($hl)); ?>
 
-                                        
-                                        <?php if($type === 'heading'): ?>
-                                            <div class="flex items-center justify-between mb-3">
-                                                <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Heading</span>
-                                                <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
-                                            </div>
-                                            <div class="flex gap-3 mb-3">
-                                                <div class="w-36">
-                                                    <label class="block text-xs text-gray-500 mb-1">Level</label>
-                                                    <select name="blocks[<?php echo e($index); ?>][heading_level]" onchange="updateHeadingPreview(this)"
-                                                            class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm">
-                                                        <?php $__currentLoopData = ['h1','h2','h3','h4','h5','h6']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hl): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                            <option value="<?php echo e($hl); ?>" <?php echo e(($block['heading_level'] ?? 'h2') === $hl ? 'selected' : ''); ?>>
-                                                                <?php echo e(strtoupper($hl)); ?>
-
-                                                            </option>
-                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                    </select>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <label class="block text-xs text-gray-500 mb-1">Heading Text</label>
-                                                    <input type="text" name="blocks[<?php echo e($index); ?>][content]"
-                                                           class="heading-text w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
-                                                           value="<?php echo e($block['content'] ?? ''); ?>"
-                                                           placeholder="Enter heading text" oninput="updateHeadingPreview(this)">
-                                                </div>
-                                            </div>
-                                            <div class="heading-preview px-3 py-2 bg-white rounded-lg border border-dashed border-gray-300 text-gray-400 text-sm italic">
-                                                <?php
-                                                    $level = $block['heading_level'] ?? 'h2';
-                                                    $text = $block['content'] ?: 'Preview appears here...';
-                                                    $styles = [
-                                                        'h1' => 'text-3xl font-bold text-gray-900',
-                                                        'h2' => 'text-2xl font-bold text-gray-800',
-                                                        'h3' => 'text-xl font-semibold text-gray-800',
-                                                        'h4' => 'text-lg font-semibold text-gray-700',
-                                                        'h5' => 'text-base font-semibold text-gray-700',
-                                                        'h6' => 'text-sm font-semibold text-gray-600',
-                                                    ];
-                                                ?>
-                                                <<?php echo e($level); ?> class="<?php echo e($styles[$level] ?? $styles['h2']); ?> not-italic"><?php echo e($text); ?></<?php echo e($level); ?>>
-                                            </div>
-
-                                        
-                                        <?php elseif($type === 'text'): ?>
-                                            <div class="flex items-center justify-between mb-2">
-                                                <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Paragraph</span>
-                                                <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
-                                            </div>
-                                            <div contenteditable="true"
-                                                 data-block-type="text"
-                                                 data-index="<?php echo e($index); ?>"
-                                                 data-placeholder="Write your paragraph here..."
-                                                 class="paragraph-editor w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
-                                                 onfocus="setCurrentEditor(this)"
-                                                 onclick="setCurrentEditor(this)"
-                                                 onkeyup="saveSelection()"
-                                                 onmouseup="saveSelection()"
-                                                 oninput="syncContent(this,<?php echo e($index); ?>)"
-                                                 oncontextmenu="showRemoveContextMenu(event, this)"><?php echo $block['content'] ?? ''; ?></div>
-                                            <input type="hidden" name="blocks[<?php echo e($index); ?>][content]" id="content-<?php echo e($index); ?>" value="<?php echo e($block['content'] ?? ''); ?>">
-
-                                        
-                                        <?php elseif($type === 'image'): ?>
-                                            <div class="flex items-center justify-between mb-3">
-                                                <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                                    Images <span id="img-count-<?php echo e($index); ?>" class="text-blue-500"></span>
-                                                </span>
-                                                <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
-                                            </div>
-
-                                            <?php if($blockImages->count() > 0): ?>
-                                                <div class="mb-3">
-                                                    <label class="block text-xs text-gray-500 mb-2">Existing Images</label>
-                                                    <div class="grid grid-cols-3 gap-2" id="existing-img-grid-<?php echo e($index); ?>">
-                                                        <?php $__currentLoopData = $blockImages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                            <div class="relative rounded-lg overflow-hidden border border-gray-200 bg-white existing-image-item"
-                                                                 data-image-id="<?php echo e($image->id); ?>">
-                                                                <img src="<?php echo e(asset('storage/' . ($image->thumbnail_path ?: $image->storage_path))); ?>"
-                                                                     class="w-full object-cover" style="height: 90px;">
-                                                                <button type="button"
-                                                                        class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-600"
-                                                                        onclick="deleteExistingImage(this, <?php echo e($index); ?>, <?php echo e($image->id); ?>)">&times;</button>
-                                                                <input type="text"
-                                                                       name="blocks[<?php echo e($index); ?>][existing_alts][<?php echo e($image->id); ?>]"
-                                                                       value="<?php echo e($image->alt_text); ?>"
-                                                                       placeholder="Alt text"
-                                                                       class="w-full text-xs border-t border-gray-200 px-1 py-0.5 focus:outline-none">
-                                                            </div>
-                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                    </div>
-                                                </div>
-                                            <?php endif; ?>
-
-                                            <div id="img-grid-<?php echo e($index); ?>" class="grid grid-cols-3 gap-3 mb-3"></div>
-                                            <input type="file"
-                                                   id="img-file-input-<?php echo e($index); ?>"
-                                                   name="blocks[<?php echo e($index); ?>][images][]"
-                                                   multiple
-                                                   accept="image/jpeg,image/png,image/webp"
-                                                   style="display:none">
-
-                                            <label class="block w-full border-2 border-dashed border-gray-300 rounded-xl p-5 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition">
-                                                <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp" multiple
-                                                       onchange="accumulateImages(this,<?php echo e($index); ?>)">
-                                                <p class="text-gray-500 text-sm">Click to add new images</p>
-                                                <p class="text-gray-400 text-xs mt-1">Click multiple times to add more</p>
-                                            </label>
-
-                                            <script>if (!window.blockFiles) window.blockFiles = {}; window.blockFiles[<?php echo e($index); ?>] = window.blockFiles[<?php echo e($index); ?>] || [];</script>
-
-                                        
-                                        <?php elseif($type === 'list'): ?>
-                                            <div class="flex items-center justify-between mb-3">
-                                                <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">📋 List</span>
-                                                <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
-                                            </div>
-                                            <div class="flex gap-3 mb-3">
-                                                <div class="w-36">
-                                                    <label class="block text-xs text-gray-500 mb-1">Type</label>
-                                                    <select name="blocks[<?php echo e($index); ?>][list_type]" class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm">
-                                                        <option value="ul" <?php echo e(($block['list_type'] ?? 'ul') === 'ul' ? 'selected' : ''); ?>>Bullet List</option>
-                                                        <option value="ol" <?php echo e(($block['list_type'] ?? 'ul') === 'ol' ? 'selected' : ''); ?>>Numbered List</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div contenteditable="true"
-                                                 data-block-type="list"
-                                                 data-index="<?php echo e($index); ?>"
-                                                 class="paragraph-editor w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 min-h-[120px]"
-                                                 onfocus="setCurrentEditor(this)"
-                                                 onclick="setCurrentEditor(this)"
-                                                 onkeyup="saveSelection()"
-                                                 onmouseup="saveSelection()"
-                                                 oninput="syncContent(this,<?php echo e($index); ?>)"
-                                                 oncontextmenu="showRemoveContextMenu(event, this)"
-                                                 placeholder="• Item 1&#10;• Item 2&#10;• Item 3"><?php echo $block['content'] ?? ''; ?></div>
-                                            <input type="hidden" name="blocks[<?php echo e($index); ?>][content]" id="content-<?php echo e($index); ?>" value="<?php echo e($block['content'] ?? ''); ?>">
-
-                                        
-                                        <?php elseif($type === 'table'): ?>
-                                            <div class="flex items-center justify-between mb-3">
-                                                <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">📊 Table</span>
-                                                <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
-                                            </div>
-                                            
-                                            <div class="space-y-3">
-                                                <div class="flex flex-wrap gap-3">
-                                                    <div class="flex-1 min-w-[200px]">
-                                                        <label class="block text-xs text-gray-500 mb-1">Caption (optional)</label>
-                                                        <input type="text" name="blocks[<?php echo e($index); ?>][caption]" 
-                                                               class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
-                                                               value="<?php echo e($block['caption'] ?? ''); ?>"
-                                                               placeholder="Table caption...">
-                                                    </div>
-                                                    <div class="flex items-center gap-4 flex-wrap">
-                                                        <label class="text-xs text-gray-500 flex items-center gap-1">
-                                                            <input type="checkbox" name="blocks[<?php echo e($index); ?>][striped]" value="1" 
-                                                                   <?php echo e(($block['striped'] ?? true) ? 'checked' : ''); ?> 
-                                                                   onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
-                                                            Striped
-                                                        </label>
-                                                        <label class="text-xs text-gray-500 flex items-center gap-1">
-                                                            <input type="checkbox" name="blocks[<?php echo e($index); ?>][bordered]" value="1" 
-                                                                   <?php echo e(($block['bordered'] ?? true) ? 'checked' : ''); ?> 
-                                                                   onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
-                                                            Bordered
-                                                        </label>
-                                                        <label class="text-xs text-gray-500 flex items-center gap-1">
-                                                            <input type="checkbox" name="blocks[<?php echo e($index); ?>][hoverable]" value="1" 
-                                                                   <?php echo e(($block['hoverable'] ?? false) ? 'checked' : ''); ?> 
-                                                                   onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
-                                                            Hover
-                                                        </label>
-                                                        <label class="text-xs text-gray-500 flex items-center gap-1">
-                                                            <input type="checkbox" name="blocks[<?php echo e($index); ?>][small]" value="1" 
-                                                                   <?php echo e(($block['small'] ?? false) ? 'checked' : ''); ?> 
-                                                                   onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
-                                                            Small
-                                                        </label>
-                                                    </div>
-                                                </div>
-
-                                                <div class="border rounded-lg overflow-hidden bg-white">
-                                                    <div id="table-preview-container-<?php echo e($index); ?>" class="p-4">
-                                                        <table class="table-preview" id="table-preview-<?php echo e($index); ?>">
-                                                            <thead>
-                                                                <tr id="table-header-<?php echo e($index); ?>">
-                                                                    <?php
-                                                                        $headers = $block['headers'] ?? ['Column 1', 'Column 2', 'Column 3'];
-                                                                    ?>
-                                                                    <?php $__currentLoopData = $headers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hIndex => $header): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                                        <th>
-                                                                            <input type="text" 
-                                                                                   name="blocks[<?php echo e($index); ?>][headers][<?php echo e($hIndex); ?>]" 
-                                                                                   value="<?php echo e($header); ?>" 
-                                                                                   class="w-full border-0 bg-transparent text-sm font-medium focus:ring-1 focus:ring-blue-500 rounded px-1" 
-                                                                                   oninput="updateTablePreviewStyles(<?php echo e($index); ?>)">
-                                                                        </th>
-                                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                                    <th style="width:40px;text-align:center;">×</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="table-body-<?php echo e($index); ?>">
-                                                                <?php
-                                                                    $rows = $block['rows'] ?? [
-                                                                        ['Row 1, Col 1', 'Row 1, Col 2', 'Row 1, Col 3']
-                                                                    ];
-                                                                ?>
-                                                                <?php $__currentLoopData = $rows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rIndex => $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                                    <tr>
-                                                                        <?php $__currentLoopData = $row; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cIndex => $cell): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                                            <td>
-                                                                                <input type="text" 
-                                                                                       name="blocks[<?php echo e($index); ?>][rows][<?php echo e($rIndex); ?>][<?php echo e($cIndex); ?>]" 
-                                                                                       value="<?php echo e($cell); ?>" 
-                                                                                       class="w-full border-0 bg-transparent text-sm focus:ring-1 focus:ring-blue-500 rounded px-1" 
-                                                                                       oninput="updateTablePreviewStyles(<?php echo e($index); ?>)">
-                                                                            </td>
-                                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                                        <td style="text-align:center;">
-                                                                            <button type="button" onclick="removeTableRow(this, <?php echo e($index); ?>)" 
-                                                                                    class="text-red-400 hover:text-red-600 text-xs">×</button>
-                                                                        </td>
-                                                                    </tr>
-                                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-
-                                                <div class="flex gap-2 flex-wrap">
-                                                    <button type="button" onclick="addTableRow(<?php echo e($index); ?>)" 
-                                                            class="text-xs px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50 transition">
-                                                        ➕ Add Row
-                                                    </button>
-                                                    <button type="button" onclick="addTableColumn(<?php echo e($index); ?>)" 
-                                                            class="text-xs px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50 transition">
-                                                        ➕ Add Column
-                                                    </button>
-                                                    <button type="button" onclick="removeTableColumn(<?php echo e($index); ?>)" 
-                                                            class="text-xs px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50 transition text-red-500">
-                                                        ✕ Remove Last Column
-                                                    </button>
-                                                    <button type="button" onclick="toggleTableColors(<?php echo e($index); ?>)" 
-                                                            class="text-xs px-3 py-1.5 rounded border border-blue-300 bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
-                                                        ⚙️ Customize Colors
-                                                    </button>
-                                                </div>
-
-                                                <div id="table-colors-<?php echo e($index); ?>" class="hidden mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                    <div class="flex items-center justify-between mb-2">
-                                                        <span class="text-xs font-medium text-gray-600">Color Settings</span>
-                                                        <button type="button" onclick="toggleTableColors(<?php echo e($index); ?>)" 
-                                                                class="text-xs text-gray-400 hover:text-gray-600">✕</button>
-                                                    </div>
-                                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                                        <div>
-                                                            <label class="block text-xs text-gray-500 mb-1">Header BG</label>
-                                                            <input type="color" name="blocks[<?php echo e($index); ?>][header_bg_color]" 
-                                                                   value="<?php echo e($block['header_bg_color'] ?? '#f3f4f6'); ?>" 
-                                                                   class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
-                                                                   onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs text-gray-500 mb-1">Header Text</label>
-                                                            <input type="color" name="blocks[<?php echo e($index); ?>][header_text_color]" 
-                                                                   value="<?php echo e($block['header_text_color'] ?? '#111827'); ?>" 
-                                                                   class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
-                                                                   onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs text-gray-500 mb-1">Row BG</label>
-                                                            <input type="color" name="blocks[<?php echo e($index); ?>][row_bg_color]" 
-                                                                   value="<?php echo e($block['row_bg_color'] ?? '#ffffff'); ?>" 
-                                                                   class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
-                                                                   onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs text-gray-500 mb-1">Row Alt BG</label>
-                                                            <input type="color" name="blocks[<?php echo e($index); ?>][row_bg_alt_color]" 
-                                                                   value="<?php echo e($block['row_bg_alt_color'] ?? '#f9fafb'); ?>" 
-                                                                   class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
-                                                                   onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs text-gray-500 mb-1">Row Text</label>
-                                                            <input type="color" name="blocks[<?php echo e($index); ?>][row_text_color]" 
-                                                                   value="<?php echo e($block['row_text_color'] ?? '#111827'); ?>" 
-                                                                   class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
-                                                                   onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs text-gray-500 mb-1">Border</label>
-                                                            <input type="color" name="blocks[<?php echo e($index); ?>][border_color]" 
-                                                                   value="<?php echo e($block['border_color'] ?? '#d1d5db'); ?>" 
-                                                                   class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
-                                                                   onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                        
-                                        <?php elseif($type === 'buttons'): ?>
-                                            <div class="flex items-center justify-between mb-3">
-                                                <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">🔘 Buttons</span>
-                                                <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
-                                            </div>
-                                            
-                                            <div class="space-y-3">
-                                                
-                                                <div class="flex flex-wrap gap-3">
-                                                    <div class="flex-1 min-w-[150px] max-w-[200px]">
-                                                        <label class="block text-xs text-gray-500 mb-1">Alignment</label>
-                                                        <select name="blocks[<?php echo e($index); ?>][alignment]" class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm" onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                            <option value="left" <?php echo e(($block['alignment'] ?? 'left') === 'left' ? 'selected' : ''); ?>>Left</option>
-                                                            <option value="center" <?php echo e(($block['alignment'] ?? 'left') === 'center' ? 'selected' : ''); ?>>Center</option>
-                                                            <option value="right" <?php echo e(($block['alignment'] ?? 'left') === 'right' ? 'selected' : ''); ?>>Right</option>
-                                                            <option value="justify" <?php echo e(($block['alignment'] ?? 'left') === 'justify' ? 'selected' : ''); ?>>Justify</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="flex-1 min-w-[150px] max-w-[200px]">
-                                                        <label class="block text-xs text-gray-500 mb-1">Direction</label>
-                                                        <select name="blocks[<?php echo e($index); ?>][direction]" class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm" onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                            <option value="horizontal" <?php echo e(($block['direction'] ?? 'horizontal') === 'horizontal' ? 'selected' : ''); ?>>Horizontal</option>
-                                                            <option value="vertical" <?php echo e(($block['direction'] ?? 'horizontal') === 'vertical' ? 'selected' : ''); ?>>Vertical</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="flex-1 min-w-[150px] max-w-[200px]">
-                                                        <label class="block text-xs text-gray-500 mb-1">Gap</label>
-                                                        <select name="blocks[<?php echo e($index); ?>][gap]" class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm" onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                            <option value="small" <?php echo e(($block['gap'] ?? 'medium') === 'small' ? 'selected' : ''); ?>>Small</option>
-                                                            <option value="medium" <?php echo e(($block['gap'] ?? 'medium') === 'medium' ? 'selected' : ''); ?>>Medium</option>
-                                                            <option value="large" <?php echo e(($block['gap'] ?? 'medium') === 'large' ? 'selected' : ''); ?>>Large</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="flex items-end">
-                                                        <button type="button" onclick="toggleButtonColors(<?php echo e($index); ?>)" 
-                                                                class="text-xs px-3 py-1.5 rounded border border-blue-300 bg-blue-50 text-blue-600 hover:bg-blue-100 transition whitespace-nowrap">
-                                                            ⚙️ Colors
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                
-                                                <div id="button-colors-<?php echo e($index); ?>" class="hidden p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                    <div class="flex items-center justify-between mb-2">
-                                                        <span class="text-xs font-medium text-gray-600">Default Colors</span>
-                                                        <button type="button" onclick="toggleButtonColors(<?php echo e($index); ?>)" 
-                                                                class="text-xs text-gray-400 hover:text-gray-600">✕</button>
-                                                    </div>
-                                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                                        <div>
-                                                            <label class="block text-xs text-gray-500 mb-1">Default BG</label>
-                                                            <input type="color" name="blocks[<?php echo e($index); ?>][default_bg_color]" 
-                                                                   value="<?php echo e($block['default_bg_color'] ?? '#2563eb'); ?>" 
-                                                                   class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
-                                                                   onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs text-gray-500 mb-1">Default Text</label>
-                                                            <input type="color" name="blocks[<?php echo e($index); ?>][default_text_color]" 
-                                                                   value="<?php echo e($block['default_text_color'] ?? '#ffffff'); ?>" 
-                                                                   class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
-                                                                   onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs text-gray-500 mb-1">Hover BG</label>
-                                                            <input type="color" name="blocks[<?php echo e($index); ?>][default_hover_bg_color]" 
-                                                                   value="<?php echo e($block['default_hover_bg_color'] ?? '#1d4ed8'); ?>" 
-                                                                   class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
-                                                                   onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                        </div>
-                                                        <div>
-                                                            <label class="block text-xs text-gray-500 mb-1">Border Radius</label>
-                                                            <input type="text" name="blocks[<?php echo e($index); ?>][default_border_radius]" 
-                                                                   value="<?php echo e($block['default_border_radius'] ?? '8px'); ?>" 
-                                                                   class="w-full border border-gray-300 rounded px-2 py-1 text-sm" 
-                                                                   placeholder="8px" onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                
-                                                <div class="space-y-2" id="buttons-list-<?php echo e($index); ?>">
-                                                    <div class="text-xs text-gray-500">Buttons:</div>
-                                                    <div id="buttons-container-<?php echo e($index); ?>">
-                                                        <?php
-                                                            $buttons = $block['buttons'] ?? [
-                                                                [
-                                                                    'text' => 'Button 1',
-                                                                    'url' => '#',
-                                                                    'bg_color' => '#2563eb',
-                                                                    'text_color' => '#ffffff',
-                                                                    'hover_bg_color' => '#1d4ed8',
-                                                                    'border_radius' => '8px',
-                                                                    'size' => 'medium',
-                                                                    'type' => 'primary'
-                                                                ]
-                                                            ];
-                                                        ?>
-                                                        <?php $__currentLoopData = $buttons; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $btnIndex => $button): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                            <div class="button-item border border-gray-200 rounded-lg p-3 bg-white mt-2" data-btn-index="<?php echo e($btnIndex); ?>">
-                                                                <div class="flex items-center justify-between mb-2">
-                                                                    <span class="text-xs font-medium text-gray-600">Button <?php echo e($btnIndex + 1); ?></span>
-                                                                    <button type="button" onclick="removeButtonItem(this, <?php echo e($index); ?>)" 
-                                                                            class="text-xs text-red-400 hover:text-red-600">Remove</button>
-                                                                </div>
-                                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                                    <div>
-                                                                        <label class="block text-xs text-gray-500">Text</label>
-                                                                        <input type="text" name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][text]" 
-                                                                               value="<?php echo e($button['text'] ?? 'Button'); ?>" 
-                                                                               class="w-full border border-gray-300 rounded px-2 py-1 text-sm" 
-                                                                               oninput="updateButtonPreview(<?php echo e($index); ?>)">
-                                                                    </div>
-                                                                    <div>
-                                                                        <label class="block text-xs text-gray-500">URL</label>
-                                                                        <input type="text" name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][url]" 
-                                                                               value="<?php echo e($button['url'] ?? '#'); ?>" 
-                                                                               class="w-full border border-gray-300 rounded px-2 py-1 text-sm" 
-                                                                               placeholder="https://..." oninput="updateButtonPreview(<?php echo e($index); ?>)">
-                                                                    </div>
-                                                                    <div>
-                                                                        <label class="block text-xs text-gray-500">Size</label>
-                                                                        <select name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][size]" 
-                                                                                class="w-full border border-gray-300 rounded px-2 py-1 text-sm" 
-                                                                                onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                                            <option value="small" <?php echo e(($button['size'] ?? 'medium') === 'small' ? 'selected' : ''); ?>>Small</option>
-                                                                            <option value="medium" <?php echo e(($button['size'] ?? 'medium') === 'medium' ? 'selected' : ''); ?>>Medium</option>
-                                                                            <option value="large" <?php echo e(($button['size'] ?? 'medium') === 'large' ? 'selected' : ''); ?>>Large</option>
-                                                                        </select>
-                                                                    </div>
-                                                                    <div>
-                                                                        <label class="block text-xs text-gray-500">Type</label>
-                                                                        <select name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][type]" 
-                                                                                class="w-full border border-gray-300 rounded px-2 py-1 text-sm" 
-                                                                                onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                                            <option value="primary" <?php echo e(($button['type'] ?? 'primary') === 'primary' ? 'selected' : ''); ?>>Primary</option>
-                                                                            <option value="secondary" <?php echo e(($button['type'] ?? 'primary') === 'secondary' ? 'selected' : ''); ?>>Secondary</option>
-                                                                            <option value="outline" <?php echo e(($button['type'] ?? 'primary') === 'outline' ? 'selected' : ''); ?>>Outline</option>
-                                                                            <option value="ghost" <?php echo e(($button['type'] ?? 'primary') === 'ghost' ? 'selected' : ''); ?>>Ghost</option>
-                                                                        </select>
-                                                                    </div>
-                                                                    <div>
-                                                                        <label class="block text-xs text-gray-500">BG Color</label>
-                                                                        <input type="color" name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][bg_color]" 
-                                                                               value="<?php echo e($button['bg_color'] ?? '#2563eb'); ?>" 
-                                                                               class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
-                                                                               onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                                    </div>
-                                                                    <div>
-                                                                        <label class="block text-xs text-gray-500">Text Color</label>
-                                                                        <input type="color" name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][text_color]" 
-                                                                               value="<?php echo e($button['text_color'] ?? '#ffffff'); ?>" 
-                                                                               class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
-                                                                               onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                                    </div>
-                                                                    <div>
-                                                                        <label class="block text-xs text-gray-500">Hover BG</label>
-                                                                        <input type="color" name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][hover_bg_color]" 
-                                                                               value="<?php echo e($button['hover_bg_color'] ?? '#1d4ed8'); ?>" 
-                                                                               class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
-                                                                               onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                                    </div>
-                                                                    <div>
-                                                                        <label class="block text-xs text-gray-500">Border Radius</label>
-                                                                        <input type="text" name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][border_radius]" 
-                                                                               value="<?php echo e($button['border_radius'] ?? '8px'); ?>" 
-                                                                               class="w-full border border-gray-300 rounded px-2 py-1 text-sm" 
-                                                                               placeholder="8px" onchange="updateButtonPreview(<?php echo e($index); ?>)">
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                    </div>
-                                                    <button type="button" onclick="addButtonItem(<?php echo e($index); ?>)" 
-                                                            class="text-xs px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50 transition mt-2">
-                                                        ➕ Add Button
-                                                    </button>
-                                                </div>
-
-                                                
-                                                <div class="border rounded-lg p-4 bg-white" id="button-preview-container-<?php echo e($index); ?>">
-                                                    <label class="block text-xs text-gray-500 mb-2">Live Preview:</label>
-                                                    <div id="button-preview-<?php echo e($index); ?>" class="btn-preview-group"></div>
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        
-                                        <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-                                            <span class="text-xs text-gray-400">Insert below:</span>
-                                            <button type="button" onclick="insertBlockAfter('heading',this)"
-                                                    class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-100 font-bold">H</button>
-                                            <button type="button" onclick="insertBlockAfter('text',this)"
-                                                    class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-100">¶</button>
-                                            <button type="button" onclick="insertBlockAfter('image',this)"
-                                                    class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-100">🖼️</button>
-                                            <button type="button" onclick="insertBlockAfter('list',this)"
-                                                    class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-100">📋</button>
-                                            <button type="button" onclick="insertBlockAfter('table',this)"
-                                                    class="text-xs px-2 py-1 rounded border border-green-300 hover:bg-green-50">📊</button>
-                                            <button type="button" onclick="insertBlockAfter('buttons',this)"
-                                                    class="text-xs px-2 py-1 rounded border border-purple-300 hover:bg-purple-50">🔘</button>
+                                                    </option>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                            </select>
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-xs text-gray-500 mb-1">Heading Text</label>
+                                            <input type="text" name="blocks[<?php echo e($index); ?>][content]"
+                                                   class="heading-text w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+                                                   value="<?php echo e($block['content'] ?? ''); ?>"
+                                                   placeholder="Enter heading text" oninput="updateHeadingPreview(this)">
                                         </div>
                                     </div>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                            <?php endif; ?>
+                                    <div class="heading-preview px-3 py-2 bg-white rounded-lg border border-dashed border-gray-300 text-gray-400 text-sm italic">
+                                        <?php
+                                            $level = $block['heading_level'] ?? 'h2';
+                                            $text = $block['content'] ?: 'Preview appears here...';
+                                            $styles = [
+                                                'h1' => 'text-3xl font-bold text-gray-900',
+                                                'h2' => 'text-2xl font-bold text-gray-800',
+                                                'h3' => 'text-xl font-semibold text-gray-800',
+                                                'h4' => 'text-lg font-semibold text-gray-700',
+                                                'h5' => 'text-base font-semibold text-gray-700',
+                                                'h6' => 'text-sm font-semibold text-gray-600',
+                                            ];
+                                        ?>
+                                        <<?php echo e($level); ?> class="<?php echo e($styles[$level] ?? $styles['h2']); ?> not-italic"><?php echo e($text); ?></<?php echo e($level); ?>>
+                                    </div>
+
+                                
+                                <?php elseif($type === 'text'): ?>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Paragraph</span>
+                                        <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
+                                    </div>
+                                    <div contenteditable="true"
+                                         data-block-type="text"
+                                         data-index="<?php echo e($index); ?>"
+                                         data-placeholder="Write your paragraph here..."
+                                         class="paragraph-editor w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                                         onfocus="setCurrentEditor(this)"
+                                         onclick="setCurrentEditor(this)"
+                                         onkeyup="saveSelection()"
+                                         onmouseup="saveSelection()"
+                                         oninput="syncContent(this,<?php echo e($index); ?>)"
+                                         oncontextmenu="showRemoveContextMenu(event, this)"><?php echo $block['content'] ?? ''; ?></div>
+                                    <input type="hidden" name="blocks[<?php echo e($index); ?>][content]" id="content-<?php echo e($index); ?>" value="<?php echo e($block['content'] ?? ''); ?>">
+
+                                
+                                <?php elseif($type === 'list'): ?>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">📋 List</span>
+                                        <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
+                                    </div>
+                                    <div class="flex gap-3 mb-3">
+                                        <div class="w-36">
+                                            <label class="block text-xs text-gray-500 mb-1">Type</label>
+                                            <select name="blocks[<?php echo e($index); ?>][list_type]" class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm">
+                                                <option value="ul" <?php echo e(($block['list_type'] ?? 'ul') === 'ul' ? 'selected' : ''); ?>>Bullet List</option>
+                                                <option value="ol" <?php echo e(($block['list_type'] ?? 'ul') === 'ol' ? 'selected' : ''); ?>>Numbered List</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div contenteditable="true"
+                                         data-block-type="list"
+                                         data-index="<?php echo e($index); ?>"
+                                         class="paragraph-editor w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 min-h-[120px]"
+                                         onfocus="setCurrentEditor(this)"
+                                         onclick="setCurrentEditor(this)"
+                                         onkeyup="saveSelection()"
+                                         onmouseup="saveSelection()"
+                                         oninput="syncContent(this,<?php echo e($index); ?>)"
+                                         oncontextmenu="showRemoveContextMenu(event, this)"
+                                         placeholder="• Item 1&#10;• Item 2&#10;• Item 3"><?php echo $block['content'] ?? ''; ?></div>
+                                    <input type="hidden" name="blocks[<?php echo e($index); ?>][content]" id="content-<?php echo e($index); ?>" value="<?php echo e($block['content'] ?? ''); ?>">
+
+                                
+                                <?php elseif($type === 'image'): ?>
+                                    <?php
+                                        $blockImages = $accommodation->images->filter(function($img) use ($blockId) {
+                                            return $img->block_id === $blockId;
+                                        });
+                                    ?>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                            Images <span id="img-count-<?php echo e($index); ?>" class="text-blue-500"></span>
+                                        </span>
+                                        <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
+                                    </div>
+
+                                    <?php if($blockImages->count() > 0): ?>
+                                        <div class="mb-3">
+                                            <label class="block text-xs text-gray-500 mb-2">Existing Images</label>
+                                            <div class="grid grid-cols-3 gap-2" id="existing-img-grid-<?php echo e($index); ?>">
+                                                <?php $__currentLoopData = $blockImages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <div class="relative rounded-lg overflow-hidden border border-gray-200 bg-white existing-image-item"
+                                                         data-image-id="<?php echo e($image->id); ?>">
+                                                        <img src="<?php echo e(asset('storage/' . $image->path)); ?>"
+                                                             class="w-full object-cover" style="height: 90px;">
+                                                        <button type="button"
+                                                                class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-600"
+                                                                onclick="deleteBlockImage(this, <?php echo e($index); ?>, <?php echo e($image->id); ?>)">&times;</button>
+                                                        <input type="text"
+                                                               name="blocks[<?php echo e($index); ?>][existing_alts][<?php echo e($image->id); ?>]"
+                                                               value="<?php echo e($image->alt_text); ?>"
+                                                               placeholder="Alt text"
+                                                               class="w-full text-xs border-t border-gray-200 px-1 py-0.5 focus:outline-none">
+                                                    </div>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <div id="img-grid-<?php echo e($index); ?>" class="grid grid-cols-3 gap-3 mb-3"></div>
+                                    <div id="img-transfer-<?php echo e($index); ?>"></div>
+
+                                    <label class="block w-full border-2 border-dashed border-gray-300 rounded-xl p-5 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition">
+                                        <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp" multiple
+                                               onchange="accumulateImages(this,<?php echo e($index); ?>)">
+                                        <p class="text-gray-500 text-sm">Click to add new images</p>
+                                        <p class="text-gray-400 text-xs mt-1">Click multiple times to add more</p>
+                                    </label>
+
+                                    <script>if (!window.blockFiles) window.blockFiles = {}; window.blockFiles[<?php echo e($index); ?>] = window.blockFiles[<?php echo e($index); ?>] || [];</script>
+
+                                
+                                <?php elseif($type === 'table'): ?>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">📊 Table</span>
+                                        <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
+                                    </div>
+                                    
+                                    <div class="space-y-3">
+                                        <div class="flex flex-wrap gap-3">
+                                            <div class="flex-1 min-w-[200px]">
+                                                <label class="block text-xs text-gray-500 mb-1">Caption</label>
+                                                <input type="text" name="blocks[<?php echo e($index); ?>][caption]" 
+                                                       class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                                                       value="<?php echo e($block['caption'] ?? ''); ?>"
+                                                       placeholder="Table caption...">
+                                            </div>
+                                            <div class="flex items-center gap-4 flex-wrap">
+                                                <label class="text-xs text-gray-500 flex items-center gap-1">
+                                                    <input type="checkbox" name="blocks[<?php echo e($index); ?>][striped]" value="1" 
+                                                           <?php echo e(($block['striped'] ?? true) ? 'checked' : ''); ?> 
+                                                           onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
+                                                    Striped
+                                                </label>
+                                                <label class="text-xs text-gray-500 flex items-center gap-1">
+                                                    <input type="checkbox" name="blocks[<?php echo e($index); ?>][bordered]" value="1" 
+                                                           <?php echo e(($block['bordered'] ?? true) ? 'checked' : ''); ?> 
+                                                           onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
+                                                    Bordered
+                                                </label>
+                                                <label class="text-xs text-gray-500 flex items-center gap-1">
+                                                    <input type="checkbox" name="blocks[<?php echo e($index); ?>][hoverable]" value="1" 
+                                                           <?php echo e(($block['hoverable'] ?? false) ? 'checked' : ''); ?> 
+                                                           onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
+                                                    Hover
+                                                </label>
+                                                <label class="text-xs text-gray-500 flex items-center gap-1">
+                                                    <input type="checkbox" name="blocks[<?php echo e($index); ?>][small]" value="1" 
+                                                           <?php echo e(($block['small'] ?? false) ? 'checked' : ''); ?> 
+                                                           onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
+                                                    Small
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="border rounded-lg overflow-hidden bg-white">
+                                            <div id="table-preview-container-<?php echo e($index); ?>" class="p-4">
+                                                <table class="table-preview" id="table-preview-<?php echo e($index); ?>">
+                                                    <thead>
+                                                        <tr id="table-header-<?php echo e($index); ?>">
+                                                            <?php
+                                                                $headers = $block['headers'] ?? ['Column 1', 'Column 2', 'Column 3'];
+                                                            ?>
+                                                            <?php $__currentLoopData = $headers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hIndex => $header): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                                <th>
+                                                                    <input type="text" 
+                                                                           name="blocks[<?php echo e($index); ?>][headers][<?php echo e($hIndex); ?>]" 
+                                                                           value="<?php echo e($header); ?>" 
+                                                                           class="w-full border-0 bg-transparent text-sm font-medium focus:ring-1 focus:ring-blue-500 rounded px-1" 
+                                                                           oninput="updateTablePreviewStyles(<?php echo e($index); ?>)">
+                                                                </th>
+                                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                            <th style="width:40px;text-align:center;">×</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="table-body-<?php echo e($index); ?>">
+                                                        <?php
+                                                            $rows = $block['rows'] ?? [
+                                                                ['Row 1, Col 1', 'Row 1, Col 2', 'Row 1, Col 3']
+                                                            ];
+                                                        ?>
+                                                        <?php $__currentLoopData = $rows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rIndex => $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                            <tr>
+                                                                <?php $__currentLoopData = $row; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cIndex => $cell): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                                    <td>
+                                                                        <input type="text" 
+                                                                               name="blocks[<?php echo e($index); ?>][rows][<?php echo e($rIndex); ?>][<?php echo e($cIndex); ?>]" 
+                                                                               value="<?php echo e($cell); ?>" 
+                                                                               class="w-full border-0 bg-transparent text-sm focus:ring-1 focus:ring-blue-500 rounded px-1" 
+                                                                               oninput="updateTablePreviewStyles(<?php echo e($index); ?>)">
+                                                                    </td>
+                                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                                <td style="text-align:center;">
+                                                                    <button type="button" onclick="removeTableRow(this, <?php echo e($index); ?>)" 
+                                                                            class="text-red-400 hover:text-red-600 text-xs">×</button>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex gap-2 flex-wrap">
+                                            <button type="button" onclick="addTableRow(<?php echo e($index); ?>)" 
+                                                    class="text-xs px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50 transition">
+                                                ➕ Add Row
+                                            </button>
+                                            <button type="button" onclick="addTableColumn(<?php echo e($index); ?>)" 
+                                                    class="text-xs px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50 transition">
+                                                ➕ Add Column
+                                            </button>
+                                            <button type="button" onclick="removeTableColumn(<?php echo e($index); ?>)" 
+                                                    class="text-xs px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50 transition text-red-500">
+                                                ✕ Remove Last Column
+                                            </button>
+                                            <button type="button" onclick="toggleTableColors(<?php echo e($index); ?>)" 
+                                                    class="text-xs px-3 py-1.5 rounded border border-blue-300 bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
+                                                ⚙️ Customize Colors
+                                            </button>
+                                        </div>
+
+                                        <div id="table-colors-<?php echo e($index); ?>" class="hidden mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <span class="text-xs font-medium text-gray-600">Color Settings</span>
+                                                <button type="button" onclick="toggleTableColors(<?php echo e($index); ?>)" 
+                                                        class="text-xs text-gray-400 hover:text-gray-600">✕</button>
+                                            </div>
+                                            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Header BG</label>
+                                                    <input type="color" name="blocks[<?php echo e($index); ?>][header_bg_color]" 
+                                                           value="<?php echo e($block['header_bg_color'] ?? '#f3f4f6'); ?>" 
+                                                           class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                                           onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Header Text</label>
+                                                    <input type="color" name="blocks[<?php echo e($index); ?>][header_text_color]" 
+                                                           value="<?php echo e($block['header_text_color'] ?? '#111827'); ?>" 
+                                                           class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                                           onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Row BG</label>
+                                                    <input type="color" name="blocks[<?php echo e($index); ?>][row_bg_color]" 
+                                                           value="<?php echo e($block['row_bg_color'] ?? '#ffffff'); ?>" 
+                                                           class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                                           onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Row Alt BG</label>
+                                                    <input type="color" name="blocks[<?php echo e($index); ?>][row_bg_alt_color]" 
+                                                           value="<?php echo e($block['row_bg_alt_color'] ?? '#f9fafb'); ?>" 
+                                                           class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                                           onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Row Text</label>
+                                                    <input type="color" name="blocks[<?php echo e($index); ?>][row_text_color]" 
+                                                           value="<?php echo e($block['row_text_color'] ?? '#111827'); ?>" 
+                                                           class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                                           onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Border</label>
+                                                    <input type="color" name="blocks[<?php echo e($index); ?>][border_color]" 
+                                                           value="<?php echo e($block['border_color'] ?? '#d1d5db'); ?>" 
+                                                           class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                                           onchange="updateTablePreviewStyles(<?php echo e($index); ?>)">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                
+                                <?php elseif($type === 'buttons'): ?>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">🔘 Buttons</span>
+                                        <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
+                                    </div>
+                                    
+                                    <div class="space-y-3">
+                                        <div class="flex flex-wrap gap-3">
+                                            <div class="flex-1 min-w-[150px] max-w-[200px]">
+                                                <label class="block text-xs text-gray-500 mb-1">Alignment</label>
+                                                <select name="blocks[<?php echo e($index); ?>][alignment]" class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm" onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                    <option value="left" <?php echo e(($block['alignment'] ?? 'left') === 'left' ? 'selected' : ''); ?>>Left</option>
+                                                    <option value="center" <?php echo e(($block['alignment'] ?? 'left') === 'center' ? 'selected' : ''); ?>>Center</option>
+                                                    <option value="right" <?php echo e(($block['alignment'] ?? 'left') === 'right' ? 'selected' : ''); ?>>Right</option>
+                                                    <option value="justify" <?php echo e(($block['alignment'] ?? 'left') === 'justify' ? 'selected' : ''); ?>>Justify</option>
+                                                </select>
+                                            </div>
+                                            <div class="flex-1 min-w-[150px] max-w-[200px]">
+                                                <label class="block text-xs text-gray-500 mb-1">Direction</label>
+                                                <select name="blocks[<?php echo e($index); ?>][direction]" class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm" onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                    <option value="horizontal" <?php echo e(($block['direction'] ?? 'horizontal') === 'horizontal' ? 'selected' : ''); ?>>Horizontal</option>
+                                                    <option value="vertical" <?php echo e(($block['direction'] ?? 'horizontal') === 'vertical' ? 'selected' : ''); ?>>Vertical</option>
+                                                </select>
+                                            </div>
+                                            <div class="flex-1 min-w-[150px] max-w-[200px]">
+                                                <label class="block text-xs text-gray-500 mb-1">Gap</label>
+                                                <select name="blocks[<?php echo e($index); ?>][gap]" class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm" onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                    <option value="small" <?php echo e(($block['gap'] ?? 'medium') === 'small' ? 'selected' : ''); ?>>Small</option>
+                                                    <option value="medium" <?php echo e(($block['gap'] ?? 'medium') === 'medium' ? 'selected' : ''); ?>>Medium</option>
+                                                    <option value="large" <?php echo e(($block['gap'] ?? 'medium') === 'large' ? 'selected' : ''); ?>>Large</option>
+                                                </select>
+                                            </div>
+                                            <div class="flex items-end">
+                                                <button type="button" onclick="toggleButtonColors(<?php echo e($index); ?>)" 
+                                                        class="text-xs px-3 py-1.5 rounded border border-blue-300 bg-blue-50 text-blue-600 hover:bg-blue-100 transition whitespace-nowrap">
+                                                    ⚙️ Colors
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div id="button-colors-<?php echo e($index); ?>" class="hidden p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <span class="text-xs font-medium text-gray-600">Default Colors</span>
+                                                <button type="button" onclick="toggleButtonColors(<?php echo e($index); ?>)" 
+                                                        class="text-xs text-gray-400 hover:text-gray-600">✕</button>
+                                            </div>
+                                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Default BG</label>
+                                                    <input type="color" name="blocks[<?php echo e($index); ?>][default_bg_color]" 
+                                                           value="<?php echo e($block['default_bg_color'] ?? '#2563eb'); ?>" 
+                                                           class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                                           onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Default Text</label>
+                                                    <input type="color" name="blocks[<?php echo e($index); ?>][default_text_color]" 
+                                                           value="<?php echo e($block['default_text_color'] ?? '#ffffff'); ?>" 
+                                                           class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                                           onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Hover BG</label>
+                                                    <input type="color" name="blocks[<?php echo e($index); ?>][default_hover_bg_color]" 
+                                                           value="<?php echo e($block['default_hover_bg_color'] ?? '#1d4ed8'); ?>" 
+                                                           class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                                           onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Border Radius</label>
+                                                    <input type="text" name="blocks[<?php echo e($index); ?>][default_border_radius]" 
+                                                           value="<?php echo e($block['default_border_radius'] ?? '8px'); ?>" 
+                                                           class="w-full border border-gray-300 rounded px-2 py-1 text-sm" 
+                                                           placeholder="8px" onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-2" id="buttons-list-<?php echo e($index); ?>">
+                                            <div class="text-xs text-gray-500">Buttons:</div>
+                                            <div id="buttons-container-<?php echo e($index); ?>">
+                                                <?php
+                                                    $buttons = $block['buttons'] ?? [];
+                                                    if (empty($buttons)) {
+                                                        $buttons = [
+                                                            [
+                                                                'text' => 'Button 1',
+                                                                'url' => '#',
+                                                                'bg_color' => '#2563eb',
+                                                                'text_color' => '#ffffff',
+                                                                'hover_bg_color' => '#1d4ed8',
+                                                                'hover_text_color' => '#ffffff',
+                                                                'border_radius' => '8px',
+                                                                'size' => 'medium',
+                                                                'type' => 'primary',
+                                                                'icon' => null,
+                                                                'target' => '_self',
+                                                                'rel' => ''
+                                                            ]
+                                                        ];
+                                                    }
+                                                ?>
+                                                <?php $__currentLoopData = $buttons; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $btnIndex => $button): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <div class="button-item border border-gray-200 rounded-lg p-3 bg-white mt-2" data-btn-index="<?php echo e($btnIndex); ?>">
+                                                        <div class="flex items-center justify-between mb-2">
+                                                            <span class="text-xs font-medium text-gray-600">Button <?php echo e($btnIndex + 1); ?></span>
+                                                            <button type="button" onclick="removeButtonItem(this, <?php echo e($index); ?>)" 
+                                                                    class="text-xs text-red-400 hover:text-red-600">Remove</button>
+                                                        </div>
+                                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                            <div>
+                                                                <label class="block text-xs text-gray-500">Text</label>
+                                                                <input type="text" name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][text]" 
+                                                                       value="<?php echo e($button['text'] ?? 'Button'); ?>" 
+                                                                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm" 
+                                                                       oninput="updateButtonPreview(<?php echo e($index); ?>)">
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs text-gray-500">URL</label>
+                                                                <input type="text" name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][url]" 
+                                                                       value="<?php echo e($button['url'] ?? '#'); ?>" 
+                                                                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm" 
+                                                                       placeholder="https://..." oninput="updateButtonPreview(<?php echo e($index); ?>)">
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs text-gray-500">Size</label>
+                                                                <select name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][size]" 
+                                                                        class="w-full border border-gray-300 rounded px-2 py-1 text-sm" 
+                                                                        onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                                    <option value="small" <?php echo e(($button['size'] ?? 'medium') === 'small' ? 'selected' : ''); ?>>Small</option>
+                                                                    <option value="medium" <?php echo e(($button['size'] ?? 'medium') === 'medium' ? 'selected' : ''); ?>>Medium</option>
+                                                                    <option value="large" <?php echo e(($button['size'] ?? 'medium') === 'large' ? 'selected' : ''); ?>>Large</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs text-gray-500">Type</label>
+                                                                <select name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][type]" 
+                                                                        class="w-full border border-gray-300 rounded px-2 py-1 text-sm" 
+                                                                        onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                                    <option value="primary" <?php echo e(($button['type'] ?? 'primary') === 'primary' ? 'selected' : ''); ?>>Primary</option>
+                                                                    <option value="secondary" <?php echo e(($button['type'] ?? 'primary') === 'secondary' ? 'selected' : ''); ?>>Secondary</option>
+                                                                    <option value="outline" <?php echo e(($button['type'] ?? 'primary') === 'outline' ? 'selected' : ''); ?>>Outline</option>
+                                                                    <option value="ghost" <?php echo e(($button['type'] ?? 'primary') === 'ghost' ? 'selected' : ''); ?>>Ghost</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs text-gray-500">BG Color</label>
+                                                                <input type="color" name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][bg_color]" 
+                                                                       value="<?php echo e($button['bg_color'] ?? '#2563eb'); ?>" 
+                                                                       class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                                                       onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs text-gray-500">Text Color</label>
+                                                                <input type="color" name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][text_color]" 
+                                                                       value="<?php echo e($button['text_color'] ?? '#ffffff'); ?>" 
+                                                                       class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                                                       onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs text-gray-500">Hover BG</label>
+                                                                <input type="color" name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][hover_bg_color]" 
+                                                                       value="<?php echo e($button['hover_bg_color'] ?? '#1d4ed8'); ?>" 
+                                                                       class="w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                                                       onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs text-gray-500">Border Radius</label>
+                                                                <input type="text" name="blocks[<?php echo e($index); ?>][buttons][<?php echo e($btnIndex); ?>][border_radius]" 
+                                                                       value="<?php echo e($button['border_radius'] ?? '8px'); ?>" 
+                                                                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm" 
+                                                                       placeholder="8px" onchange="updateButtonPreview(<?php echo e($index); ?>)">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                            </div>
+                                            <button type="button" onclick="addButtonItem(<?php echo e($index); ?>)" 
+                                                    class="text-xs px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50 transition mt-2">
+                                                ➕ Add Button
+                                            </button>
+                                        </div>
+
+                                        <div class="border rounded-lg p-4 bg-white" id="button-preview-container-<?php echo e($index); ?>">
+                                            <label class="block text-xs text-gray-500 mb-2">Live Preview:</label>
+                                            <div id="button-preview-<?php echo e($index); ?>" class="btn-preview-group"></div>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                
+                                <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                                    <span class="text-xs text-gray-400">Insert below:</span>
+                                    <button type="button" onclick="insertBlockAfter('heading',this)"
+                                            class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-100 font-bold">H</button>
+                                    <button type="button" onclick="insertBlockAfter('text',this)"
+                                            class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-100">¶</button>
+                                    <button type="button" onclick="insertBlockAfter('image',this)"
+                                            class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-100">🖼️</button>
+                                    <button type="button" onclick="insertBlockAfter('list',this)"
+                                            class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-100">📋</button>
+                                    <button type="button" onclick="insertBlockAfter('table',this)"
+                                            class="text-xs px-2 py-1 rounded border border-green-300 hover:bg-green-50">📊</button>
+                                    <button type="button" onclick="insertBlockAfter('buttons',this)"
+                                            class="text-xs px-2 py-1 rounded border border-purple-300 hover:bg-purple-50">🔘</button>
+                                </div>
+                            </div>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-gray-700">Gallery Images</h2>
+            </div>
+            <div class="p-5">
+                <p class="text-xs text-gray-500 mb-3">
+                    Upload multiple images for the gallery. Max 4MB each.
+                </p>
+
+                <?php
+                    $galleryImages = $accommodation->images ?? collect();
+                ?>
+
+                <?php if($galleryImages->count() > 0): ?>
+                    <div class="mb-4">
+                        <label class="block text-xs text-gray-500 mb-2">Existing Gallery Images</label>
+                        <div class="grid grid-cols-3 gap-2" id="existing-gallery-grid">
+                            <?php $__currentLoopData = $galleryImages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <div class="relative rounded-lg overflow-hidden border border-gray-200 bg-white existing-gallery-item"
+                                     data-image-id="<?php echo e($image->id); ?>">
+                                    <img src="<?php echo e(asset('storage/' . $image->path)); ?>"
+                                         class="w-full object-cover" style="height: 90px;">
+                                    <button type="button"
+                                            class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-600"
+                                            onclick="deleteGalleryImage(this, <?php echo e($image->id); ?>)">&times;</button>
+                                    <input type="text"
+                                           name="existing_gallery_alts[<?php echo e($image->id); ?>]"
+                                           value="<?php echo e($image->alt_text); ?>"
+                                           placeholder="Alt text"
+                                           class="w-full text-xs border-t border-gray-200 px-1 py-0.5 focus:outline-none">
+                                </div>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                     </div>
+                <?php endif; ?>
+
+                <input type="file"
+                       name="gallery_images[]"
+                       id="gallery_images"
+                       accept="image/*"
+                       multiple
+                       class="hidden">
+
+                <button type="button"
+                        onclick="document.getElementById('gallery_images').click()"
+                        class="inline-flex items-center px-4 py-2 bg-green-50 border border-green-400 text-green-700 text-sm font-semibold rounded-lg hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <i class="fas fa-plus mr-2"></i> Add Images
+                </button>
+
+                <div id="gallery_preview_grid"
+                     class="mt-3 grid grid-cols-3 gap-2">
                 </div>
 
+                <p id="gallery_empty_msg" class="text-xs text-gray-400 mt-2">
+                    No new images selected yet.
+                </p>
             </div>
+        </div>
 
-            
-            <div class="space-y-6">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 sticky top-6">
-                    <div class="px-5 py-4 border-b border-gray-100">
-                        <h2 class="font-semibold text-gray-700">Publishing</h2>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="font-semibold text-gray-700">Settings</h2>
+            </div>
+            <div class="p-5">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" name="is_active" value="1"
+                               class="rounded text-green-600 focus:ring-green-500"
+                               <?php echo e(old('is_active', $accommodation->is_active) ? 'checked' : ''); ?>>
+                        <span class="text-sm text-gray-700">Active (visible on public site)</span>
                     </div>
-                    <div class="p-5 space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                            <select name="status"
-                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="draft" <?php echo e(old('status', $destination->is_draft ? 'draft' : 'published') === 'draft' ? 'selected' : ''); ?>>Draft</option>
-                                <option value="published" <?php echo e(old('status', $destination->is_draft ? 'draft' : 'published') === 'published' ? 'selected' : ''); ?>>Published</option>
-                            </select>
-                        </div>
-                        <button type="submit"
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm transition">
-                            Save Changes
-                        </button>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" name="is_featured" value="1"
+                               class="rounded text-green-600 focus:ring-green-500"
+                               <?php echo e(old('is_featured', $accommodation->is_featured) ? 'checked' : ''); ?>>
+                        <span class="text-sm text-gray-700">Featured</span>
                     </div>
-                </div>
-
-                
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div class="px-5 py-4 border-b border-gray-100">
-                        <h2 class="font-semibold text-gray-700">Featured Image</h2>
-                        <p class="text-xs text-gray-400 mt-0.5">Shown in previews and social sharing</p>
-                    </div>
-                    <div class="p-5">
-                        <?php if($destination->featured_image): ?>
-                            <div id="featured-preview" class="mb-3">
-                                <img id="featured-preview-img"
-                                     src="<?php echo e(asset('storage/' . $destination->featured_image)); ?>"
-                                     class="w-full rounded-lg object-cover border border-gray-200"
-                                     style="max-height:180px;">
-                                <button type="button" onclick="removeFeaturedImage()"
-                                        class="mt-2 text-xs text-red-500 hover:text-red-700">Remove image</button>
-                            </div>
-                        <?php endif; ?>
-                        <label id="featured-drop-zone"
-                               class="block w-full border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition">
-                            <input type="file" name="featured_image" id="featured-image-input"
-                                   class="hidden" accept="image/jpeg,image/png,image/webp"
-                                   onchange="previewFeaturedImage(this)">
-                            <div id="featured-upload-prompt" class="<?php echo e($destination->featured_image ? 'hidden' : ''); ?>">
-                                <p class="text-gray-500 text-sm">Click to upload</p>
-                                <p class="text-gray-400 text-xs mt-1">JPG, PNG, WEBP</p>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div class="px-5 py-4 border-b border-gray-100">
-                        <h2 class="font-semibold text-gray-700">Main Image</h2>
-                        <p class="text-xs text-gray-400 mt-0.5">Used in listings</p>
-                    </div>
-                    <div class="p-5">
-                        <?php if($destination->image): ?>
-                            <div id="main-preview" class="mb-3">
-                                <img id="main-preview-img"
-                                     src="<?php echo e(asset('storage/' . $destination->image)); ?>"
-                                     class="w-full rounded-lg object-cover border border-gray-200"
-                                     style="max-height:180px;">
-                                <button type="button" onclick="removeMainImage()"
-                                        class="mt-2 text-xs text-red-500 hover:text-red-700">Remove image</button>
-                            </div>
-                        <?php endif; ?>
-                        <label id="main-drop-zone"
-                               class="block w-full border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition">
-                            <input type="file" name="image" id="main-image-input"
-                                   class="hidden" accept="image/jpeg,image/png,image/webp"
-                                   onchange="previewMainImage(this)">
-                            <div id="main-upload-prompt" class="<?php echo e($destination->image ? 'hidden' : ''); ?>">
-                                <p class="text-gray-500 text-sm">Click to upload</p>
-                                <p class="text-gray-400 text-xs mt-1">JPG, PNG, WEBP</p>
-                            </div>
-                        </label>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Sort Order</label>
+                        <input type="number" name="sort_order" min="0" value="<?php echo e(old('sort_order', $accommodation->sort_order ?? 0)); ?>"
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
                     </div>
                 </div>
             </div>
+        </div>
 
+        
+        <div class="flex justify-end">
+            <button type="submit"
+                    class="inline-flex items-center px-6 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                <i class="fas fa-save mr-2"></i> Update Accommodation
+            </button>
         </div>
     </form>
 </div>
@@ -807,11 +890,11 @@
             📋
         </button>
         <button type="button" onclick="addBlock('table')"
-                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-green-300 bg-green-50 text-sm text-green-700 hover:bg-green-100 transition">
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-green-300 bg-green-50 text-sm text-green-700 hover:bg-green-100 transition font-medium">
             📊 Table
         </button>
         <button type="button" onclick="addBlock('buttons')"
-                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-purple-300 bg-purple-50 text-sm text-purple-700 hover:bg-purple-100 transition">
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-purple-300 bg-purple-50 text-sm text-purple-700 hover:bg-purple-100 transition font-medium">
             🔘 Buttons
         </button>
         
@@ -845,8 +928,7 @@
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <p class="text-sm text-gray-500 mb-4">Click an icon to insert it at your cursor position. <span class="text-xs text-gray-400">(Right-click any icon to remove it)</span></p>
-        
+        <p class="text-sm text-gray-500 mb-4">Click an icon to insert it at your cursor position.</p>
         
         <div class="mb-4">
             <input type="text" id="icon-search" 
@@ -858,7 +940,6 @@
         <div class="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3 overflow-y-auto flex-1 p-2" id="icon-grid">
             <?php
                 $fontAwesomeIcons = [
-                    // Solid Icons
                     'fa-check-circle', 'fa-check', 'fa-times-circle', 'fa-times', 'fa-plus-circle', 'fa-plus',
                     'fa-minus-circle', 'fa-minus', 'fa-star', 'fa-heart', 'fa-fire', 'fa-rocket', 'fa-lightbulb',
                     'fa-info-circle', 'fa-exclamation-triangle', 'fa-exclamation-circle', 'fa-check-double',
@@ -867,13 +948,10 @@
                     'fa-globe', 'fa-calendar', 'fa-clock', 'fa-hourglass', 'fa-sun', 'fa-moon', 'fa-cloud',
                     'fa-umbrella', 'fa-tree', 'fa-leaf', 'fa-seedling', 'fa-paw', 'fa-dog', 'fa-cat',
                     'fa-hippo', 'fa-elephant', 'fa-fish', 'fa-dove', 'fa-otter', 'fa-dragon', 'fa-unicorn',
-                    // Regular Icons
                     'fa-star', 'fa-heart', 'fa-circle', 'fa-square', 'fa-check-circle', 'fa-times-circle',
-                    // Brands
                     'fa-facebook', 'fa-twitter', 'fa-instagram', 'fa-youtube', 'fa-whatsapp', 'fa-telegram',
                     'fa-tripadvisor', 'fa-airbnb', 'fa-google', 'fa-apple', 'fa-android', 'fa-windows',
                     'fa-linux', 'fa-github', 'fa-linkedin', 'fa-pinterest', 'fa-snapchat', 'fa-tiktok',
-                    // More solid
                     'fa-arrow-right', 'fa-arrow-left', 'fa-arrow-up', 'fa-arrow-down', 'fa-long-arrow-alt-right',
                     'fa-chevron-right', 'fa-chevron-left', 'fa-chevron-up', 'fa-chevron-down', 'fa-angle-double-right',
                     'fa-angle-double-left', 'fa-angle-double-up', 'fa-angle-double-down', 'fa-play', 'fa-pause',
@@ -924,13 +1002,13 @@
         <div class="space-y-3">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Link Text</label>
-                <input type="text" id="modal-link-text"
+                <input type="text" id="modal-link-text" 
                        placeholder="e.g. Click here to learn more"
                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
-                <input type="url" id="modal-link-url"
+                <input type="url" id="modal-link-url" 
                        placeholder="https://..."
                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
@@ -945,19 +1023,18 @@
     </div>
 </div>
 
-
 <div id="edit-link-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Edit Link</h3>
         <div class="space-y-3">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Link Text</label>
-                <input type="text" id="edit-link-text"
+                <input type="text" id="edit-link-text" 
                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
-                <input type="url" id="edit-link-url"
+                <input type="url" id="edit-link-url" 
                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
         </div>
@@ -1165,14 +1242,15 @@
 
 <script>
 (function () {
-    let blockIndex = <?php echo e($existingBlocks->count()); ?>;
+    // Start block index after existing blocks
+    let blockIndex = <?php echo e(count($existingBlocks)); ?>;
     const blockFiles = window.blockFiles || {};
     window.blockFiles = blockFiles;
 
     let currentEditorForLink = null;
-    let currentEditingLink   = null;
+    let currentEditingLink = null;
     let currentEditingEditor = null;
-    let savedSelectionRange  = null;
+    let savedSelectionRange = null;
     let contextTargetElement = null;
 
     // ─── TOGGLE FUNCTIONS ──────────────────────────────────────
@@ -1280,7 +1358,7 @@
         }
     });
 
-    // ─── BUILD BLOCK ───────────────────────────────────────────
+    // ─── BUILD BLOCK ─────────────────────────────────────────
     function buildBlock(type, idx) {
         const div = document.createElement('div');
         div.className = 'block-item border border-gray-200 rounded-xl p-4 mb-3 bg-gray-50';
@@ -1288,6 +1366,7 @@
 
         let inner = `<input type="hidden" name="blocks[${idx}][type]" value="${type}">`;
 
+        // ─── HEADING BLOCK ──────────────────────────────────────
         if (type === 'heading') {
             inner += `
             <div class="flex items-center justify-between mb-3">
@@ -1317,6 +1396,7 @@
             <div class="heading-preview px-3 py-2 bg-white rounded-lg border border-dashed border-gray-300 text-gray-400 text-sm italic">Preview appears here...</div>`;
         }
 
+        // ─── TEXT BLOCK ─────────────────────────────────────────
         if (type === 'text') {
             inner += `
             <div class="flex items-center justify-between mb-2">
@@ -1337,6 +1417,7 @@
             <input type="hidden" name="blocks[${idx}][content]" id="content-${idx}">`;
         }
 
+        // ─── IMAGE BLOCK ────────────────────────────────────────
         if (type === 'image') {
             blockFiles[idx] = [];
             inner += `
@@ -1345,14 +1426,16 @@
                 <button type="button" onclick="removeBlock(this)" class="text-xs text-red-500 hover:text-red-700">Remove</button>
             </div>
             <div id="img-grid-${idx}" class="grid grid-cols-3 gap-3 mb-3"></div>
-            <input type="file" id="img-file-input-${idx}" name="blocks[${idx}][images][]" multiple accept="image/jpeg,image/png,image/webp" style="display:none">
+            <div id="img-transfer-${idx}"></div>
             <label class="block w-full border-2 border-dashed border-gray-300 rounded-xl p-5 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition">
-                <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp" multiple onchange="accumulateImages(this,${idx})">
+                <input type="file" class="hidden" accept="image/jpeg,image/png,image/webp" multiple
+                       onchange="accumulateImages(this,${idx})">
                 <p class="text-gray-500 text-sm">Click to add images</p>
                 <p class="text-gray-400 text-xs mt-1">Click multiple times to add more</p>
             </label>`;
         }
 
+        // ─── LIST BLOCK ─────────────────────────────────────────
         if (type === 'list') {
             inner += `
             <div class="flex items-center justify-between mb-3">
@@ -1456,7 +1539,7 @@
             </div>`;
         }
 
-        // ─── BUTTONS BLOCK (CLEANED UP) ─────────────────────────
+        // ─── BUTTONS BLOCK ──────────────────────────────────────
         if (type === 'buttons') {
             inner += `
             <div class="flex items-center justify-between mb-3">
@@ -1627,15 +1710,23 @@
         });
         input.value = '';
         renderImageGrid(idx);
-        syncFilesToInput(idx);
+        syncFiles(idx);
     };
 
-    function syncFilesToInput(idx) {
-        const realInput = document.getElementById('img-file-input-' + idx);
-        if (!realInput) return;
-        const dt = new DataTransfer();
-        (blockFiles[idx] || []).forEach(f => dt.items.add(f));
-        realInput.files = dt.files;
+    function syncFiles(idx) {
+        const t = document.getElementById('img-transfer-' + idx);
+        if (t) {
+            t.innerHTML = '';
+            const dt = new DataTransfer();
+            (blockFiles[idx] || []).forEach(f => dt.items.add(f));
+            const inp = document.createElement('input');
+            inp.type = 'file';
+            inp.name = `blocks[${idx}][images][]`;
+            inp.multiple = true;
+            inp.className = 'hidden';
+            inp.files = dt.files;
+            t.appendChild(inp);
+        }
     }
 
     function renderImageGrid(idx) {
@@ -1652,7 +1743,7 @@
                 <div class="relative">
                     <img src="${URL.createObjectURL(file)}" class="w-full object-cover" style="height:100px;">
                     <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-600" 
-                            onclick="(() => { blockFiles[${idx}].splice(${i}, 1); renderImageGrid(${idx}); syncFilesToInput(${idx}); })()">&times;</button>
+                            onclick="(() => { blockFiles[${idx}].splice(${i}, 1); renderImageGrid(${idx}); syncFiles(${idx}); })()">&times;</button>
                 </div>
                 <div class="p-2 bg-gray-50">
                     <input type="text" name="blocks[${idx}][alts][${i}]" placeholder="Alt text" class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
@@ -1662,18 +1753,58 @@
         });
     }
 
-    // ─── DELETE EXISTING IMAGE ────────────────────────────────
-    window.deleteExistingImage = function(btn, idx, imageId) {
-        if (!confirm('Delete this image?')) return;
+    // ─── DELETE BLOCK IMAGE (FIXED) ──────────────────────────
+    window.deleteBlockImage = function(btn, idx, imageId) {
+        if (!confirm('Delete this image from the content block?')) return;
         const item = btn.closest('.existing-image-item');
         const block = document.querySelector(`.block-item[data-index="${idx}"]`);
+        
+        // Add hidden input to mark for deletion
         const flagInput = document.createElement('input');
         flagInput.type = 'hidden';
         flagInput.name = `blocks[${idx}][delete_images][]`;
         flagInput.value = imageId;
         block.appendChild(flagInput);
+        
+        // Visual feedback
         item.style.opacity = '0.3';
         item.style.pointerEvents = 'none';
+        item.style.textDecoration = 'line-through';
+        
+        // Show deleted badge
+        const badge = document.createElement('span');
+        badge.className = 'absolute top-1 left-1 bg-red-500 text-white text-xs px-2 py-0.5 rounded';
+        badge.textContent = 'Will be deleted';
+        item.appendChild(badge);
+        
+        // Hide the delete button
+        btn.style.display = 'none';
+        
+        console.log('Block image marked for deletion:', imageId);
+    };
+
+    // ─── DELETE GALLERY IMAGE ──────────────────────────────────
+    window.deleteGalleryImage = function(btn, imageId) {
+        if (!confirm('Delete this gallery image?')) return;
+        const item = btn.closest('.existing-gallery-item');
+        
+        const form = document.getElementById('accommodation-form');
+        const flagInput = document.createElement('input');
+        flagInput.type = 'hidden';
+        flagInput.name = 'delete_images[]';
+        flagInput.value = imageId;
+        form.appendChild(flagInput);
+        
+        item.style.opacity = '0.3';
+        item.style.pointerEvents = 'none';
+        item.style.textDecoration = 'line-through';
+        
+        const badge = document.createElement('span');
+        badge.className = 'absolute top-1 left-1 bg-red-500 text-white text-xs px-2 py-0.5 rounded';
+        badge.textContent = 'Will be deleted';
+        item.appendChild(badge);
+        
+        btn.style.display = 'none';
     };
 
     // ─── TABLE HELPER FUNCTIONS ───────────────────────────────
@@ -1831,7 +1962,6 @@
         }
     };
 
-    // ─── BUTTON PREVIEW UPDATE ─────────────────────────────────
     window.updateButtonPreview = function(idx) {
         const previewContainer = document.getElementById('button-preview-' + idx);
         if (!previewContainer) return;
@@ -2141,6 +2271,7 @@
         });
     });
 
+    // ─── FEATURED IMAGE ───────────────────────────────────────
     window.previewFeaturedImage = function(input) {
         if (!input.files[0]) return;
         let preview = document.getElementById('featured-preview');
@@ -2166,31 +2297,85 @@
         if (prompt) prompt.classList.remove('hidden');
     };
 
-    window.previewMainImage = function(input) {
-        if (!input.files[0]) return;
-        let preview = document.getElementById('main-preview');
-        const prompt = document.getElementById('main-upload-prompt');
-        if (!preview) {
-            const dropZone = document.getElementById('main-drop-zone');
-            preview = document.createElement('div');
-            preview.id = 'main-preview';
-            preview.className = 'mb-3';
-            preview.innerHTML = `<img id="main-preview-img" class="w-full rounded-lg object-cover border border-gray-200" style="max-height:180px;"><button type="button" onclick="removeMainImage()" class="mt-2 text-xs text-red-500 hover:text-red-700">Remove image</button>`;
-            dropZone.parentNode.insertBefore(preview, dropZone);
+    // ─── GALLERY IMAGES ────────────────────────────────────────
+    const galleryInput = document.getElementById('gallery_images');
+    const galleryGrid = document.getElementById('gallery_preview_grid');
+    const galleryEmptyMsg = document.getElementById('gallery_empty_msg');
+    let galleryFiles = [];
+
+    if (galleryInput) {
+        galleryInput.addEventListener('change', function() {
+            const newFiles = Array.from(this.files);
+
+            newFiles.forEach(file => {
+                const exists = galleryFiles.some(
+                    f => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
+                );
+                if (!exists) {
+                    galleryFiles.push(file);
+                }
+            });
+
+            const dt = new DataTransfer();
+            galleryFiles.forEach(file => dt.items.add(file));
+            galleryInput.files = dt.files;
+
+            renderGalleryPreviews();
+            this.value = '';
+        });
+    }
+
+    function renderGalleryPreviews() {
+        galleryGrid.innerHTML = '';
+
+        if (!galleryFiles.length) {
+            galleryEmptyMsg.classList.remove('hidden');
+            return;
         }
-        document.getElementById('main-preview-img').src = URL.createObjectURL(input.files[0]);
-        preview.classList.remove('hidden');
-        if (prompt) prompt.classList.add('hidden');
-    };
 
-    window.removeMainImage = function() {
-        document.getElementById('main-image-input').value = '';
-        const preview = document.getElementById('main-preview');
-        const prompt = document.getElementById('main-upload-prompt');
-        if (preview) preview.classList.add('hidden');
-        if (prompt) prompt.classList.remove('hidden');
-    };
+        galleryEmptyMsg.classList.add('hidden');
 
+        galleryFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative group';
+
+                wrapper.innerHTML = `
+                    <img src="${e.target.result}"
+                         alt="${file.name}"
+                         class="w-full h-24 object-cover rounded-lg border shadow">
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-lg transition"></div>
+                    <button type="button"
+                            data-index="${index}"
+                            class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition">
+                        &times;
+                    </button>
+                    <p class="text-xs text-gray-500 mt-1 truncate" title="${file.name}">${file.name}</p>
+                `;
+
+                const btn = wrapper.querySelector('button');
+                btn.addEventListener('click', function() {
+                    removeGalleryImage(parseInt(this.getAttribute('data-index'), 10));
+                });
+
+                galleryGrid.appendChild(wrapper);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function removeGalleryImage(index) {
+        galleryFiles.splice(index, 1);
+
+        const dt = new DataTransfer();
+        galleryFiles.forEach(file => dt.items.add(file));
+        galleryInput.files = dt.files;
+
+        renderGalleryPreviews();
+    }
+
+    // ─── PASTE CLEANUP ─────────────────────────────────────────
     document.addEventListener('paste', function(e) {
         const target = e.target;
         if (target && target.matches && target.matches('[data-block-type="text"], [data-block-type="list"]')) {
@@ -2200,8 +2385,13 @@
         }
     });
 
-    document.getElementById('destination-form').addEventListener('submit', function(e) {
-        Object.keys(blockFiles).forEach(idx => syncFilesToInput(idx));
+    // ─── FORM SUBMIT ───────────────────────────────────────────
+    document.getElementById('accommodation-form').addEventListener('submit', function(e) {
+        // Log delete images for debugging
+        const deleteInputs = document.querySelectorAll('input[name="delete_images[]"]');
+        console.log('Delete images to be sent:', Array.from(deleteInputs).map(el => el.value));
+        
+        Object.keys(blockFiles).forEach(idx => syncFiles(idx));
         document.querySelectorAll('.paragraph-editor').forEach(el => {
             const idx = el.dataset.index;
             const h = document.getElementById('content-' + idx);
@@ -2217,5 +2407,6 @@
 })();
 </script>
 <?php $__env->stopPush(); ?>
+
 <?php $__env->stopSection(); ?>
-<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\safaris\resources\views/admin/destinations/edit.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\safaris\resources\views/admin/accommodations/edit.blade.php ENDPATH**/ ?>

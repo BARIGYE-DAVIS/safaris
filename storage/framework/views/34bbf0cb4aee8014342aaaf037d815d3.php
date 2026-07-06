@@ -10,7 +10,7 @@
         
         <div class="absolute inset-0 bg-black/60"></div>
         
-        <div class="relative z-10 container mx-auto px-4 text-center text-white py-16">
+       <div class="relative z-10 container mx-auto px-4 text-center text-white pt-16 pb-0">
             <div class="max-w-4xl mx-auto">
                 <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight animate-fade-in"><?php echo e($destination->name); ?></h1>
 
@@ -51,14 +51,13 @@
     </section>
 
     
-    <section class="relative py-12 md:py-16 bg-white/95 backdrop-blur-sm mt-[-2px] rounded-t-3xl shadow-2xl">
+   <section class="relative pt-0 pb-12 md:pb-16 bg-white/95 backdrop-blur-sm mt-[-2px] rounded-t-3xl shadow-2xl">
         <div class="container mx-auto px-4">
             <div class="max-w-6xl mx-auto">
-                <div class="p-6 md:p-10 lg:p-12">
-                    
+                <div class="px-6 pt-8 pb-6 md:px-10 md:pb-10 lg:px-12 lg:pb-12">
                     
                     <?php if($destination->description): ?>
-                        <div class="text-gray-700 leading-relaxed mb-12 scroll-fade">
+                        <div class="text-gray-700 leading-relaxed mb-12 scroll-fade hidden">
                             <p class="text-lg md:text-xl lg:text-2xl font-light text-gray-600 leading-relaxed border-l-4 border-green-500 pl-6"><?php echo e($destination->description); ?></p>
                         </div>
                     <?php endif; ?>
@@ -93,7 +92,7 @@
                                 $headingClasses = [
                                     'h1' => 'text-3xl md:text-4xl lg:text-5xl font-extrabold text-green-800 mb-6 mt-12 tracking-tight',
                                     'h2' => 'text-2xl md:text-3xl lg:text-4xl font-bold text-green-800 mb-4 mt-10 tracking-tight',
-                                    'h3' => 'text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-3 mt-8',
+                                    'h3' => 'text-xl md:text-2xl lg:text-3xl font-bold text-gray-500 mb-3 mt-8',
                                     'h4' => 'text-lg md:text-xl lg:text-2xl font-semibold text-gray-800 mb-3 mt-6',
                                     'h5' => 'text-base md:text-lg lg:text-xl font-semibold text-gray-800 mb-2 mt-5',
                                     'h6' => 'text-sm md:text-base lg:text-lg font-semibold text-gray-800 mb-2 mt-4',

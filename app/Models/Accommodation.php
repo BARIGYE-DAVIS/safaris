@@ -23,19 +23,24 @@ class Accommodation extends Model
         'price_to',
         'short_description',
         'full_description',
+        'content_blocks',
         'featured_image',
         'amenities',
         'is_active',
         'is_featured',
         'sort_order',
+        'meta_title',
+        'meta_description',
+        'focus_keyword',
     ];
 
     protected $casts = [
-        'amenities'   => 'array',
-        'is_active'   => 'boolean',
-        'is_featured' => 'boolean',
-        'price_from'  => 'decimal:2',
-        'price_to'    => 'decimal:2',
+        'amenities'      => 'array',
+        'content_blocks' => 'array',
+        'is_active'      => 'boolean',
+        'is_featured'    => 'boolean',
+        'price_from'     => 'decimal:2',
+        'price_to'       => 'decimal:2',
     ];
 
     /*
@@ -60,8 +65,7 @@ class Accommodation extends Model
     }
 
     /**
-     * NEW: Relationship to tour itineraries
-     * An accommodation can be used in many tour itinerary days
+     * Relationship to tour itineraries
      */
     public function itineraries()
     {
@@ -95,20 +99,19 @@ class Accommodation extends Model
         return "{$currency} {$to} per person per night, sharing";
     }
 
-    public function getFeaturedImageUrlAttribute(): ?string
-    {
-        if (! $this->featured_image) {
-            return null;
-        }
-
-        return asset('storage/' . $this->featured_image);
+public function getFeaturedImageUrlAttribute(): ?string
+{
+    if (! $this->featured_image) {
+        return null;
     }
 
-    /**
-     * FIX: Uses already-loaded 'images' relation to avoid N+1 query.
-     * If the relation is not loaded (e.g. called outside a list context),
-     * it falls back to a single DB query.
-     */
+    // Debug: Log the path
+    \Log::info('Featured image path: ' . $this->featured_image);
+    \Log::info('Featured image URL: ' . asset('storage/' . $this->featured_image));
+
+    return asset('storage/' . $this->featured_image);
+}
+
     public function getFirstGalleryImageUrlAttribute(): ?string
     {
         $image = $this->relationLoaded('images')

@@ -369,4 +369,4 @@ Route::prefix('profile')->group(function () {
     Route::put('/', [App\Http\Controllers\ProfileController::class, 'update'])->name('admin.profile.update');
 });
 
-Route::get('/explore/{slug}', [SeoPageController::class, 'show'])->name('seo-pages.show');
+Route::get('/{slug}', [SeoPageController::class, 'show'])->name('seo-pages.show');

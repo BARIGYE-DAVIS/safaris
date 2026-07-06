@@ -31,7 +31,11 @@
                         <h2 class="text-2xl md:text-3xl font-bold mb-2">
                             {{ $acc->name }}
                         </h2>
-                        @if($acc->short_description)
+                        @if($acc->meta_description)
+                            <p class="text-sm md:text-base text-gray-100 line-clamp-3">
+                                {{ Str::limit($acc->meta_description, 150) }}
+                            </p>
+                        @elseif($acc->short_description)
                             <p class="text-sm md:text-base text-gray-100 line-clamp-3">
                                 {{ $acc->short_description }}
                             </p>
@@ -108,33 +112,19 @@
                 </select>
             </div>
 
-            {{-- Country text search --}}
-            <div class="flex-1 min-w-[160px]">
-                <label class="block text-xs font-semibold text-gray-600 mb-1">
-                    Country (name or ID)
-                </label>
-                <input type="text" name="country" value="{{ request('country') }}"
-                       class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-green-500 live-search"
-                       placeholder="Uganda, Kenya, etc.">
-            </div>
-
-            {{-- OPTIONAL: strict country dropdown (uses country_id) --}}
-            {{-- If you have a countries list, you can use this instead of text search  --}}
-            {{-- 
+            {{-- Country --}}
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Country</label>
-                <select name="country_id"
+                <select name="country"
                         class="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-green-500 live-filter">
-                    <option value="">All</option>
+                    <option value="">All Countries</option>
                     @foreach($countries as $country)
-                        <option value="{{ $country->id }}"
-                            {{ request('country_id') == $country->id ? 'selected' : '' }}>
+                        <option value="{{ $country->name }}" {{ request('country') == $country->name ? 'selected' : '' }}>
                             {{ $country->name }}
                         </option>
                     @endforeach
                 </select>
             </div>
-            --}}
 
             {{-- Reset link --}}
             <div class="ml-auto">
@@ -164,6 +154,11 @@
                                 {{ ucfirst($acc->category) }}
                             </span>
                         @endif
+                        @if($acc->is_featured)
+                            <span class="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
+                                <i class="fas fa-star mr-1"></i> Featured
+                            </span>
+                        @endif
                     </a>
 
                     <div class="flex-1 flex flex-col p-4">
@@ -178,7 +173,11 @@
                             @if($acc->type) · {{ $acc->type }} @endif
                         </p>
 
-                        @if($acc->short_description)
+                        @if($acc->meta_description)
+                            <p class="mt-2 text-sm text-gray-600 line-clamp-3">
+                                {{ Str::limit($acc->meta_description, 120) }}
+                            </p>
+                        @elseif($acc->short_description)
                             <p class="mt-2 text-sm text-gray-600 line-clamp-3">
                                 {{ $acc->short_description }}
                             </p>
@@ -211,39 +210,30 @@
             {{ $accommodations->withQueryString()->links() }}
         </div>
     @else
-        <p class="text-sm text-gray-500">No accommodations found for these filters.</p>
+        <div class="text-center py-12">
+            <p class="text-sm text-gray-500">No accommodations found for these filters.</p>
+            <a href="{{ route('accommodations.index') }}" class="text-sm text-green-600 hover:text-green-700 mt-2 inline-block">
+                Clear all filters
+            </a>
+        </div>
     @endif
 </div>
 
-{{-- Alpine for hero slider (if not globally loaded) --}}
+{{-- Alpine for hero slider --}}
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
 <script>
-    // LIVE FILTERING: auto-submit on change / typing (with small delay)
+    // LIVE FILTERING: auto-submit on change
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('filtersForm');
         if (!form) return;
 
         const selects = form.querySelectorAll('.live-filter');
-        const searchInputs = form.querySelectorAll('.live-search');
 
         // Auto-submit on select change
         selects.forEach(sel => {
             sel.addEventListener('change', () => {
                 form.submit();
-            });
-        });
-
-        // Debounced submit for text search
-        let typingTimer;
-        const debounceMs = 400;
-
-        searchInputs.forEach(input => {
-            input.addEventListener('input', () => {
-                clearTimeout(typingTimer);
-                typingTimer = setTimeout(() => {
-                    form.submit();
-                }, debounceMs);
             });
         });
     });

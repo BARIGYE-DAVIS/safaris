@@ -12,6 +12,7 @@ use App\Models\Destination;
 use App\Models\Activity;
 use App\Models\Country;
 use App\Models\Gallery;
+use App\Models\SeoPage;
 
 class PageController extends Controller
 {
@@ -86,8 +87,16 @@ class PageController extends Controller
             ->latest('updated_at')
             ->get();
 
+        // SEO landing pages served via Route::get('/{slug}', [SeoPageController::class, 'show'])
+        $seoPages = SeoPage::query()
+            ->when(Schema::hasColumn('seo_pages', 'status'), fn ($q) => $q->where('status', 'published'))
+            ->when(Schema::hasColumn('seo_pages', 'is_published'), fn ($q) => $q->where('is_published', true))
+            ->when(Schema::hasColumn('seo_pages', 'published_at'), fn ($q) => $q->where('published_at', '<=', now()))
+            ->latest('updated_at')
+            ->get();
+
         return response()
-            ->view('sitemap', compact('tours', 'blogs', 'destinations', 'activities', 'countries', 'galleries'))
+            ->view('sitemap', compact('tours', 'blogs', 'destinations', 'activities', 'countries', 'galleries', 'seoPages'))
             ->header('Content-Type', 'text/xml');
     }
 

@@ -33,7 +33,12 @@
                             <?php echo e($acc->name); ?>
 
                         </h2>
-                        <?php if($acc->short_description): ?>
+                        <?php if($acc->meta_description): ?>
+                            <p class="text-sm md:text-base text-gray-100 line-clamp-3">
+                                <?php echo e(Str::limit($acc->meta_description, 150)); ?>
+
+                            </p>
+                        <?php elseif($acc->short_description): ?>
                             <p class="text-sm md:text-base text-gray-100 line-clamp-3">
                                 <?php echo e($acc->short_description); ?>
 
@@ -115,18 +120,19 @@
             </div>
 
             
-            <div class="flex-1 min-w-[160px]">
-                <label class="block text-xs font-semibold text-gray-600 mb-1">
-                    Country (name or ID)
-                </label>
-                <input type="text" name="country" value="<?php echo e(request('country')); ?>"
-                       class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-green-500 live-search"
-                       placeholder="Uganda, Kenya, etc.">
-            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+                <select name="country"
+                        class="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-green-500 live-filter">
+                    <option value="">All Countries</option>
+                    <?php $__currentLoopData = $countries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $country): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($country->name); ?>" <?php echo e(request('country') == $country->name ? 'selected' : ''); ?>>
+                            <?php echo e($country->name); ?>
 
-            
-            
-            
+                        </option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </select>
+            </div>
 
             
             <div class="ml-auto">
@@ -157,6 +163,11 @@
 
                             </span>
                         <?php endif; ?>
+                        <?php if($acc->is_featured): ?>
+                            <span class="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
+                                <i class="fas fa-star mr-1"></i> Featured
+                            </span>
+                        <?php endif; ?>
                     </a>
 
                     <div class="flex-1 flex flex-col p-4">
@@ -172,7 +183,12 @@
                             <?php if($acc->type): ?> · <?php echo e($acc->type); ?> <?php endif; ?>
                         </p>
 
-                        <?php if($acc->short_description): ?>
+                        <?php if($acc->meta_description): ?>
+                            <p class="mt-2 text-sm text-gray-600 line-clamp-3">
+                                <?php echo e(Str::limit($acc->meta_description, 120)); ?>
+
+                            </p>
+                        <?php elseif($acc->short_description): ?>
                             <p class="mt-2 text-sm text-gray-600 line-clamp-3">
                                 <?php echo e($acc->short_description); ?>
 
@@ -210,7 +226,12 @@
 
         </div>
     <?php else: ?>
-        <p class="text-sm text-gray-500">No accommodations found for these filters.</p>
+        <div class="text-center py-12">
+            <p class="text-sm text-gray-500">No accommodations found for these filters.</p>
+            <a href="<?php echo e(route('accommodations.index')); ?>" class="text-sm text-green-600 hover:text-green-700 mt-2 inline-block">
+                Clear all filters
+            </a>
+        </div>
     <?php endif; ?>
 </div>
 
@@ -218,31 +239,17 @@
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
 <script>
-    // LIVE FILTERING: auto-submit on change / typing (with small delay)
+    // LIVE FILTERING: auto-submit on change
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('filtersForm');
         if (!form) return;
 
         const selects = form.querySelectorAll('.live-filter');
-        const searchInputs = form.querySelectorAll('.live-search');
 
         // Auto-submit on select change
         selects.forEach(sel => {
             sel.addEventListener('change', () => {
                 form.submit();
-            });
-        });
-
-        // Debounced submit for text search
-        let typingTimer;
-        const debounceMs = 400;
-
-        searchInputs.forEach(input => {
-            input.addEventListener('input', () => {
-                clearTimeout(typingTimer);
-                typingTimer = setTimeout(() => {
-                    form.submit();
-                }, debounceMs);
             });
         });
     });
